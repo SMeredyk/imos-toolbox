@@ -8,7 +8,7 @@ function sample_data = readXR420( filename, mode )
 %
 % Inputs:
 %   filename    - Cell array containing the name of the file to parse.
-%   mode        - Toolbox data type mode ('profile' or 'timeSeries').
+%   mode        - Toolbox data type mode.
 %
 % Outputs:
 %   sample_data - Struct containing imported sample data.
@@ -17,7 +17,7 @@ function sample_data = readXR420( filename, mode )
 % Contributor : Guillaume Galibert <guillaume.galibert@utas.edu.au>
 
 %
-% Copyright (c) 2010, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -29,7 +29,7 @@ function sample_data = readXR420( filename, mode )
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -178,7 +178,7 @@ function sample_data = readXR420( filename, mode )
           sample_data.variables{end}.name         = 'TIME';
           sample_data.variables{end}.typeCastFunc = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
           sample_data.variables{end}.data         = sample_data.variables{end}.typeCastFunc([descendingTime, ascendingTime]);
-          sample_data.variables{end}.comment      = 'First value over profile measurement';
+          sample_data.variables{end}.comment      = 'First value over profile measurement.';
           
           sample_data.variables{end+1}.dimensions = dimensions;
           sample_data.variables{end}.name         = 'DIRECTION';
@@ -283,7 +283,7 @@ function sample_data = readXR420( filename, mode )
               end
           end
           
-      otherwise
+      case 'timeSeries'
           sample_data.dimensions{1}.name            = 'TIME';
           sample_data.dimensions{1}.typeCastFunc    = str2func(netcdf3ToMatlabType(imosParameters(sample_data.dimensions{1}.name, 'type')));
           sample_data.dimensions{1}.data            = sample_data.dimensions{1}.typeCastFunc(data.time);

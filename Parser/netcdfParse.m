@@ -5,7 +5,7 @@ function sample_data = netcdfParse( filename, mode )
 %
 % Inputs:
 %   filename    - cell array of file names (only one supported).
-%   mode        - Toolbox data type mode ('profile' or 'timeSeries').
+%   mode        - Toolbox data type mode.
 %
 % Outputs:
 %   sample_data - struct containing the imported data set.
@@ -16,7 +16,7 @@ function sample_data = netcdfParse( filename, mode )
 %               Gordon Keith <gordon.keith@csiro.au>
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -28,7 +28,7 @@ function sample_data = netcdfParse( filename, mode )
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -184,6 +184,8 @@ function sample_data = netcdfParse( filename, mode )
       sample_data.meta.level = imosFileVersion(sample_data.file_version, 'index');
   end
   
+  sample_data.toolbox_input_file              = filename;
+  
   [~, sample_data.meta.file_name, ext]        = fileparts(filename);
   sample_data.meta.file_name                  = [sample_data.meta.file_name, ext];
   sample_data.meta.site_id                    = '';
@@ -221,12 +223,20 @@ function sample_data = netcdfParse( filename, mode )
       sample_data.meta.beam_angle = sample_data.instrument_beam_angle;
   end
   
+  if isfield(sample_data, 'instrument_nominal_depth')
+      sample_data.meta.depth = sample_data.instrument_nominal_depth;
+  end
+  
   if isfield(sample_data, 'instrument_sample_interval')
       sample_data.meta.instrument_sample_interval = sample_data.instrument_sample_interval;
   end
   
   if isfield(sample_data, 'featureType')
       sample_data.meta.featureType = sample_data.featureType;
+  end
+  
+  if isfield(sample_data, 'quality_control_log')
+      sample_data.meta.log = sample_data.quality_control_log;
   end
   
   iHeightAboveSensor = getVar(sample_data.dimensions, 'HEIGHT_ABOVE_SENSOR');

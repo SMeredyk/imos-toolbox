@@ -24,7 +24,7 @@ function viewMetadata(parent, sample_data, updateCallback, repCallback, mode)
 %
 %                      function repCallback(location, names, values)
 %
-%   mode           - Toolbox data type mode ('profile' or 'timeSeries').
+%   mode           - Toolbox data type mode.
 %
 % Author:       Paul McCarthy <paul.mccarthy@csiro.au>
 % Contributor:  Guillaume Galibert <guillaume.galibert@utas.edu.au>
@@ -32,7 +32,7 @@ function viewMetadata(parent, sample_data, updateCallback, repCallback, mode)
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -44,7 +44,7 @@ function viewMetadata(parent, sample_data, updateCallback, repCallback, mode)
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -206,7 +206,7 @@ function viewMetadata(parent, sample_data, updateCallback, repCallback, mode)
         
         % make sure numeric values are not rounded (too much)
         case 'N',
-          data{i,2} = sprintf('%.10g', data{i,2});
+          data{i,2} = sprintf('%.10g ', data{i,2});
         
         % make everything else a string - i'm assuming that when 
         % num2str is passed a string, it will return that string 
@@ -435,11 +435,15 @@ function viewMetadata(parent, sample_data, updateCallback, repCallback, mode)
 
         % numbers are just numbers
         case 'N'
-          temp = str2double(fieldValue);
+          temp = str2num(fieldValue); %#ok<ST2NM> str2num used on purpose to deal with arrays
 
           % reject anything that is not a number
           if isempty(temp)
             error([fieldName ' must be a number']); 
+          end
+
+          if length(temp) > 1
+            fieldValue = ['[' fieldValue ']'];
           end
 
         % qc flag is different depending on qc set in use

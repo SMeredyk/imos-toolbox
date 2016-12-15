@@ -18,7 +18,7 @@ function sample_data = SBE56Parse( filename, mode )
 %
 % Inputs:
 %   filename    - cell array of files to import (only one supported).
-%   mode        - Toolbox data type mode ('profile' or 'timeSeries').
+%   mode        - Toolbox data type mode.
 %
 % Outputs:
 %   sample_data - Struct containing sample data.
@@ -28,7 +28,7 @@ function sample_data = SBE56Parse( filename, mode )
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated
 % Marine Observing System (IMOS).
 % All rights reserved.
 %
@@ -40,7 +40,7 @@ function sample_data = SBE56Parse( filename, mode )
 %     * Redistributions in binary form must reproduce the above copyright
 %       notice, this list of conditions and the following disclaimer in the
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors
+%     * Neither the name of the AODN/IMOS nor the names of its contributors
 %       may be used to endorse or promote products derived from this software
 %       without specific prior written permission.
 %
@@ -109,7 +109,7 @@ if strcmpi(ext, '.CNV')
 else
     % have csv file
     % use SBE56 specific csv data reader function
-    [data, comment, csvHeaderLines] = readSBE56csv(filename, mode);
+    [data, comment, csvHeaderLines] = readSBE56csv(filename);
     instHeader = parseInstrumentHeader(csvHeaderLines);
     procHeader = struct;
 end
@@ -394,7 +394,7 @@ end
 end
 
 %%
-function [data, comment, csvHeaderLines] = readSBE56csv(filename, mode)
+function [data, comment, csvHeaderLines] = readSBE56csv(filename)
 %READSBE56CSV
 
 % So far a typical SBE56 csv file has a number of header lines with '%' as

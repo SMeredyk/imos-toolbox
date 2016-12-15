@@ -6,7 +6,7 @@ function sample_data = readWQMraw( filename, mode )
 %
 % Inputs:
 %   filename    - name of the input file to be parsed
-%   mode        - Toolbox data type mode ('profile' or 'timeSeries').
+%   mode        - Toolbox data type mode.
 %
 % Outputs:
 %   sample_data - contains a time vector (in matlab numeric format), and a 
@@ -39,7 +39,7 @@ function sample_data = readWQMraw( filename, mode )
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -51,7 +51,7 @@ function sample_data = readWQMraw( filename, mode )
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -159,7 +159,7 @@ function sample_data = readWQMraw( filename, mode )
       timeBurst = time(iBurst(i):iBurst(i+1)-1);
       sampleIntervalInBurst(i) = median(diff(timeBurst*24*3600));
       firstTimeBurst(i) = timeBurst(1);
-      durationBurst(i) = (timeBurst(end) - timeBurst(1))*24*3600;
+      durationBurst(i) = (timeBurst(end) - timeBurst(1))*24*3600 + sampleIntervalInBurst(i);
   end
   
   sample_data.meta.instrument_sample_interval   = round(median(sampleIntervalInBurst));
@@ -249,10 +249,10 @@ function sample_data = readWQMraw( filename, mode )
     sample_data.variables{end}.comment                = comment;
     
     % WQM uses SeaBird pressure sensor
-    if strncmp('PRES_REL', sample_data.variables{k}.name, 8)
+    if strncmp('PRES_REL', sample_data.variables{end}.name, 8)
         % let's document the constant pressure atmosphere offset previously 
         % applied by SeaBird software on the absolute presure measurement
-        sample_data.variables{k}.applied_offset = sample_data.variables{k}.typeCastFunc(-14.7*0.689476);
+        sample_data.variables{end}.applied_offset = sample_data.variables{end}.typeCastFunc(-14.7*0.689476);
     end
   end
   

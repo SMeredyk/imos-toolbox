@@ -28,7 +28,7 @@ function [data, flags, paramsLog] = imosRegionalRangeQC ( sample_data, data, k, 
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -40,7 +40,7 @@ function [data, flags, paramsLog] = imosRegionalRangeQC ( sample_data, data, k, 
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -87,7 +87,6 @@ end
 %     site = sample_data.meta.site_name; % source = ddb
 %     if strcmpi(site, 'UNKNOWN'), site = sample_data.site_code; end % source = global_attributes file
 site = sample_data.site_code;
-site = imosSites(site);
 
 % test if site information exists
 if isempty(site)
@@ -121,11 +120,11 @@ else
     end
     
     % read values from imosRegionalRangeQC properties file
-    [regionalMin, regionalMax, isSite] = getImosRegionalRange(site.name, paramName);
+    [regionalMin, regionalMax, isSite] = getImosRegionalRange(site, paramName);
     
     if ~isSite
         fprintf('%s\n', ['Warning : ' 'File imosRegionalRangeQC.txt is not documented '...
-        'for site ' site.name]);
+        'for site ' site]);
     else
         if ~isnan(regionalMin)
             % get the flag values with which we flag good and out of range data

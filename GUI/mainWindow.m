@@ -56,7 +56,7 @@ function mainWindow(...
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -68,7 +68,7 @@ function mainWindow(...
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -122,14 +122,13 @@ function mainWindow(...
     'Value',  1,...
     'Tag', 'samplePopUpMenu');
   
-  % get the toolbox execution mode. Values can be 'timeSeries' and 'profile'. 
-  % If no value is set then default mode is 'timeSeries'
-  mode = lower(readProperty('toolbox.mode'));
+  % get the toolbox execution mode
+  mode = readProperty('toolbox.mode');
   
   switch mode
       case 'profile'
           graphMenuValue = 2;
-      otherwise
+      case 'timeSeries'
           graphMenuValue = 1;
   end
 
@@ -254,10 +253,10 @@ function mainWindow(...
   tb      = findall(fig, 'Type', 'uitoolbar');
   buttons = findall(tb);
   
-  zoomoutb = findobj(buttons, 'TooltipString', 'Zoom Out');
-  zoominb  = findobj(buttons, 'TooltipString', 'Zoom In');
-  panb     = findobj(buttons, 'TooltipString', 'Pan');
-  datacursorb     = findobj(buttons, 'TooltipString', 'Data Cursor');
+  zoomoutb    = findobj(buttons, 'TooltipString', 'Zoom Out');
+  zoominb     = findobj(buttons, 'TooltipString', 'Zoom In');
+  panb        = findobj(buttons, 'TooltipString', 'Pan');
+  datacursorb = findobj(buttons, 'TooltipString', 'Data Cursor');
   
   buttons(buttons == tb)            = [];
   buttons(buttons == zoomoutb)      = [];
@@ -274,55 +273,65 @@ function mainWindow(...
   set(hZoom, 'ActionPostCallback', @zoomPostCallback);
   set(hPan, 'ActionPostCallback', @zoomPostCallback);
   
+  % update zoom in and pan's tooltips to display hot keys
+  set(zoominb, 'TooltipString', 'Zoom In (Ctrl+z)');
+  set(panb,    'TooltipString', 'Pan (Ctrl+a)');
+  
   %set uimenu
   hToolsMenu                        = uimenu(fig, 'label', 'Tools');
-  if strcmpi(mode, 'timeseries')
-      hToolsCheckPlannedDepths      = uimenu(hToolsMenu, 'label', 'Check measured against planned depths');
-      hToolsCheckPlannedDepthsNonQC = uimenu(hToolsCheckPlannedDepths, 'label', 'non QC');
-      hToolsCheckPlannedDepthsQC    = uimenu(hToolsCheckPlannedDepths, 'label', 'QC');
-      hToolsCheckPressDiffs         = uimenu(hToolsMenu, 'label', 'Check pressure differences between selected instrument and nearest neighbours');
-      hToolsCheckPressDiffsNonQC    = uimenu(hToolsCheckPressDiffs, 'label', 'non QC');
-      hToolsCheckPressDiffsQC       = uimenu(hToolsCheckPressDiffs, 'label', 'QC');
-      hToolsLineDepth               = uimenu(hToolsMenu, 'label', 'Line plot mooring''s depths');
-      hToolsLineDepthNonQC          = uimenu(hToolsLineDepth, 'label', 'non QC');
-      hToolsLineDepthQC             = uimenu(hToolsLineDepth, 'label', 'QC');
-      hToolsLineCommonVar           = uimenu(hToolsMenu, 'label', 'Line plot mooring''s 1D variables');
-      hToolsLineCommonVarNonQC      = uimenu(hToolsLineCommonVar, 'label', 'non QC');
-      hToolsLineCommonVarQC         = uimenu(hToolsLineCommonVar, 'label', 'QC');
-      hToolsScatterCommonVar        = uimenu(hToolsMenu, 'label', 'Scatter plot mooring''s 1D variables VS depth');
-      hToolsScatterCommonVarNonQC   = uimenu(hToolsScatterCommonVar, 'label', 'non QC');
-      hToolsScatterCommonVarQC      = uimenu(hToolsScatterCommonVar, 'label', 'QC');
-      hToolsScatter2DCommonVar      = uimenu(hToolsMenu, 'label', 'Scatter plot mooring''s 2D variables VS depth');
-      hToolsScatter2DCommonVarNonQC = uimenu(hToolsScatter2DCommonVar, 'label', 'non QC');
-      hToolsScatter2DCommonVarQC    = uimenu(hToolsScatter2DCommonVar, 'label', 'QC');
-      
-      %set menu callbacks
-      set(hToolsCheckPlannedDepthsNonQC, 'callBack', {@displayCheckPlannedDepths, false});
-      set(hToolsCheckPlannedDepthsQC,    'callBack', {@displayCheckPlannedDepths, true});
-      set(hToolsCheckPressDiffsNonQC,    'callBack', {@displayCheckPressDiffs, false});
-      set(hToolsCheckPressDiffsQC,       'callBack', {@displayCheckPressDiffs, true});
-      set(hToolsLineDepthNonQC,          'callBack', {@displayLineMooringDepth, false});
-      set(hToolsLineDepthQC,             'callBack', {@displayLineMooringDepth, true});
-      set(hToolsLineCommonVarNonQC,      'callBack', {@displayLineMooringVar, false});
-      set(hToolsLineCommonVarQC,         'callBack', {@displayLineMooringVar, true});
-      set(hToolsScatterCommonVarNonQC,   'callBack', {@displayScatterMooringVar, false, true});
-      set(hToolsScatterCommonVarQC,      'callBack', {@displayScatterMooringVar, true, true});
-      set(hToolsScatter2DCommonVarNonQC, 'callBack', {@displayScatterMooringVar, false, false});
-      set(hToolsScatter2DCommonVarQC,    'callBack', {@displayScatterMooringVar, true, false});
-  else
-      hToolsLineCastVar             = uimenu(hToolsMenu, 'label', 'Line plot profile variables');
-      hToolsLineCastVarNonQC        = uimenu(hToolsLineCastVar, 'label', 'non QC');
-      hToolsLineCastVarQC           = uimenu(hToolsLineCastVar, 'label', 'QC');
-      
-      %set menu callbacks
-      set(hToolsLineCastVarNonQC,       'callBack', {@displayLineCastVar, false});
-      set(hToolsLineCastVarQC,          'callBack', {@displayLineCastVar, true});
+  switch mode
+      case 'timeSeries'
+          hToolsCheckPlannedDepths      = uimenu(hToolsMenu, 'label', 'Check measured against planned depths');
+          hToolsCheckPlannedDepthsNonQC = uimenu(hToolsCheckPlannedDepths, 'label', 'all data');
+          hToolsCheckPlannedDepthsQC    = uimenu(hToolsCheckPlannedDepths, 'label', 'only good and non QC''d data');
+          hToolsCheckPressDiffs         = uimenu(hToolsMenu, 'label', 'Check pressure differences between selected instrument and nearest neighbours');
+          hToolsCheckPressDiffsNonQC    = uimenu(hToolsCheckPressDiffs, 'label', 'all data');
+          hToolsCheckPressDiffsQC       = uimenu(hToolsCheckPressDiffs, 'label', 'only good and non QC''d data');
+          hToolsLineDepth               = uimenu(hToolsMenu, 'label', 'Line plot mooring''s depths');
+          hToolsLineDepthNonQC          = uimenu(hToolsLineDepth, 'label', 'all data');
+          hToolsLineDepthQC             = uimenu(hToolsLineDepth, 'label', 'only good and non QC''d data');
+          hToolsLineCommonVar           = uimenu(hToolsMenu, 'label', 'Line plot mooring''s 1D variables');
+          hToolsLineCommonVarNonQC      = uimenu(hToolsLineCommonVar, 'label', 'all data');
+          hToolsLineCommonVarQC         = uimenu(hToolsLineCommonVar, 'label', 'only good and non QC''d data');
+          hToolsScatterCommonVar        = uimenu(hToolsMenu, 'label', 'Scatter plot mooring''s 1D variables VS depth');
+          hToolsScatterCommonVarNonQC   = uimenu(hToolsScatterCommonVar, 'label', 'all data');
+          hToolsScatterCommonVarQC      = uimenu(hToolsScatterCommonVar, 'label', 'only good and non QC''d data');
+          hToolsScatter2DCommonVar      = uimenu(hToolsMenu, 'label', 'Scatter plot mooring''s 2D variables VS depth');
+          hToolsScatter2DCommonVarNonQC = uimenu(hToolsScatter2DCommonVar, 'label', 'all data');
+          hToolsScatter2DCommonVarQC    = uimenu(hToolsScatter2DCommonVar, 'label', 'only good and non QC''d data');
+          
+          %set menu callbacks
+          set(hToolsCheckPlannedDepthsNonQC, 'callBack', {@displayCheckPlannedDepths, false});
+          set(hToolsCheckPlannedDepthsQC,    'callBack', {@displayCheckPlannedDepths, true});
+          set(hToolsCheckPressDiffsNonQC,    'callBack', {@displayCheckPressDiffs, false});
+          set(hToolsCheckPressDiffsQC,       'callBack', {@displayCheckPressDiffs, true});
+          set(hToolsLineDepthNonQC,          'callBack', {@displayLineMooringDepth, false});
+          set(hToolsLineDepthQC,             'callBack', {@displayLineMooringDepth, true});
+          set(hToolsLineCommonVarNonQC,      'callBack', {@displayLineMooringVar, false});
+          set(hToolsLineCommonVarQC,         'callBack', {@displayLineMooringVar, true});
+          set(hToolsScatterCommonVarNonQC,   'callBack', {@displayScatterMooringVar, false, true});
+          set(hToolsScatterCommonVarQC,      'callBack', {@displayScatterMooringVar, true, true});
+          set(hToolsScatter2DCommonVarNonQC, 'callBack', {@displayScatterMooringVar, false, false});
+          set(hToolsScatter2DCommonVarQC,    'callBack', {@displayScatterMooringVar, true, false});
+      case 'profile'
+          hToolsLineCastVar             = uimenu(hToolsMenu, 'label', 'Line plot profile variables');
+          hToolsLineCastVarNonQC        = uimenu(hToolsLineCastVar, 'label', 'all data');
+          hToolsLineCastVarQC           = uimenu(hToolsLineCastVar, 'label', 'only good and non QC''d data');
+          
+          %set menu callbacks
+          set(hToolsLineCastVarNonQC,       'callBack', {@displayLineCastVar, false});
+          set(hToolsLineCastVarQC,          'callBack', {@displayLineCastVar, true});
   end
-  hHelpMenu                         = uimenu(fig, 'label', 'Help');
-  hHelpWiki                         = uimenu(hHelpMenu, 'label', 'IMOS Toolbox Wiki');
+  hHotKeyMenu = uimenu(fig, 'label', 'Hot Keys');
+  uimenu(hHotKeyMenu, 'Label', 'Enable zoom',       'Accelerator', 'z', 'Callback', @(src,evt)zoom(fig, 'on'));
+  uimenu(hHotKeyMenu, 'Label', 'Enable pan',        'Accelerator', 'a', 'Callback', @(src,evt)pan( fig, 'on'));
+  uimenu(hHotKeyMenu, 'Label', 'Disable zoom/pan',  'Accelerator', 'q', 'Callback', @disableZoomAndPan);
+
+  hHelpMenu = uimenu(fig, 'label', 'Help');
+  hHelpWiki = uimenu(hHelpMenu, 'label', 'IMOS Toolbox Wiki');
   
   %set menu callbacks
-  set(hHelpWiki,                        'callBack', @openWikiPage);
+  set(hHelpWiki, 'callBack', @openWikiPage);
   
   %% Widget Callbacks
   
@@ -365,7 +374,30 @@ function mainWindow(...
   % menu. Updates the variables panel, then delegates to selectionChange.
   % 
     sam = getSelectedData();
+    
+    % keep track of previously selected variables
+    iTickBox = getSelectedVars();
+    nTickBoxed = length(iTickBox);
+    selectedVarNames = cell(1, nTickBoxed);
+    tickBoxes = get(varPanel, 'UserData');
+    for i=1:nTickBoxed
+        selectedVarNames{i} = get(tickBoxes(iTickBox(i)), 'String');
+    end
+    
+    % reset the varPanel
+    newVars = [];
     createVarPanel(sam, []);
+    
+    % we want to be able to keep the selected variables from one dataset to another if possible
+    newTickBoxes = get(varPanel, 'UserData');
+    for j=1:length(newTickBoxes)
+        varName = get(newTickBoxes(j), 'String');
+        if any(strcmp(varName, selectedVarNames))
+            newVars = [newVars j];
+        end
+    end
+        
+    if ~isempty(newVars), createVarPanel(sam, newVars); end
     selectionChange('set');
   end
 
@@ -451,13 +483,41 @@ function mainWindow(...
         set(graphs, 'XLim', xLimits);
         set(graphs, 'XTick', xTicks);
         
-        % reset other 1D axis yTicks if needed because the X axis sync causes a
-        % change in the Y range
+        % update other 1D axis yLim / yTick to reflect the
+        % change in the Y range of displayed data
         if ~isempty(graphs1D)
+            sam = getSelectedData();
+            hTickBoxes = get(varPanel, 'UserData');
+            
+            qcSet     = str2double(readProperty('toolbox.qc_set'));
+            rawFlag   = imosQCFlag('raw',          qcSet, 'flag');
+            goodFlag  = imosQCFlag('good',         qcSet, 'flag');
+            pGoodFlag = imosQCFlag('probablyGood', qcSet, 'flag');
+            okFlags = [rawFlag goodFlag pGoodFlag];
+
             for i=1:length(graphs1D)
-                yLimits = get(graphs1D(i), 'YLim');
+                userData = get(graphs1D(i), 'UserData');
+                hData = userData{1};
+                iTickBox = userData{2};
+                
+                varName = get(hTickBoxes(iTickBox), 'String');
+                iVar = getVar(sam.variables, varName);
+                flags = sam.variables{iVar}.flags;
+                iGood = ismember(flags, okFlags);
+                
+                xData = get(hData, 'XData');
+                yData = get(hData, 'YData');
+                
+                xData(~iGood) = [];
+                yData(~iGood) = [];
+                
+                iDataIn = xData >= xLimits(1) & xData <= xLimits(2);
+                yLimits = [min(yData(iDataIn)), max(yData(iDataIn))];
+                set(graphs1D(i), 'YLim', yLimits);
+                
                 yStep   = (yLimits(2) - yLimits(1)) / 5;
                 yTicks  = yLimits(1):yStep:yLimits(2);
+                
                 set(graphs1D(i), 'YTick', yTicks);
             end
         end
@@ -583,12 +643,15 @@ function mainWindow(...
 
   end
 
+function disableZoomAndPan(source, ev)
+    pan(fig, 'off');
+    zoom(fig, 'off');
+end
+
 function displayLineCastVar(source,ev, isQC)
     %DISPLAYLINECASTVAR Opens a new window where all the 
     % variables collected by the CTD cast are line-plotted.
     %
-    stringQC = 'non QC';
-    if isQC; stringQC = 'QC'; end
         
     % get all params names
     lenSampleData = length(sample_data);
@@ -828,7 +891,7 @@ end
             if iDepth ~= 0
                 sam.variables(iDepth) = [];
             end
-        otherwise
+        case 'timeSeries'
             % we don't want to plot TIMESERIES, PROFILE, TRAJECTORY, LATITUDE, LONGITUDE, NOMINAL_DEPTH
             p = getVar(sam.variables, 'NOMINAL_DEPTH');
     end
@@ -886,7 +949,7 @@ end
             case 'profile'
                 % we don't want to plot TIME, PROFILE, DIRECTION, LATITUDE, LONGITUDE, BOT_DEPTH
                 varOffset = getVar(sam.variables, 'BOT_DEPTH');
-            otherwise
+            case 'timeSeries'
                 % we don't want to plot TIMESERIES, PROFILE, TRAJECTORY, LATITUDE, LONGITUDE, NOMINAL_DEPTH
                 varOffset = getVar(sam.variables, 'NOMINAL_DEPTH');
         end

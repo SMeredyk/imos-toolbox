@@ -18,7 +18,7 @@ function pcolorMooring2DVar(sample_data, varName, isQC, saveToFile, exportDir)
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -30,7 +30,7 @@ function pcolorMooring2DVar(sample_data, varName, isQC, saveToFile, exportDir)
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -60,12 +60,17 @@ varUnit = imosParameters(varName, 'uom');
 stringQC = 'non QC';
 if isQC, stringQC = 'QC'; end
 
-%plot depth information
-monitorRec = get(0,'MonitorPosition');
-xResolution = monitorRec(:, 3)-monitorRec(:, 1);
-iBigMonitor = xResolution == max(xResolution);
-if sum(iBigMonitor)==2, iBigMonitor(2) = false; end % in case exactly same monitors
+monitorRect = getRectMonitor();
+iBigMonitor = getBiggestMonitor();
+
 title = [sample_data{1}.deployment_code ' mooring''s instruments ' stringQC '''d good ' varTitle];
+
+% retrieve good flag values
+qcSet     = str2double(readProperty('toolbox.qc_set'));
+rawFlag   = imosQCFlag('raw', qcSet, 'flag');
+goodFlag  = imosQCFlag('good', qcSet, 'flag');
+pGoodFlag = imosQCFlag('probablyGood', qcSet, 'flag');
+goodFlags = [rawFlag, goodFlag, pGoodFlag];
 
 %sort instruments by depth
 lenSampleData = length(sample_data);
@@ -108,7 +113,7 @@ for i=1:lenSampleData
     
     instrumentDesc{i} = [strrep(instrumentDesc{i}, '_', ' ') ' (' num2str(metaDepth(i)) 'm' instrumentSN ')'];
         
-    switch varName
+    switch varName(1:4)
         case {'UCUR', 'VCUR', 'WCUR', 'VEL1', 'VEL2', 'VEL3'}   % 0 centred parameters
             cMap = 'r_b';
             cType = 'centeredOnZero';
@@ -139,28 +144,17 @@ for i=1:lenSampleData
             size(sample_data{iSort(i)}.variables{iVar}.data, 3) == 1 % we're only plotting ADCP 2D variables
         if initiateFigure
             fileName = genIMOSFileName(sample_data{iSort(i)}, 'png');
-            visible = 'on';
-            if saveToFile, visible = 'off'; end
             hFigMooringVar = figure(...
                 'Name', title, ...
                 'NumberTitle', 'off', ...
-                'Visible', visible, ...
-                'OuterPosition', [0, 0, monitorRec(iBigMonitor, 3), monitorRec(iBigMonitor, 4)]);
+                'OuterPosition', monitorRect(iBigMonitor, :));
             
-            if saveToFile
-                % the default renderer under windows is opengl; for some reason,
-                % printing pcolor plots fails when using opengl as the renderer
-                set(hFigMooringVar, 'Renderer', 'zbuffer');
-                
-                % ensure the printed version is the same whatever the screen used.
-                set(hFigMooringVar, 'PaperPositionMode', 'manual');
-                set(hFigMooringVar, 'PaperType', 'A4', 'PaperOrientation', 'landscape', 'PaperUnits', 'normalized', 'PaperPosition', [0, 0, 1, 1]);
-                
-                % preserve the color scheme
-                set(hFigMooringVar, 'InvertHardcopy', 'off');
-            end
+            % create uipanel within figure so that screencapture can be
+            % used on the plot only and without capturing all of the figure
+            % (including buttons, menus...)
+            hPanelMooringVar = uipanel('Parent', hFigMooringVar);
+            hAxMooringVar = axes('Parent', hPanelMooringVar);
             
-            hAxMooringVar = axes('Parent',   hFigMooringVar);
             set(get(hAxMooringVar, 'XLabel'), 'String', 'Time');
             set(get(hAxMooringVar, 'YLabel'), 'String', [nameHeight ' (m)'], 'Interpreter', 'none');
             set(get(hAxMooringVar, 'Title'), 'String', sprintf('%s\n%s', title, instrumentDesc{i}), 'Interpreter', 'none');
@@ -181,11 +175,11 @@ for i=1:lenSampleData
             timeFlags = sample_data{iSort(i)}.dimensions{iTime}.flags;
             varFlags = sample_data{iSort(i)}.variables{iVar}.flags;
             
-            iGoodTime = (timeFlags == 1 | timeFlags == 2);
+            iGoodTime = ismember(timeFlags, goodFlags);
             nGoodTime = sum(iGoodTime);
             
             iGood = repmat(iGoodTime, [1, size(sample_data{iSort(i)}.variables{iVar}.data, 2)]);
-            iGood = iGood & (varFlags == 1 | varFlags == 2);
+            iGood = iGood & ismember(varFlags, goodFlags);
             
             iGoodHeight = any(iGood, 1);
             nGoodHeight = sum(iGoodHeight);
@@ -205,7 +199,7 @@ for i=1:lenSampleData
             dataVar(~iGoodHeight) = [];
             dataVar = reshape(dataVar, nGoodTime, nGoodHeight);
             
-            hPcolorVar(i) = pcolor(hAxMooringVar, xPcolor, yPcolor, double(dataVar'));
+            hPcolorVar(i) = pcolor(hAxMooringVar, double(xPcolor), double(yPcolor), double(dataVar'));
             set(hPcolorVar(i), 'FaceColor', 'flat', 'EdgeColor', 'none');
 
             % Let's redefine properties after pcolor to make sure grid lines appear
@@ -256,11 +250,8 @@ if ~initiateFigure
         fileName = strrep(fileName, '_PARAM_', ['_', varName, '_']); % IMOS_[sub-facility_code]_[site_code]_FV01_[deployment_code]_[PLOT-TYPE]_[PARAM]_C-[creation_date].png
         fileName = strrep(fileName, '_PLOT-TYPE_', '_PCOLOR_');
         
-        % use hardcopy as a trick to go faster than print.
-        % opengl (hardware or software) should be supported by any platform and go at least just as
-        % fast as zbuffer. With hardware accelaration supported, could even go a
-        % lot faster.
-        imwrite(hardcopy(hFigMooringVar, '-dopengl'), fullfile(exportDir, fileName), 'png');
+        fastSaveas(hFigMooringVar, hPanelMooringVar, fullfile(exportDir, fileName));
+        
         close(hFigMooringVar);
     end
 end

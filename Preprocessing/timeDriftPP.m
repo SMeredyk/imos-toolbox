@@ -29,7 +29,7 @@ function sample_data = timeDriftPP(sample_data, qcLevel, auto)
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated
 % Marine Observing System (IMOS).
 % All rights reserved.
 %
@@ -41,7 +41,7 @@ function sample_data = timeDriftPP(sample_data, qcLevel, auto)
 %     * Redistributions in binary form must reproduce the above copyright
 %       notice, this list of conditions and the following disclaimer in the
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors
+%     * Neither the name of the AODN/IMOS nor the names of its contributors
 %       may be used to endorse or promote products derived from this software
 %       without specific prior written permission.
 %
@@ -70,7 +70,12 @@ if strcmpi(qcLevel, 'raw'), return; end
 % auto logical in input to enable running under batch processing
 if nargin<3, auto=false; end
 
+%check for CSV file import
+isCSV = false;
 ddb = readProperty('toolbox.ddb');
+if isdir(ddb)
+    isCSV = true;
+end
 
 descs           = {};
 nSample         = length(sample_data);
@@ -84,13 +89,10 @@ for k = 1:nSample
     descs{k} = genSampleDataDesc(sample_data{k});
     
     %check to see if the offsets are available already from the ddb
-    if strcmp('csv',ddb)
+    if isCSV
         if isfield(sample_data{k}.meta.deployment,'StartOffset')
             startOffsets(k) = sample_data{k}.meta.deployment.StartOffset;
         end
-    end
-    
-    if strcmp('csv',ddb)
         if isfield(sample_data{k}.meta.deployment,'EndOffset')
             endOffsets(k) = sample_data{k}.meta.deployment.EndOffset;
         end

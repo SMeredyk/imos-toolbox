@@ -8,7 +8,7 @@ function filename = exportNetCDF( sample_data, dest, mode )
 % Inputs:
 %   sample_data - a struct containing sample data for one process level.
 %   dest        - Destination directory to save the file.
-%   mode        - Toolbox data type mode ('profile' or 'timeSeries').
+%   mode        - Toolbox data type mode.
 %
 % Outputs:
 %   filename    - String containing the absolute path of the saved NetCDF file.
@@ -19,7 +19,7 @@ function filename = exportNetCDF( sample_data, dest, mode )
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -31,7 +31,7 @@ function filename = exportNetCDF( sample_data, dest, mode )
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -53,7 +53,7 @@ function filename = exportNetCDF( sample_data, dest, mode )
   if ~ischar(dest),          error('dest must be a string');        end
 
   % check that destination is a directory
-  [stat atts] = fileattrib(dest);
+  [stat, atts] = fileattrib(dest);
   if ~stat || ~atts.directory || ~atts.UserWrite
     error([dest ' does not exist, is not a directory, or is not writeable']);
   end
@@ -299,7 +299,7 @@ function filename = exportNetCDF( sample_data, dest, mode )
           fprintf('%s\n', ['Warning : in ' filename ', the variable ' ...
               varname ' has been created with a chunk size not ' ...
               'optimised for any 2D representation (slower performance).' ...
-              ' Please inform eMII.']);
+              ' Please inform AODN.']);
       end
       
       if ~isempty(dimLen)
@@ -474,7 +474,7 @@ function vid = addQCVar(...
 %                 coordinate variables and data variables.
 %   netcdfType  - The netCDF type in which the flags should be output.
 %   dateFmt     - Date format in which date attributes should be output.
-%   mode        - Toolbox processing mode ('profile' or 'timeSeries').
+%   mode        - Toolbox processing mode.
 %
 % Outputs:
 %   vid         - NetCDF variable identifier of the QC variable that was 
@@ -545,7 +545,7 @@ function vid = addQCVar(...
       case 'profile'
           iInWater = true(size(sample_data.(type){varIdx}.data));
           
-      otherwise
+      case 'timeSeries'
           % inOutWater test don't apply on dimensions for timeseries data
           if ~strcmp(type, 'variables') || any(strcmp(sample_data.(type){varIdx}.name, {'TIMESERIES', 'PROFILE', 'TRAJECTORY', 'LATITUDE', 'LONGITUDE', 'NOMINAL_DEPTH'}))
               iInWater = true(size(sample_data.(type){varIdx}.data));
@@ -630,7 +630,7 @@ function putAtts(fid, vid, var, template, templateFile, netcdfType, dateFmt, mod
 %                  originated.
 %   netcdfType   - type to use for casting valid_min/valid_max/_FillValue attributes.
 %   dateFmt      - format to use for writing date attributes.
-%   mode         - Toolbox processing mode ('profile' or 'timeSeries').
+%   mode         - Toolbox processing mode.
 %  
 
   % we convert the NetCDF required data type into a casting function towards the
@@ -644,6 +644,10 @@ function putAtts(fid, vid, var, template, templateFile, netcdfType, dateFmt, mod
 
   % each att is a struct field
   atts = fieldnames(template);
+  
+  % let's process them in the alphabetical order regardless of the case
+  [~, iSort] = sort(lower(atts));
+  atts = atts(iSort);
   for k = 1:length(atts)
 
     name = atts{k};

@@ -20,7 +20,7 @@ function filename = genIMOSFileName( sample_data, suffix )
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -32,7 +32,7 @@ function filename = genIMOSFileName( sample_data, suffix )
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -58,15 +58,14 @@ function filename = genIMOSFileName( sample_data, suffix )
   %
   dateFmt = readProperty('exportNetCDF.fileDateFormat');
 
-  % get the toolbox execution mode. Values can be 'timeSeries' and 'profile'. 
-  % If no value is set then default mode is 'timeSeries'
+  % get the toolbox execution mode
   mode = readProperty('toolbox.mode');
   
   % get default config, and file config
   defCfg  = genDefaultFileNameConfig(sample_data, dateFmt, mode);
   fileCfg = readFileNameConfig(sample_data);
   
-  switch lower(mode)
+  switch mode
       case 'profile'
           % build the file name
           if strcmpi(suffix, 'png')
@@ -86,7 +85,7 @@ function filename = genIMOSFileName( sample_data, suffix )
               filename = [filename        getVal(fileCfg, defCfg, 'product_type')  '_'];
               filename = [filename 'C-'   getVal(fileCfg, defCfg, 'creation_date')    ];
           end
-      otherwise
+      case 'timeSeries'
           % build the file name
           if strcmpi(suffix, 'png')
               filename = [sample_data.naming_authority '_'];
@@ -190,12 +189,12 @@ function config = genDefaultFileNameConfig(sample_data, dateFmt, mode)
   config.file_version  = imosFileVersion(sample_data.meta.level, 'fileid');
   
   % <product_type>
-  switch lower(mode)
+  switch mode
       case 'profile'
           config.product_type  = ['Profile-' ...
               sample_data.meta.instrument_model];
           
-      otherwise
+      case 'timeSeries'
           config.product_type  = [...
               sample_data.meta.site_id '-' ...
               sample_data.meta.instrument_model    '-' ...

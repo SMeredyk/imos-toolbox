@@ -8,7 +8,7 @@ function [sample_data, cancel] = preprocessManager( sample_data, qcLevel, mode, 
 % Inputs:
 %   sample_data - cell array of sample_data structs.
 %   qcLevel     - string, 'raw' or 'qc'. Some pp not applied when 'raw'.
-%   mode        - string, 'timeSerie' or 'profile'.
+%   mode        - string, toolbox execution mode.
 %   auto        - logical, check if pre-processing in batch mode.
 %
 % Outputs:
@@ -23,7 +23,7 @@ function [sample_data, cancel] = preprocessManager( sample_data, qcLevel, mode, 
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -35,7 +35,7 @@ function [sample_data, cancel] = preprocessManager( sample_data, qcLevel, mode, 
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -78,14 +78,7 @@ function [sample_data, cancel] = preprocessManager( sample_data, qcLevel, mode, 
   
   % get default filter chain if there is one
   try
-      switch mode
-          case 'profile'
-              ppChain = ...
-                  textscan(readProperty('preprocessManager.preprocessChain.profile'), '%s');
-          otherwise
-              ppChain = ...
-                  textscan(readProperty('preprocessManager.preprocessChain.timeSeries'), '%s');
-      end
+      ppChain = textscan(readProperty(['preprocessManager.preprocessChain.' mode]), '%s');
       ppChain = ppChain{1};
   catch e
   end
@@ -115,14 +108,8 @@ function [sample_data, cancel] = preprocessManager( sample_data, qcLevel, mode, 
       % save user's latest selection for next time - turn the ppChain
       % cell array into a space-separated string of the names
       ppChainStr = cellfun(@(x)([x ' ']), ppChain, 'UniformOutput', false);
-      switch mode
-          case 'profile'
-              writeProperty('preprocessManager.preprocessChain.profile', ...
-                  deblank([ppChainStr{:}]));
-          otherwise
-              writeProperty('preprocessManager.preprocessChain.timeSeries', ...
-                  deblank([ppChainStr{:}]));
-      end
+      writeProperty(['preprocessManager.preprocessChain.' mode], ...
+          deblank([ppChainStr{:}]));
   end
   
   if ~isempty(ppChain)
@@ -198,8 +185,7 @@ function [ppRoutines, ppChain] = setDefaultRoutines(filterName)
   ppRoutines = listPreprocessRoutines();
   ppChain    = {};
   
-  % get the toolbox execution mode. Values can be 'timeSeries' and 'profile'. 
-  % If no value is set then default mode is 'timeSeries'
+  % get the toolbox execution mode
   mode = readProperty('toolbox.mode');
   
   % get default filter chain if there is one

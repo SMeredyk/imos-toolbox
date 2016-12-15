@@ -20,7 +20,7 @@ function lineMooring2DVarSection(sample_data, varName, timeValue, isQC, saveToFi
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -32,7 +32,7 @@ function lineMooring2DVarSection(sample_data, varName, timeValue, isQC, saveToFi
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -57,11 +57,8 @@ if ~islogical(isQC),        error('isQC must be a logical');            end
 if ~islogical(saveToFile),  error('saveToFile must be a logical');      end
 if ~ischar(exportDir),      error('exportDir must be a string');        end
 
-%plot depth information
-monitorRec = get(0,'MonitorPosition');
-xResolution = monitorRec(:, 3)-monitorRec(:, 1);
-iBigMonitor = xResolution == max(xResolution);
-if sum(iBigMonitor)==2, iBigMonitor(2) = false; end % in case exactly same monitors
+monitorRect = getRectMonitor();
+iBigMonitor = getBiggestMonitor();
 
 iVar = getVar(sample_data.variables, varName);
 title = [sample_data.variables{iVar}.name ' section of ' sample_data.deployment_code ' at ' datestr(timeValue, 'yyyy-mm-dd HH:MM:SS UTC')];
@@ -120,23 +117,25 @@ backgroundColor = [0.75 0.75 0.75];
 if iVar > 0
     if initiateFigure
         fileName = genIMOSFileName(sample_data, 'png');
-        visible = 'on';
-        if saveToFile, visible = 'off'; end
         hFigVarSection = figure(...
             'Name', title, ...
             'NumberTitle','off', ...
-            'Visible', visible, ...
-            'OuterPosition', [0, 0, monitorRec(iBigMonitor, 3), monitorRec(iBigMonitor, 4)]);
+            'OuterPosition', monitorRect(iBigMonitor, :));
         
+        % create uipanel within figure so that screencapture can be
+        % used on the plot only and without capturing all of the figure
+        % (including buttons, menus...)
+        hPanelVarSection = uipanel('Parent', hFigVarSection);
+            
         initiateFigure = false;
     end
     
-    hAxCastVar = axes;
-    set(get(hAxCastVar, 'Title'), 'String', title, 'Interpreter', 'none');
-    set(get(hAxCastVar, 'XLabel'), 'String', [varTitle ' (' varUnit ')'], 'Interpreter', 'none');
-    set(get(hAxCastVar, 'YLabel'), 'String', [dimTitle ' (' dimUnit ')'], 'Interpreter', 'none');
+    hAxVarSection = axes('Parent', hPanelVarSection);
+    set(get(hAxVarSection, 'Title'), 'String', title, 'Interpreter', 'none');
+    set(get(hAxVarSection, 'XLabel'), 'String', [varTitle ' (' varUnit ')'], 'Interpreter', 'none');
+    set(get(hAxVarSection, 'YLabel'), 'String', [dimTitle ' (' dimUnit ')'], 'Interpreter', 'none');
     
-    hold(hAxCastVar, 'on');
+    hold(hAxVarSection, 'on');
     
     % dummy entry for first entry in legend
     hLineVar(1) = plot(0, 0, 'o', 'color', backgroundColor, 'Visible', 'off'); % color grey same as background (invisible)
@@ -148,8 +147,8 @@ if iVar > 0
         yLine, ...
         'LineStyle', '-');
     
-    xLim = get(hAxCastVar, 'XLim');
-    yLim = get(hAxCastVar, 'YLim');
+    xLim = get(hAxVarSection, 'XLim');
+    yLim = get(hAxVarSection, 'YLim');
     
     %get var QC information
     varFlags = sample_data.variables{iVar}.flags(iX);
@@ -241,13 +240,13 @@ if iVar > 0
     
     % Let's redefine properties after line to make sure grid lines appear
     % above color data and XTick and XTickLabel haven't changed
-    set(hAxCastVar, ...
+    set(hAxVarSection, ...
         'XGrid',        'on', ...
         'YGrid',        'on', ...
         'Layer',        'top');
     
     % set background to be grey
-    set(hAxCastVar, 'Color', backgroundColor)
+    set(hAxVarSection, 'Color', backgroundColor)
 end
 
 if ~initiateFigure
@@ -261,7 +260,7 @@ if ~initiateFigure
     instrumentDesc = [instrumentDesc; flagDesc];
     % Matlab >R2015 legend entries for data which are not plotted 
 	% will be shown with reduced opacity
-    hLegend = legend(hAxCastVar, ...
+    hLegend = legend(hAxVarSection, ...
         hLineVar,       regexprep(instrumentDesc,'_','\_'), ...
         'Interpreter',  'none', ...
         'Location',     'SouthOutside');
@@ -269,20 +268,9 @@ if ~initiateFigure
 end
     
 if saveToFile
-    % ensure the printed version is the same whatever the screen used.
-    set(hFigVarSection, 'PaperPositionMode', 'manual');
-    set(hFigVarSection, 'PaperType', 'A4', 'PaperOrientation', 'landscape', 'PaperUnits', 'normalized', 'PaperPosition', [0, 0, 1, 1]);
-    
-    % preserve the color scheme
-    set(hFigVarSection, 'InvertHardcopy', 'off');
-    
     fileName = strrep(fileName, '_PLOT-TYPE_', '_LINE_'); % IMOS_[sub-facility_code]_[platform_code]_FV01_[time_coverage_start]_[PLOT-TYPE]_C-[creation_date].png
     
-    % use hardcopy as a trick to go faster than print.
-    % opengl (hardware or software) should be supported by any platform and go at least just as
-    % fast as zbuffer. With hardware accelaration supported, could even go a
-    % lot faster.
-    imwrite(hardcopy(hFigVarSection, '-dopengl'), fullfile(exportDir, fileName), 'png');
+    fastSaveas(hFigVarSection, hPanelVarSection, fullfile(exportDir, fileName));
     
     close(hFigVarSection);
 end

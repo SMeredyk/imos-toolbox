@@ -23,7 +23,7 @@ function sample_data = salinityPP( sample_data, qcLevel, auto )
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -35,7 +35,7 @@ function sample_data = salinityPP( sample_data, qcLevel, auto )
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -97,6 +97,9 @@ for k = 1:length(sample_data)
   
   cndc = sam.variables{cndcIdx}.data;
   temp = sam.variables{tempIdx}.data;
+  
+  % pressure information used for Salinity computation is from the
+  % PRES or PRES_REL variables in priority
   if isPresVar
       if presRelIdx > 0
           presRel = sam.variables{presRelIdx}.data;
@@ -109,28 +112,40 @@ for k = 1:length(sample_data)
           presName = 'PRES substracting a constant value 10.1325 dbar for nominal atmospheric pressure';
       end
   else
+      % when no pressure variable exists, we use depth information either 
+      % from the DEPTH variable or from the instrument_nominal_depth 
+      % global attribute
       if depthIdx > 0
+          % with depth data
           depth = sam.(depthType){depthIdx}.data;
-          if ~isempty(sam.geospatial_lat_min) && ~isempty(sam.geospatial_lat_max)
-              % compute depth with Gibbs-SeaWater toolbox
-              % relative_pressure ~= gsw_p_from_z(-depth, latitude)
-              if sam.geospatial_lat_min == sam.geospatial_lat_max
-                  presRel = gsw_p_from_z(-depth, sam.geospatial_lat_min);
-              else
-                  meanLat = sam.geospatial_lat_min + ...
-                      (sam.geospatial_lat_max - sam.geospatial_lat_min)/2;
-                  presRel = gsw_p_from_z(-depth, meanLat);
-              end
-              presName = 'DEPTH';
-          else
-              % without latitude information, we assume 1dbar ~= 1m
-              presRel = depth;
-              presName = 'DEPTH (assuming 1 m ~ 1 dbar)';
-          end
-          
+          presName = 'DEPTH';
       else
-          presRel = sam.instrument_nominal_depth*ones(size(temp));
-          presName = 'instrument_nominal_depth (assuming 1 m ~ 1 dbar)';
+          % with nominal depth information
+          depth = sam.instrument_nominal_depth*ones(size(temp));
+          presName = 'instrument_nominal_depth';
+      end
+      
+      % any depth values <= -5 are discarded (reminder, depth is
+      % positive down), this allow use of gsw_p_from_z without error.
+      depth(depth <= -5) = NaN;
+      
+      % pressure information needed for Salinity computation is either
+      % retrieved from gsw_p_from_z when latitude is available or by 
+      % simply assuming 1dbar ~= 1m
+      if ~isempty(sam.geospatial_lat_min) && ~isempty(sam.geospatial_lat_max)
+          % compute depth with Gibbs-SeaWater toolbox
+          % relative_pressure ~= gsw_p_from_z(-depth, latitude)
+          if sam.geospatial_lat_min == sam.geospatial_lat_max
+              presRel = gsw_p_from_z(-depth, sam.geospatial_lat_min);
+          else
+              meanLat = sam.geospatial_lat_min + ...
+                  (sam.geospatial_lat_max - sam.geospatial_lat_min)/2;
+              presRel = gsw_p_from_z(-depth, meanLat);
+          end
+      else
+          % without latitude information, we assume 1dbar ~= 1m
+          presRel = depth;
+          presName = [presName ' (assuming 1 m ~ 1 dbar)'];
       end
   end
   

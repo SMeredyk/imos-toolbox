@@ -24,8 +24,8 @@ function sample_data = aquatecParse( filename, mode )
 % If the logger was configured to use burst mode, the bursts are averaged.
 %
 % Inputs:
-%   filename - cell array of filename names (Only supports one currently).
-%   mode        - Toolbox data type mode ('profile' or 'timeSeries').
+%   filename    - cell array of filename names (Only supports one currently).
+%   mode        - Toolbox data type mode.
 %
 % Outputs:
 %   sample_data - struct containing sample data.
@@ -36,7 +36,7 @@ function sample_data = aquatecParse( filename, mode )
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated
 % Marine Observing System (IMOS).
 % All rights reserved.
 %
@@ -48,7 +48,7 @@ function sample_data = aquatecParse( filename, mode )
 %     * Redistributions in binary form must reproduce the above copyright
 %       notice, this list of conditions and the following disclaimer in the
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors
+%     * Neither the name of the AODN/IMOS nor the names of its contributors
 %       may be used to endorse or promote products derived from this software
 %       without specific prior written permission.
 %

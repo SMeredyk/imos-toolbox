@@ -19,7 +19,7 @@ function sample_data = adcpNortekVelocityBeam2EnuPP( sample_data, qcLevel, auto 
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -31,7 +31,7 @@ function sample_data = adcpNortekVelocityBeam2EnuPP( sample_data, qcLevel, auto 
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -169,6 +169,29 @@ for k = 1:length(sample_data)
         else
             sample_data{k}.variables{curIdx}.comment = [sample_data{k}.variables{curIdx}.comment ' ' Beam2EnuComment];
         end
+    end
+    
+    % let's look for remaining variables assigned to DIST_ALONG_BEAMS,
+    % if none we can remove this dimension
+    isDistAlongBeamsUsed = false;
+    for j=1:length(sample_data{k}.variables)
+        if any(sample_data{k}.variables{j}.dimensions == distAlongBeamsIdx)
+            isDistAlongBeamsUsed = true;
+            break;
+        end
+    end
+    if ~isDistAlongBeamsUsed
+        if length(sample_data{k}.dimensions) > distAlongBeamsIdx
+            for j=1:length(sample_data{k}.variables)
+                dimToUpdate = sample_data{k}.variables{j}.dimensions > distAlongBeamsIdx;
+                if any(dimToUpdate)
+                    sample_data{k}.variables{j}.dimensions(dimToUpdate) = sample_data{k}.variables{j}.dimensions(dimToUpdate) - 1;
+                end
+            end
+        end
+        sample_data{k}.dimensions(distAlongBeamsIdx) = [];
+        
+        Beam2EnuComment = [Beam2EnuComment ' DIST_ALONG_BEAMS is not used by any variable left and has been removed.'];
     end
     
     if ~isfield(sample_data{k}, 'history')

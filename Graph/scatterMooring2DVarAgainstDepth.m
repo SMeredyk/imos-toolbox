@@ -18,7 +18,7 @@ function scatterMooring2DVarAgainstDepth(sample_data, varName, isQC, saveToFile,
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated
 % Marine Observing System (IMOS).
 % All rights reserved.
 %
@@ -30,7 +30,7 @@ function scatterMooring2DVarAgainstDepth(sample_data, varName, isQC, saveToFile,
 %     * Redistributions in binary form must reproduce the above copyright
 %       notice, this list of conditions and the following disclaimer in the
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors
+%     * Neither the name of the AODN/IMOS nor the names of its contributors
 %       may be used to endorse or promote products derived from this software
 %       without specific prior written permission.
 %
@@ -54,25 +54,29 @@ if ~islogical(isQC),        error('isQC must be a logical');            end
 if ~islogical(saveToFile),  error('saveToFile must be a logical');      end
 if ~ischar(exportDir),      error('exportDir must be a string');        end
 
-varTitle = imosParameters(varName, 'long_name');
-varUnit = imosParameters(varName, 'uom');
-
 if any(strcmpi(varName, {'DEPTH', 'PRES', 'PRES_REL'}))
     return;
 end
 
-stringQC = 'non QC';
-if isQC, stringQC = 'QC'; end
+monitorRect = getRectMonitor();
+iBigMonitor = getBiggestMonitor();
 
-%plot depth information
-monitorRec = get(0,'MonitorPosition');
-xResolution = monitorRec(:, 3)-monitorRec(:, 1);
-iBigMonitor = xResolution == max(xResolution);
-if sum(iBigMonitor)==2, iBigMonitor(2) = false; end % in case exactly same monitors
+varTitle = imosParameters(varName, 'long_name');
+varUnit = imosParameters(varName, 'uom');
 
-title = [sample_data{1}.deployment_code ' mooring''s instruments ' stringQC '''d good ' varTitle];
+stringQC = 'all';
+if isQC, stringQC = 'only good and non QC''d'; end
 
-%sort instruments by depth
+title = [sample_data{1}.deployment_code ' mooring''s instruments ' stringQC ' ' varTitle];
+
+% retrieve good flag values
+qcSet     = str2double(readProperty('toolbox.qc_set'));
+rawFlag   = imosQCFlag('raw', qcSet, 'flag');
+goodFlag  = imosQCFlag('good', qcSet, 'flag');
+pGoodFlag = imosQCFlag('probablyGood', qcSet, 'flag');
+goodFlags = [rawFlag, goodFlag, pGoodFlag];
+
+% sort instruments by depth
 lenSampleData = length(sample_data);
 metaDepth = nan(lenSampleData, 1);
 xMin = nan(lenSampleData, 1);
@@ -95,10 +99,10 @@ for i=1:lenSampleData
         timeFlags = sample_data{i}.dimensions{iTime}.flags;
         varFlags = sample_data{i}.variables{iVar}.flags;
         
-        iGoodTime = (timeFlags == 1 | timeFlags == 2);
+        iGoodTime = ismember(timeFlags, goodFlags);
         
         iGood = repmat(iGoodTime, [1, size(sample_data{i}.variables{iVar}.data, 2)]);
-        iGood = iGood & (varFlags == 1 | varFlags == 2) & ~isnan(sample_data{i}.variables{iVar}.data);
+        iGood = iGood & ismember(varFlags, goodFlags) & ~isnan(sample_data{i}.variables{iVar}.data);
         iGood = max(iGood, [], 2); % we only need one good bin
     end
     
@@ -151,10 +155,10 @@ for i=1:lenSampleData
             timeFlags = sample_data{iSort(i)}.dimensions{iTime}.flags;
             varFlags = sample_data{iSort(i)}.variables{iVar}.flags;
             
-            iGoodTime = (timeFlags == 1 | timeFlags == 2);
+            iGoodTime = ismember(timeFlags, goodFlags);
             
             iGood = repmat(iGoodTime, [1, size(sample_data{iSort(i)}.variables{iVar}.data, 2)]);
-            iGood = iGood & (varFlags == 1 | varFlags == 2) & ~isnan(sample_data{iSort(i)}.variables{iVar}.data);
+            iGood = iGood & ismember(varFlags, goodFlags) & ~isnan(sample_data{iSort(i)}.variables{iVar}.data);
         end
         
         if any(any(iGood))
@@ -163,7 +167,7 @@ for i=1:lenSampleData
         end
         
     elseif iVar > 0 && ...
-            any(strcmpi(sample_data{iSort(i)}.variables{iVar}.name, {'UCUR', 'VCUR', 'WCUR', 'CDIR', 'CSPD', 'VEL1', 'VEL2', 'VEL3'})) && ...
+            any(strncmpi(sample_data{iSort(i)}.variables{iVar}.name, {'UCUR', 'VCUR', 'WCUR', 'CDIR', 'CSPD', 'VEL1', 'VEL2', 'VEL3'}, 4)) && ...
             size(sample_data{iSort(i)}.variables{iVar}.data, 2) == 1 % we're plotting current metre 1D variables with DEPTH variable.
         iGood = true(size(sample_data{iSort(i)}.variables{iVar}.data));
         if isQC
@@ -171,10 +175,10 @@ for i=1:lenSampleData
             timeFlags = sample_data{iSort(i)}.dimensions{iTime}.flags;
             varFlags = sample_data{iSort(i)}.variables{iVar}.flags;
             
-            iGoodTime = (timeFlags == 1 | timeFlags == 2);
+            iGoodTime = ismember(timeFlags, goodFlags);
             
             iGood = repmat(iGoodTime, [1, size(sample_data{iSort(i)}.variables{iVar}.data, 2)]);
-            iGood = iGood & (varFlags == 1 | varFlags == 2) & ~isnan(sample_data{iSort(i)}.variables{iVar}.data);
+            iGood = iGood & ismember(varFlags, goodFlags) & ~isnan(sample_data{iSort(i)}.variables{iVar}.data);
         end
         
         if any(any(iGood))
@@ -255,15 +259,17 @@ if any(isPlottable)
         if isPlottable(i)
             if initiateFigure
                 fileName = genIMOSFileName(sample_data{iSort(i)}, 'png');
-                visible = 'on';
-                if saveToFile, visible = 'off'; end
                 hFigMooringVar = figure(...
                     'Name', title, ...
                     'NumberTitle', 'off', ...
-                    'Visible', visible, ...
-                    'OuterPosition', [0, 0, monitorRec(iBigMonitor, 3), monitorRec(iBigMonitor, 4)]);
+                    'OuterPosition', monitorRect(iBigMonitor, :));
                 
-                hAxMooringVar = axes('Parent',   hFigMooringVar);
+                % create uipanel within figure so that screencapture can be
+                % used on the plot only and without capturing all of the figure
+                % (including buttons, menus...)
+                hPanelMooringVar = uipanel('Parent', hFigMooringVar);
+                hAxMooringVar = axes('Parent', hPanelMooringVar);
+            
                 set(hAxMooringVar, 'YDir', 'reverse');
                 set(get(hAxMooringVar, 'XLabel'), 'String', 'Time');
                 set(get(hAxMooringVar, 'YLabel'), 'String', 'DEPTH (m)', 'Interpreter', 'none');
@@ -311,13 +317,13 @@ if any(isPlottable)
                 
                 if iDepth
                     depthFlags = sample_data{iSort(i)}.variables{iDepth}.flags;
-                    iGoodDepth = (depthFlags == 1 | depthFlags == 2);
+                    iGoodDepth = ismember(depthFlags, goodFlags);
                 end
                 
-                iGoodTime = (timeFlags == 1 | timeFlags == 2);
+                iGoodTime = ismember(timeFlags, goodFlags);
                 
                 iGood = repmat(iGoodTime, [1, size(sample_data{iSort(i)}.variables{iVar}.data, 2)]);
-                iGood = iGood & (varFlags == 1 | varFlags == 2) & ~isnan(varValues);
+                iGood = iGood & ismember(varFlags, goodFlags) & ~isnan(varValues);
             end
             
             iGoodHeight = any(iGood, 1);
@@ -382,19 +388,20 @@ if any(isPlottable)
                             dataVar(:, j), ...
                             markerStyle{mod(i, lenMarkerStyle)+1}, ...
                             CLim,...
-                            'DisplayName',instrumentDesc{i+1},...
-                            'UserData', userData);
+                            'DisplayName', instrumentDesc{i+1}, ...
+                            'MarkerSize',  2.5, ...
+                            'UserData',    userData);
                     else
                         % faster than scatter, but legend requires adjusting
-                        h = fastScatterMesh( hAxMooringVar,...
-                            xScatter,...
-                            dataDepth - yScatter(j),...
-                            dataVar(:, j),...
-                            CLim,...
-                            'Marker',markerStyle{mod(i, lenMarkerStyle)+1},...
-                            'MarkerSize',2.5,...
-                            'DisplayName',instrumentDesc{i+1},...
-                            'UserData', userData);
+                        h = fastScatterMesh( hAxMooringVar, ...
+                            xScatter, ...
+                            dataDepth - yScatter(j), ...
+                            dataVar(:, j), ...
+                            CLim, ...
+                            'Marker',      markerStyle{mod(i, lenMarkerStyle)+1}, ...
+                            'DisplayName', instrumentDesc{i+1}, ...
+                            'MarkerSize',  2.5, ...
+                            'UserData',    userData);
                     end
                     clear('userData');
                     
@@ -456,7 +463,9 @@ if ~initiateFigure
         'anchor', [6 2], ...
         'buffer', [0 -hYBuffer], ...
         'ncol', nCols,...
-        'FontSize', fontSizeAx,'xscale',xscale);
+        'FontSize', fontSizeAx, ...
+        'xscale',xscale, ...
+        'parent', hPanelMooringVar);
     
     % if used mesh for scatter plot then have to clean up legend
     % entries
@@ -484,21 +493,11 @@ if ~initiateFigure
     %     set(hLegend, 'Box', 'off', 'Color', 'none');
     
     if saveToFile
-        % ensure the printed version is the same whatever the screen used.
-        set(hFigMooringVar, 'PaperPositionMode', 'manual');
-        set(hFigMooringVar, 'PaperType', 'A4', 'PaperOrientation', 'landscape', 'PaperUnits', 'normalized', 'PaperPosition', [0, 0, 1, 1]);
-        
-        % preserve the color scheme
-        set(hFigMooringVar, 'InvertHardcopy', 'off');
-        
         fileName = strrep(fileName, '_PARAM_', ['_', varName, '_']); % IMOS_[sub-facility_code]_[site_code]_FV01_[deployment_code]_[PLOT-TYPE]_[PARAM]_C-[creation_date].png
         fileName = strrep(fileName, '_PLOT-TYPE_', '_SCATTER_');
         
-        % use hardcopy as a trick to go faster than print.
-        % opengl (hardware or software) should be supported by any platform and go at least just as
-        % fast as zbuffer. With hardware accelaration supported, could even go a
-        % lot faster.
-        imwrite(hardcopy(hFigMooringVar, '-dopengl'), fullfile(exportDir, fileName), 'png');
+        fastSaveas(hFigMooringVar, hPanelMooringVar, fullfile(exportDir, fileName));
+        
         close(hFigMooringVar);
     end
 end
@@ -550,7 +549,7 @@ end
                 xUnits  = sam.variables{ixVar}.units;
             end
             if strcmp(xName, 'TIME')
-                xStr = datestr(posClic(1),'yyyy-mm-dd HH:MM:SS.FFF');
+                xStr = datestr(posClic(1),'dd-mm-yyyy HH:MM:SS.FFF');
             else
                 xStr = [num2str(posClic(1)) ' ' xUnits];
             end
@@ -568,7 +567,7 @@ end
                 yUnits  = sam.variables{iyVar}.units;
             end
             if strcmp(yName, 'TIME')
-                yStr = datestr(posClic(2),'yyyy-mm-dd HH:MM:SS.FFF');
+                yStr = datestr(posClic(2),'dd-mm-yyyy HH:MM:SS.FFF');
             else
                 yStr = [num2str(posClic(2)) ' ' yUnits]; %num2str(posClic(2),4)
             end
@@ -592,7 +591,7 @@ end
             timeData = sam.dimensions{iTime}.data;
             idx = find(abs(timeData-posClic(1))<eps(10));
             if strcmp(zName, 'TIME')
-                zStr = datestr(zData(idx),'yyyy-mm-dd HH:MM:SS.FFF');
+                zStr = datestr(zData(idx),'dd-mm-yyyy HH:MM:SS.FFF');
             else
                 zStr = [num2str(zData(idx,userData.jHeight)) ' (' zUnits ')'];
             end
@@ -617,7 +616,11 @@ end
 
 %%
     function zoomDateTick(obj,event_obj,hAx)
-        datetick(hAx,'x','dd-mm-yy HH:MM:SS','keeplimits')
+        xLim = get(hAx, 'XLim');
+        currXTicks = get(hAx, 'xtick');
+        newXTicks = linspace(xLim(1), xLim(2), length(currXTicks));
+        set(hAx, 'xtick', newXTicks);
+        datetick(hAx,'x','dd-mm-yy HH:MM:SS','keepticks');
     end
 
 end

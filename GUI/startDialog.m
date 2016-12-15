@@ -10,7 +10,7 @@ function [fieldTrip dataDir] = startDialog(mode, isCSV)
 %
 % Input:
 %
-%   mode - String, toolox execution mode can be 'profile' or 'timeSeries'.
+%   mode - String, toolox execution mode.
 %   isCSV - optional boolean (default = false). True if importing from csv files.
 %   
 % Outputs:
@@ -25,7 +25,7 @@ function [fieldTrip dataDir] = startDialog(mode, isCSV)
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -37,7 +37,7 @@ function [fieldTrip dataDir] = startDialog(mode, isCSV)
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -62,18 +62,10 @@ function [fieldTrip dataDir] = startDialog(mode, isCSV)
   dateFmt     = readProperty('toolbox.dateFormat');
     
   % if values exist for data dir and field trip, use them
-  switch mode
-      case 'profile'
-          dataDir     =            readProperty('startDialog.dataDir.profile');
-          fieldTripId =            readProperty('startDialog.fieldTrip.profile');
-          lowDate     = str2double(readProperty('startDialog.lowDate.profile'));
-          highDate    = str2double(readProperty('startDialog.highDate.profile'));
-      otherwise
-          dataDir     =            readProperty('startDialog.dataDir.timeSeries');
-          fieldTripId =            readProperty('startDialog.fieldTrip.timeSeries');
-          lowDate     = str2double(readProperty('startDialog.lowDate.timeSeries'));
-          highDate    = str2double(readProperty('startDialog.highDate.timeSeries'));
-  end
+  dataDir     =            readProperty(['startDialog.dataDir.' mode]);
+  fieldTripId =            readProperty(['startDialog.fieldTrip.' mode]);
+  lowDate     = str2double(readProperty(['startDialog.lowDate.' mode]));
+  highDate    = str2double(readProperty(['startDialog.highDate.' mode]));
 
   % otherwise use default values
   if isempty(dataDir),      dataDir = pwd;      end
@@ -83,10 +75,11 @@ function [fieldTrip dataDir] = startDialog(mode, isCSV)
 
   % retrieve all field trip IDs; they are displayed as a drop down menu
   if isCSV
-      fieldTrips = executeCSVQuery('FieldTrip', [], []);
+      executeQueryFunc = @executeCSVQuery;
   else
-      fieldTrips = executeDDBQuery('FieldTrip', [], []);
+      executeQueryFunc = @executeDDBQuery;
   end
+  fieldTrips = executeQueryFunc('FieldTrip', [], []);
   
   if isempty(fieldTrips), error('No field trip entries in DDB'); end
   
@@ -342,18 +335,10 @@ function [fieldTrip dataDir] = startDialog(mode, isCSV)
   if isempty(dataDir) || isempty(fieldTrip), return; end
   
   % persist the user's directory and field trip selection
-  switch mode
-      case 'profile'
-          writeProperty('startDialog.dataDir.profile',   dataDir);
-          writeProperty('startDialog.fieldTrip.profile', fieldTrip.FieldTripID);
-          writeProperty('startDialog.lowDate.profile',   num2str(lowDate));
-          writeProperty('startDialog.highDate.profile',  num2str(highDate));
-      otherwise
-          writeProperty('startDialog.dataDir.timeSeries',   dataDir);
-          writeProperty('startDialog.fieldTrip.timeSeries', fieldTrip.FieldTripID);
-          writeProperty('startDialog.lowDate.timeSeries',   num2str(lowDate));
-          writeProperty('startDialog.highDate.timeSeries',  num2str(highDate));
-  end
+  writeProperty(['startDialog.dataDir.' mode],   dataDir);
+  writeProperty(['startDialog.fieldTrip.' mode], fieldTrip.FieldTripID);
+  writeProperty(['startDialog.lowDate.' mode],   num2str(lowDate));
+  writeProperty(['startDialog.highDate.' mode],  num2str(highDate));
   
 end
 

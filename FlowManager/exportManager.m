@@ -18,7 +18,7 @@ function exportManager(dataSets, levelNames, output, auto)
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -30,7 +30,7 @@ function exportManager(dataSets, levelNames, output, auto)
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -75,9 +75,8 @@ function exportManager(dataSets, levelNames, output, auto)
     otherwise,     error(['unknown output type: ' output]);
   end
     
-  % get the toolbox execution mode. Values can be 'timeSeries' and 'profile'. 
-  % If no value is set then default mode is 'timeSeries'
-  mode = lower(readProperty('toolbox.mode'));
+  % get the toolbox execution mode
+  mode = readProperty('toolbox.mode');
   
   setNames = {};
   for k = 1:numSets
@@ -120,7 +119,8 @@ function exportManager(dataSets, levelNames, output, auto)
             filenames{end+1} = exportRawData(dataSets{k}, exportDir, setNames{k});
       end
       if ~auto
-          waitbar(k / nDataSets, progress, ['Exported ' filenames{end}]);
+          [~, radFile, ext] = fileparts(filenames{end});
+          waitbar(k / nDataSets, progress, [radFile ext]);
       end
       
     catch e
@@ -246,38 +246,39 @@ end
 
 paramsName = unique(paramsName);
 
-if strcmpi(mode, 'timeseries')
-    % we get rid of specific parameters
-    notNeededParams = {'TIMESERIES', 'PROFILE', 'TRAJECTORY', 'LATITUDE', 'LONGITUDE', 'NOMINAL_DEPTH'};
-    for i=1:length(notNeededParams)
-        iNotNeeded = strcmpi(paramsName, notNeededParams{i});
-        paramsName(iNotNeeded) = [];
-    end
-    
-    % timeseries specific plots
-    nParams = length(paramsName);
-    for i=1:nParams
-        if ~auto
-            waitbar(i / nParams, progress, ['Exporting ' paramsName{i} ' plots']);
+switch mode
+    case 'timeSeries'
+        % we get rid of specific parameters
+        notNeededParams = {'TIMESERIES', 'PROFILE', 'TRAJECTORY', 'LATITUDE', 'LONGITUDE', 'NOMINAL_DEPTH'};
+        for i=1:length(notNeededParams)
+            iNotNeeded = strcmpi(paramsName, notNeededParams{i});
+            paramsName(iNotNeeded) = [];
         end
+        
+        % timeseries specific plots
+        nParams = length(paramsName);
+        for i=1:nParams
+            if ~auto
+                waitbar(i / nParams, progress, ['Exporting ' paramsName{i} ' plots']);
+            end
+            try
+                lineMooring1DVar(sample_data, paramsName{i}, true, true, exportDir);
+                scatterMooring1DVarAgainstDepth(sample_data, paramsName{i}, true, true, exportDir);
+                scatterMooring2DVarAgainstDepth(sample_data, paramsName{i}, true, true, exportDir);
+                %pcolorMooring2DVar(sample_data, paramsName{i}, true, true, exportDir);
+            catch e
+                errorString = getErrorString(e);
+                fprintf('%s\n',   ['Error says : ' errorString]);
+            end
+        end
+    case 'profile'
+        % profile specific plots
         try
-            lineMooring1DVar(sample_data, paramsName{i}, true, true, exportDir);
-            scatterMooring1DVarAgainstDepth(sample_data, paramsName{i}, true, true, exportDir);
-            scatterMooring2DVarAgainstDepth(sample_data, paramsName{i}, true, true, exportDir);
-            %pcolorMooring2DVar(sample_data, paramsName{i}, true, true, exportDir);
+            lineCastVar(sample_data, paramsName, true, true, exportDir);
         catch e
             errorString = getErrorString(e);
             fprintf('%s\n',   ['Error says : ' errorString]);
         end
-    end
-else
-    % profile specific plots
-    try
-        lineCastVar(sample_data, paramsName, true, true, exportDir);
-    catch e
-        errorString = getErrorString(e);
-        fprintf('%s\n',   ['Error says : ' errorString]);
-    end
 end
 
 

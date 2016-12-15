@@ -19,7 +19,7 @@ function [sample_data, varChecked, paramsLog] = imosHistoricalManualSetQC( sampl
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated
 % Marine Observing System (IMOS).
 % All rights reserved.
 %
@@ -31,7 +31,7 @@ function [sample_data, varChecked, paramsLog] = imosHistoricalManualSetQC( sampl
 %     * Redistributions in binary form must reproduce the above copyright
 %       notice, this list of conditions and the following disclaimer in the
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors
+%     * Neither the name of the AODN/IMOS nor the names of its contributors
 %       may be used to endorse or promote products derived from this software
 %       without specific prior written permission.
 %
@@ -57,8 +57,15 @@ varChecked = {};
 paramsLog  = [];
 
 % read manual QC file for this dataset
-[mqcPath, mqcFile, ~] = fileparts(sample_data.toolbox_input_file);
-mqcFile = fullfile(mqcPath, [mqcFile, '.mqc']);
+mqcFile = [sample_data.toolbox_input_file, '.mqc'];
+
+% we need to migrate any remnants of the old file naming convention
+% for .mqc files.
+[mqcPath, oldMqcFile, ~] = fileparts(sample_data.toolbox_input_file);
+oldMqcFile = fullfile(mqcPath, [oldMqcFile, '.mqc']);
+if exist(oldMqcFile, 'file')
+    movefile(oldMqcFile, mqcFile);
+end
 
 if exist(mqcFile, 'file')
     load(mqcFile, '-mat', 'mqc');

@@ -23,7 +23,7 @@ function [graphs lines vars] = graphTimeSeries( parent, sample_data, vars )
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -35,7 +35,7 @@ function [graphs lines vars] = graphTimeSeries( parent, sample_data, vars )
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -61,15 +61,14 @@ function [graphs lines vars] = graphTimeSeries( parent, sample_data, vars )
     return; 
   end
   
-  % get the toolbox execution mode. Values can be 'timeSeries' and 'profile'. 
-  % If no value is set then default mode is 'timeSeries'
-  mode = lower(readProperty('toolbox.mode'));
+  % get the toolbox execution mode
+  mode = readProperty('toolbox.mode');
   
   switch mode
       case 'profile'
           % we don't want to plot TIME, PROFILE, DIRECTION, LATITUDE, LONGITUDE, BOT_DEPTH
           p = getVar(sample_data.variables, 'BOT_DEPTH');
-      otherwise
+      case 'timeSeries'
           % we don't want to plot TIMESERIES, PROFILE, TRAJECTORY, LATITUDE, LONGITUDE, NOMINAL_DEPTH
           p = getVar(sample_data.variables, 'NOMINAL_DEPTH');
   end

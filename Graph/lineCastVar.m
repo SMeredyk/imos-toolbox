@@ -18,7 +18,7 @@ function lineCastVar(sample_data, varNames, isQC, saveToFile, exportDir)
 %
 
 %
-% Copyright (c) 2009, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -30,7 +30,7 @@ function lineCastVar(sample_data, varNames, isQC, saveToFile, exportDir)
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -62,15 +62,10 @@ for i=1:length(notNeededParams)
 end
 
 %plot depth information
-monitorRec = get(0,'MonitorPosition');
-xResolution = monitorRec(:, 3)-monitorRec(:, 1);
-iBigMonitor = xResolution == max(xResolution);
-if sum(iBigMonitor)==2, iBigMonitor(2) = false; end % in case exactly same monitors
+monitorRect = getRectMonitor();
+iBigMonitor = getBiggestMonitor();
 
 title = [sample_data{1}.site_code ' profile on ' datestr(sample_data{1}.time_coverage_start, 'yyyy-mm-dd UTC')];
-
-lineStyle = {'-', '--', ':', '-.'};
-lenLineStyle = length(lineStyle);
 
 initiateFigure = true;
 
@@ -132,19 +127,21 @@ for k=1:lenVarNames
         if iVar > 0
             if initiateFigure
                 fileName = genIMOSFileName(sample_data{i}, 'png');
-                visible = 'on';
-                if saveToFile, visible = 'off'; end
                 hFigCastVar = figure(...
                     'Name', title, ...
                     'NumberTitle','off', ...
-                    'Visible', visible, ...
-                    'OuterPosition', [0, 0, monitorRec(iBigMonitor, 3), monitorRec(iBigMonitor, 4)]);
+                    'OuterPosition', monitorRect(iBigMonitor, :));
+                
+                % create uipanel within figure so that screencapture can be
+                % used on the plot only and without capturing all of the figure
+                % (including buttons, menus...)
+                hPanelCastVar = uipanel('Parent', hFigCastVar);
                 
                 initiateFigure = false;
             end
                        
             if i==1
-                hAxCastVar = subplot(1, lenVarNames, k);
+                hAxCastVar = subplot(1, lenVarNames, k, 'Parent', hPanelCastVar);
                 set(hAxCastVar, 'YDir', 'reverse');
                 set(get(hAxCastVar, 'Title'), 'String', title, 'Interpreter', 'none');
                 set(get(hAxCastVar, 'XLabel'), 'String', varName, 'Interpreter', 'none');
@@ -171,8 +168,7 @@ for k=1:lenVarNames
             
             hLineVar(i + 1) = line(dataVar, ...
                 yLine, ...
-                'Color', cMap(i, :), ...
-                'LineStyle', lineStyle{mod(i, lenLineStyle)+1});
+                'Color', cMap(i, :));
             
             xLim = get(hAxCastVar, 'XLim');
             yLim = get(hAxCastVar, 'YLim');
@@ -309,20 +305,9 @@ for k=1:lenVarNames
 end
     
 if saveToFile
-    % ensure the printed version is the same whatever the screen used.
-    set(hFigCastVar, 'PaperPositionMode', 'manual');
-    set(hFigCastVar, 'PaperType', 'A4', 'PaperOrientation', 'landscape', 'PaperUnits', 'normalized', 'PaperPosition', [0, 0, 1, 1]);
-    
-    % preserve the color scheme
-    set(hFigCastVar, 'InvertHardcopy', 'off');
-    
     fileName = strrep(fileName, '_PLOT-TYPE_', '_LINE_'); % IMOS_[sub-facility_code]_[platform_code]_FV01_[time_coverage_start]_[PLOT-TYPE]_C-[creation_date].png
     
-    % use hardcopy as a trick to go faster than print.
-    % opengl (hardware or software) should be supported by any platform and go at least just as
-    % fast as zbuffer. With hardware accelaration supported, could even go a
-    % lot faster.
-    imwrite(hardcopy(hFigCastVar, '-dopengl'), fullfile(exportDir, fileName), 'png');
+    fastSaveas(hFigCastVar, hPanelCastVar, fullfile(exportDir, fileName));
     
     close(hFigCastVar);
 end
