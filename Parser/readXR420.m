@@ -15,7 +15,8 @@ function sample_data = readXR420( filename, mode )
 %
 % Author :      Laurent Besnard <laurent.besnard@utas.edu.au>
 % Contributor : Guillaume Galibert <guillaume.galibert@utas.edu.au>
-
+%				Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
+%
 %
 % Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
@@ -178,7 +179,7 @@ function sample_data = readXR420( filename, mode )
           sample_data.variables{end}.name         = 'TIME';
           sample_data.variables{end}.typeCastFunc = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
           sample_data.variables{end}.data         = sample_data.variables{end}.typeCastFunc([descendingTime, ascendingTime]);
-          sample_data.variables{end}.comment      = 'First value over profile measurement.';
+          sample_data.variables{end}.comment      = 'First value over profile measurement';
           
           sample_data.variables{end+1}.dimensions = dimensions;
           sample_data.variables{end}.name         = 'DIRECTION';
@@ -260,11 +261,17 @@ function sample_data = readXR420( filename, mode )
                   case 'Depth', name = 'DEPTH';
                       
                   %Fluorometry-chlorophyl (ug/l) = (mg.m-3)
-                  case 'FlCa'
+                  case {'FlCa', 'FLC'},
                       name = 'CPHL';
                       comment.(vars{k}) = ['Artificial chlorophyll data computed from ' ...
                           'fluorometry sensor raw counts measurements. Originally ' ...
                           'expressed in ug/l, 1l = 0.001m3 was assumed.'];
+						  
+					%DO (%)
+                  case 'D_O2', name = 'DOXS';
+                      
+                  %Turb-a (NTU)
+                  case {'Turba', 'Turb'}, name = 'TURB';
               end
               
               sample_data.variables{end  }.name       = name;
@@ -333,7 +340,7 @@ function sample_data = readXR420( filename, mode )
                   case 'Depth', name = 'DEPTH';
                       
                   %Fluorometry-chlorophyl (ug/l) = (mg.m-3)
-                  case 'FlCa'
+                  case {'FlCa', 'FLC'},
                       name = 'CPHL';
                       comment.(fields{k}) = ['Artificial chlorophyll data computed from ' ...
                           'fluorometry sensor raw counts measurements. Originally ' ...
@@ -343,7 +350,7 @@ function sample_data = readXR420( filename, mode )
                   case 'D_O2', name = 'DOXS';
                       
                   %Turb-a (NTU)
-                  case 'Turba', name = 'TURB';
+                  case {'Turba', 'Turb'}, name = 'TURB';
                       
                   otherwise, name = fields{k};
               end
@@ -442,7 +449,7 @@ function data = readData(fid, header)
   colLine = fgetl(fid);
   [col, colLine] = strtok(colLine);
   while ~isempty(colLine)
-      %rename FlC-a to FlCa because Matlbal doesn't understand - whitin a structure name
+      %rename FlC-a to FlCa because Matlab doesn't understand - whitin a structure name
       col = strrep(col, '-', '');
       
       cols           = [cols col];
@@ -460,16 +467,9 @@ function data = readData(fid, header)
   % regenerate interval from start/end time, and number of 
   % samples, rather than using the one listed in the header
   nSamples = length(samples{1});
-  
-  %This section is overwriting the interval with an incorrect value so can
-  %we comment it out
-%   header.interval = (header.end - header.start) / (nSamples-1);
-  
+   
   % generate time stamps from start/interval/end
   data.time = header.start:header.interval:header.end;
   data.time = data.time(1:length(samples{1}))';
   
-%   if isfield(header, 'averaging_time_period')
-%       data.time = data.time + (header.averaging_time_period/(24*3600))/2; %assume averaging time is always in seconds
-%   end
 end

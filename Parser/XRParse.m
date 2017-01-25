@@ -1,11 +1,12 @@
 function sample_data = XRParse( filename, mode )
-%XRPARSE Parses a data file retrieved from an RBR XR420 or XR620 depth 
-% logger.
+%XRPARSE Parses a RBR data file retrieved from an RBR XR420 (CT, CT-FL-Tu-DO), 
+% Concerto, Duo or XR620 data logger.
 %
 % This function is able to read in a single file retrieved from an RBR
-% XR420 or XR620 data logger generated using RBR Windows v 6.13 software 
+% XR420, Concerto/Duo or XR620 data logger generated using RBR Windows v 6.13 software 
 % or Ruskin software. The pressure data is returned in a sample_data
-% struct.
+% struct. The salinty data and Speed of Sound are not imported for the XR420 or 
+% XR620 models; only Concerto/Duo because of the onboard CTD data.
 %
 % Inputs:
 %   filename    - Cell array containing the name of the file to parse.
@@ -14,9 +15,9 @@ function sample_data = XRParse( filename, mode )
 % Outputs:
 %   sample_data - Struct containing imported sample data.
 %
-% Author : Guillaume Galibert <guillaume.galibert@utas.edu.au>
+% Author : 		Guillaume Galibert <guillaume.galibert@utas.edu.au>
+% Contributors :Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
 %
-
 %
 % Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
@@ -71,10 +72,21 @@ catch e
     rethrow(e);
 end
 
-if strcmpi(ext, '.dat') && strcmp(line(1:3), 'RBR')
+
+if strcmpi(ext, '.dat') && strcmp(line(1:9), 'Model=RBR')
     % use the classic XR420 parser for RBR Windows v 6.13 file format
     sample_data = readXR420(filename, mode);
-else
-    % use the new XR620 and XR420 parser for Ruskin file format
-    sample_data = readXR620(filename, mode);
-end
+elseif strcmpi(ext, '.txt') && strcmp(line(1:12), 'Model=XR-420')
+            sample_data = readXR620(filename, mode); % This is a neewer Ruskin exported XR420 dataset, 
+			% imports CT, CT-FL-Tu-DO ; no salinity or depth imported
+elseif strcmpi(ext, '.txt') && strcmp(line(1:12), 'Model=XR-620')
+            sample_data = readXR620(filename, mode); % This is a neewer Ruskin exported XR420 dataset, 
+			% imports CT, CT-FL-Tu-DO ; no salinity or depth imported		
+elseif strcmpi(ext, '.txt') && strcmp(line(1:12), 'Model=RBRcon')		
+		   	sample_data = readXRConcertoDuo(filename, mode); % This is a Concerto model 
+			%this parser is the same as XR620
+else strcmpi(ext, '.txt') && strcmp(line(1:10), 'Model=RBRd')			
+		   	sample_data = readXRConcertoDuo(filename, mode); % This is a Duo model - 
+			%this parser is the same as XR620
+
+end % end of main

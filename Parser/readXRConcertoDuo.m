@@ -1,9 +1,9 @@
-function sample_data = readXR620( filename, mode )
-%readXR620 Parses a data file retrieved from an RBR XR620 or XR420 depth 
+function sample_data = readXRConcertoDuo( filename, mode )
+%readXRConcertoDuo Parses a data file retrieved from an RBR ConcertoDuo 
 % logger.
 %
 % This function is able to read in a single file retrieved from an RBR
-% XR620 or RX420 data logger in Engineering unit .txt format (processed 
+% Concerto / Duo data logger in Engineering unit .txt format (processed 
 % using Ruskin software). The pressure data is returned in a sample_data 
 % struct. Other RBR instrument like TDR 2050, TR 1060 might be supported
 % when processed with Ruskin software.
@@ -243,33 +243,33 @@ function sample_data = readXR620( filename, mode )
               switch vars{k}
                   
                   %Conductivity (mS/cm) = 10-1*(S/m)
-                  case {'Cond', 'cond05'}
+                  case {'Cond', 'cond00', 'cond05', 'cond06'},
                       name = 'CNDC';
-                      data.(vars{k}) = data.(vars{k})/10;
+                      data.(fields{k}) = data.(fields{k})/10;
                       
                       %Temperature (Celsius degree)
-                  case {'Temp', 'temp02', 'temp00'}, name = 'TEMP';
+                  case {'Temp', 'temp00', 'temp09'}, name = 'TEMP';
                       
                       %Pressure (dBar)
-                  case {'Pres', 'pres20'}, name = 'PRES';
+                  case {'Pres', 'pres19'}, name = 'PRES';
                       
-                      %Relative Pressure (dBar)
-                  case {'pres08'}, name = 'PRES_REL';
+                      %Pressure_Relative (dBar)
+                  case 'pres08', name = 'PRES_REL';
                       
                       %Fluorometry-chlorophyl (ug/l) = (mg.m-3)
-                  case 'FlC'
+                  case 'FlC',
                       name = 'CPHL';
-                      comment.(vars{k}) = ['Artificial chlorophyll data computed from ' ...
+                      comment.(fields{k}) = ['Artificial chlorophyll data computed from ' ...
                           'fluorometry sensor raw counts measurements. Originally ' ...
                           'expressed in ug/l, 1l = 0.001m3 was assumed.'];
                       
                       %Turbidity (NTU)
-                  case 'Turb', name = 'TURB';
+                  case {'Turb', 'Turb-a','turb00'}, name = 'TURB';
                       
                       %Rinko temperature (Celsius degree)
-                  case 'R_Temp'
+                  case 'R_Temp',
                       name = '';
-                      comment.(vars{k}) = 'Corrected temperature for DO sensor.';
+                      comment.(fields{k}) = 'Corrected temperature.';
                       
                       %Rinko dissolved O2 (%)
                   case 'R_D_O2', name = 'DOXS';
@@ -277,28 +277,26 @@ function sample_data = readXR620( filename, mode )
                       %Depth (m)
                   case {'Depth', 'dpth01'}, name = 'DEPTH';
                       
-					  % commented -out due to possible latitude miscalculation from Ruskin software
                       %Salinity (PSU)
-                  %case {'Salin', 'sal_00'}, name = 'PSAL';
+                  %case 'sal_00', name = 'PSAL'; % removed 'Salin' due to possible bad salinty data from Ruskin
                       
                       %Specific conductivity (uS/cm) = 10-4 * (S/m)
-                  case {'SpecCond', 'scon00'},
+                  case {'SpecCond', 'specC', 'scon00'},
                       name = 'SPEC_CNDC';
-                      data.(vars{k}) = data.(vars{k})/10000;
+                      data.(fields{k}) = data.(fields{k})/10000;
                       
                       %Density anomaly (n/a)
-                 % case {'DensAnom', 'density'}, name = '';
+                  %case {'DensAnom', 'density', 'dden00'}, name = '';
                       
-					  %commented out due to not importing salinity from Rusking software
                       %Speed of sound (m/s)
-                  %case {'SoSUN', 'SoS (UN)','sos_00'}, name = 'SSPD';
+                  %case 'sos_00', name = 'SSPD'; % removed 'SosUN' due to possible bad salinty data from Ruskin
                       
                       %Rinko dissolved O2 concentration (mg/l) => (umol/l)
-                  case 'rdO2C'
+                  case 'rdO2C',
                       name = 'DOX1';
-                      comment.(vars{k}) = ['Originally expressed in mg/l, ' ...
+                      comment.(fields{k}) = ['Originally expressed in mg/l, ' ...
                           'O2 density = 1.429kg/m3 and 1ml/l = 44.660umol/l were assumed.'];
-                      data.(vars{k}) = data.(vars{k}) * 44.660/1.429; % O2 density = 1.429 kg/m3
+                      data.(fields{k}) = data.(fields{k}) * 44.660/1.429; % O2 density = 1.429 kg/m3
                       
                       % Oxyguard dissolved O2 (%)
                   case 'D_O2', name = 'DOXS';
@@ -306,9 +304,9 @@ function sample_data = readXR620( filename, mode )
                       % Oxyguard dissolved O2 concentration (ml/l) => (umol/l)
                   case {'dO2C','xdO2C'},
                       name = 'DOX1';
-                      comment.(vars{k}) = ['Originally expressed in ml/l, ' ...
+                      comment.(fields{k}) = ['Originally expressed in ml/l, ' ...
                           '1ml/l = 44.660umol/l was assumed.'];
-                      data.(vars{k}) = data.(vars{k}) * 44.660;
+                      data.(fields{k}) = data.(fields{k}) * 44.660;
               end
               
               if ~isempty(name)
@@ -513,31 +511,31 @@ function sample_data = readXR620( filename, mode )
               switch fields{k}
                   
                   %Conductivity (mS/cm) = 10-1*(S/m)
-                  case {'Cond', 'cond05'}
+                  case {'Cond', 'cond00', 'cond05', 'cond06'},
                       name = 'CNDC';
                       data.(fields{k}) = data.(fields{k})/10;
                       
                       %Temperature (Celsius degree)
-                  case {'Temp', 'temp00'}, name = 'TEMP';
+                  case {'Temp', 'temp00', 'temp09'}, name = 'TEMP';
                       
                       %Pressure (dBar)
-                  case 'Pres', name = 'PRES';
+                  case {'Pres', 'pres19'}, name = 'PRES';
                       
-                      %Pressure_ReLative (dBar)
+                      %Pressure_Relative (dBar)
                   case 'pres08', name = 'PRES_REL';
                       
                       %Fluorometry-chlorophyl (ug/l) = (mg.m-3)
-                  case 'FlC'
+                  case 'FlC',
                       name = 'CPHL';
                       comment.(fields{k}) = ['Artificial chlorophyll data computed from ' ...
                           'fluorometry sensor raw counts measurements. Originally ' ...
                           'expressed in ug/l, 1l = 0.001m3 was assumed.'];
                       
                       %Turbidity (NTU)
-                  case {'Turb', 'Turb-a'}, name = 'TURB';
+                  case {'Turb', 'Turb-a','turb00'}, name = 'TURB';
                       
                       %Rinko temperature (Celsius degree)
-                  case 'R_Temp'
+                  case 'R_Temp',
                       name = '';
                       comment.(fields{k}) = 'Corrected temperature.';
                       
@@ -548,21 +546,21 @@ function sample_data = readXR620( filename, mode )
                   case {'Depth', 'dpth01'}, name = 'DEPTH';
                       
                       %Salinity (PSU)
-                  %case {'Salin', 'sal_00'}, name = 'PSAL';
+                 %% case 'sal_00', name = 'PSAL'; % removed 'Salin' due to possible bad salinty data from Ruskin
                       
                       %Specific conductivity (uS/cm) = 10-4 * (S/m)
-                  case {'SpecCond', 'scon00'}
+                  case {'SpecCond', 'specC', 'scon00'},
                       name = 'SPEC_CNDC';
                       data.(fields{k}) = data.(fields{k})/10000;
                       
                       %Density anomaly (n/a)
-                 % case {'DensAnom', 'density'}, name = '';
+                 % case {'DensAnom', 'density', 'dden00'}, name = '';
                       
                       %Speed of sound (m/s)
-                  %case {'SoSUN', 'sos_00'}, name = 'SSPD';
+                %%  case 'sos_00', name = 'SSPD'; % removed 'SosUN' due to possible bad salinty data from Ruskin
                       
                       %Rinko dissolved O2 concentration (mg/l) => (umol/l)
-                  case 'rdO2C'
+                  case 'rdO2C',
                       name = 'DOX1';
                       comment.(fields{k}) = ['Originally expressed in mg/l, ' ...
                           'O2 density = 1.429kg/m3 and 1ml/l = 44.660umol/l were assumed.'];
@@ -742,14 +740,14 @@ function header = readHeader(fid)
     ['^Model=+' '(\S+)$']
     ['^Firmware=+' '(\S+)$']
     ['^Serial=+' '(\S+)$']
-    ['^LoggingStartDate=+' '(\S+)$']
+    ['^LoggingStartDate=+' '(\S+)$'] % this variable doesn`t exist in RBRConcerto files
     ['^LoggingStartTime=+' '(\S+\s?\S+)$']
-    ['^LoggingEndDate=+' '(\S+)$']
+    ['^LoggingEndDate=+' '(\S+)$'] % this variable doesn`t exist in RBRConcerto files
     ['^LoggingEndTime=+' '(\S+\s?\S+)$']
-    ['^LoggingSamplingPeriod=+' '(\d+)Hz']
+    ['^LoggingSamplingPeriod=+' '(\d+)Hz'] % this variable doesn`t exist in RBRConcerto files
     ['^LoggingSamplingPeriod=+' '(\d\d:\d\d:\d\d)']
     ['^NumberOfChannels=+' '(\d+)']
-    ['^CorrectionToConductivity=+' '(\d+)']
+    ['^CorrectionToConductivity=+' '(\d+)'] % this variable doesn`t exist in RBRConcerto files
     ['^NumberOfSamples=+' '(\d+)']
   };
   
@@ -781,18 +779,18 @@ function header = readHeader(fid)
               
           % start of sampling
           case 4
-              startDate    = tkns{1}{1};
+              startDate    = tkns{1}{1}; % this variable doesn`t exist in RBRConcerto files
           case 5
               startTime    = tkns{1}{1};
               
           % end of sampling
           case 6
-              endDate    = tkns{1}{1};
+              endDate    = tkns{1}{1}; % this variable doesn`t exist in RBRConcerto files
           case 7
               endTime    = tkns{1}{1};
               
           % sample interval
-          case 8
+          case 8 % this variable doesn`t exist in RBRConcerto files
               header.interval = 1/str2double(tkns{1}{1});
               
           % other sample interval
@@ -805,7 +803,7 @@ function header = readHeader(fid)
               header.channels = str2double(tkns{1}{1});
           
           % correction to conductivity
-          case 11
+          case 11 % this variable doesn`t exist in RBRConcerto files
               header.correction  = tkns{1}{1};
               
           % number of samples
@@ -814,6 +812,8 @@ function header = readHeader(fid)
       end
     end
   end
+  % section meant to remedy the changing versions of Ruskin and the
+  % nomenclature surrounding start and end dates
   
   if ~isempty(startDate) && ~isempty(startTime) % ruskin v1.5
       if length(startDate) == 8 
@@ -821,9 +821,11 @@ function header = readHeader(fid)
       else
           header.start    = datenum([startDate ' ' startTime],  'yyyy/mmm/dd HH:MM:SS.FFF');
       end
-  elseif isempty(startDate) && ~isempty(startTime) % ruskin v1.7
+  elseif isempty(startDate) && ~isempty(startTime) % ruskin v1.7+ (V1.13)
       header.start    = datenum(startTime,  'dd-mmm-yyyy HH:MM:SS.FFF');
   end
+  % section meant to remedy the changing versions of Ruskin and the
+  % nomenclature surrounding start and end dates
   
   if ~isempty(endDate) && ~isempty(endTime) % ruskin v1.5
       if length(endDate) == 8
@@ -831,7 +833,7 @@ function header = readHeader(fid)
       else
           header.end      = datenum([endDate   ' ' endTime],    'yyyy/mmm/dd HH:MM:SS.FFF');
       end
-  elseif isempty(endDate) && ~isempty(endTime) % ruskin v1.7
+  elseif isempty(endDate) && ~isempty(endTime) % ruskin v1.7+ (v1.13)
       header.end    = datenum(endTime,  'dd-mmm-yyyy HH:MM:SS.FFF');
   end
   

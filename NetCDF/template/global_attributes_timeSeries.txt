@@ -1,24 +1,24 @@
 % what
-S, project                      = Integrated Marine Observing System (IMOS)
-S, Conventions                  = CF-1.6,IMOS-1.4
+S, project                      = ArcticNet Mooring Observing System (AMOS)
+S, conventions                  = CF-1.6,IMOS-1.4
 S, standard_name_vocabulary     = NetCDF Climate and Forecast (CF) Metadata Convention Standard Name Table 27
-S, title                        = 
-S, institution                  = 
+S, title                        = [ddb Site]: [ddb Site Sites ResearchActivity]
+S, institution                  = ArcticNet
 D, date_created                 = [mat now_utc]
-D, date_modified                = 
-S, abstract                     = 
+D, date_modified                = [ddb Modified]
+S, abstract                     = [ddb Site]: [ddb Site Sites Description]
 S, comment                      = [ddb Comment]
 S, source                       = [ddb DeploymentType]
 S, instrument                   = [ddb InstrumentID Instruments Make] [ddb InstrumentID Instruments Model]
 S, keywords                     = [ddb InstrumentID Instruments Model], [mat cellStructCons(sample_data.dimensions, 'name', ', ')], [mat cellStructCons(sample_data.variables, 'name', ', ')]
 S, keywords_vocabulary          = IMOS parameter names. See https://github.com/aodn/imos-toolbox/blob/master/IMOS/imosParameters.txt
 S, references                   = http://www.imos.org.au
-S, site_code                    = 
-S, platform_code                = 
+S, site_code                    = [ddb Site]
+S, platform_code                = Amundsen (CGDT)
 S, deployment_code              = [ddb Site]
-S, featureType                  = [mat sample_data.meta.featureType]
-S, cdm_data_type                = 
-S, naming_authority             = IMOS
+S, featureType                  = [mat updateIfEmpty('[mat sample_data.meta.featureType]', 'timeSeries')]
+S, cdm_data_type                = Station
+S, naming_authority             = AMOS
 S, metadata                     = 
 S, sensorML                     = 
 S, instrument_serial_number     = [mat updateIfEmpty('[ddb InstrumentID Instruments SerialNumber]', sample_data.meta.instrument_serial_no)]
@@ -27,8 +27,10 @@ N, instrument_average_interval  = [mat sample_data.meta.instrument_average_inter
 N, instrument_beam_angle        = [mat sample_data.meta.beam_angle]
 N, instrument_burst_interval    = [mat sample_data.meta.instrument_burst_interval]
 N, instrument_burst_duration    = [mat sample_data.meta.instrument_burst_duration]
-S, institution_address          = 
-S, institution_postal_address   = 
+S, instrument_calib_status		= [ddb CalibSite]: Status :[ddb CalibStatus]
+D, instrument_calib_date		= [ddb CalibDate]
+N, instrument_calib_stdDevErr	= [ddb CalibErr]
+
 
 % these fields are automatically populated upon creation/export
 S, file_version                 = 
@@ -37,14 +39,14 @@ S, history                      =
 S, quality_control_log          = 
 
 % where
-N, geospatial_lat_min       = [ddb Site Sites Latitude]
-N, geospatial_lat_max       = [ddb Site Sites Latitude]
-N, geospatial_lon_min       = [ddb Site Sites Longitude]
-N, geospatial_lon_max       = [ddb Site Sites Longitude]
+N, geospatial_lat_min       = [ddb Site Sites NominalLatitude]
+N, geospatial_lat_max       = [ddb Site Sites NominalLatitude]
+N, geospatial_lon_min       = [ddb Site Sites NominalLongitude]
+N, geospatial_lon_max       = [ddb Site Sites NominalLongitude]
 N, instrument_nominal_height= 
-N, instrument_nominal_depth = 
-N, site_nominal_depth       = 
-N, site_depth_at_deployment = 
+N, instrument_nominal_depth = [ddb InstrumentDepth]
+N, site_nominal_depth       = [ddb Site Sites Depth]
+N, site_depth_at_deployment = [ddb Site Sites Depth]
 
 % if left empty, these fields are automatically populated upon import 
 % when DEPTH variable exist (if not use depthPP pre-processing routine)
@@ -53,28 +55,31 @@ N, geospatial_vertical_max =
 S, geospatial_vertical_positive = down
 
 % when
-N, local_time_zone         = 
+N, local_time_zone         	= 
 
 % these fields are automatically populated upon import
-D, time_deployment_start        = 
-S, time_deployment_start_origin = 
-D, time_deployment_end          = 
-S, time_deployment_end_origin   = 
-D, time_coverage_start          = 
-D, time_coverage_end            = 
+D, time_deployment_start        = [ddb TimeFirstInPos]
+S, time_deployment_start_origin =
+D, time_deployment_end          = [ddb TimeEstimatedRetrieval]
+S, time_deployment_end_origin   =
+D, time_coverage_start          = [ddb TimeFirstInPos]
+D, time_coverage_end            = [ddb TimeEstimatedRetrieval]
 
 % who
-S, data_centre                  = Australian Ocean Data Network (AODN)
-S, data_centre_email            = info@aodn.org.au
-S, author_email                 = 
-S, author                       = 
-S, principal_investigator       = 
-S, principal_investigator_email = 
-S, institution_references       = http://www.imos.org.au/aodn.html
+S, data_centre                  = ArcticNet - Universite Laval
+S, institution_address          = 1045 Ave. de la Medecine, Quebec, QC
+S, institution_postal_address   = G1V 0A6  Canada
+S, data_centre_email            = pdc@arcticnet.ulaval.ca
+S, author_email                 = shawn.meredyk@arcticnet.ulaval.ca
+S, author                       = Shawn Meredyk
+S, principal_investigator       = Louis Fortier
+S, principal_investigator_email = louis.fortier@bio.ulaval.ca
+S, institution_references       = http://www.arcticnet.ulaval.ca
 
 % how
 S, lineage                 = 
-S, citation                = The citation in a list of references is: "IMOS [year-of-data-download], [Title], [data-access-URL], accessed [date-of-access].".
-S, acknowledgement         = Any users of IMOS data are required to clearly acknowledge the source of the material derived from IMOS in the format: "Data was sourced from the Integrated Marine Observing System (IMOS) - IMOS is a national collaborative research infrastructure, supported by the Australian Government." If relevant, also credit other organisations involved in collection of this particular datastream (as listed in 'credit' in the metadata record).
-S, disclaimer              = Data, products and services from IMOS are provided "as is" without any warranty as to fitness for a particular purpose.
+S, citation                = The citation in a list of references is: "ArcticNet [year-of-data-download], [Title], [data-access-URL], accessed [date-of-access].".
+s, credit				   = [ddb Site Sites ResearchActivity]
+S, acknowledgement         = Any users of AMOS data are required to clearly acknowledge the source of the material derived from AMOS in the format: "Data was sourced from the ArcticNet Marine Observing System (AMOS) - AMOS is a collaborative research infrastructure, supported by the Canadian Government." If relevant, also credit other organisations involved in collection of this particular datastream (as listed in 'credit' in the metadata record).
+S, disclaimer              = Data, products and services from AMOS are provided "as is" without any warranty as to fitness for a particular purpose.
 S, license                 = http://creativecommons.org/licenses/by/4.0/
