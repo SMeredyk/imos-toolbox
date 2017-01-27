@@ -699,7 +699,8 @@ function sample_data = readXR620( filename, mode )
                       crat = 10*cndc.data ./ gsw_C3515;
                       
                       % we need to use relative pressure using gsw_P0 = 101325 Pa 
-                      psal.data = gsw_SP_from_R(crat, temp.data, pres.data - gsw_P0/10^4);
+                      psal=struct('data',gsw_SP_from_R(crat, temp.data, pres.data - gsw_P0/10^4)); %AForest 27-Jan-2017 (Correct error Struct contents reference from a non-struct array object)
+                      %psal.data = gsw_SP_from_R(crat, temp.data, pres.data - gsw_P0/10^4);
                   end
                   
                   % calculate density from salinity, temperature and pressure
