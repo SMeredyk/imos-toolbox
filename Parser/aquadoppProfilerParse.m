@@ -167,6 +167,22 @@ velocity1    = velocity1    / 1000.0;
 velocity2    = velocity2    / 1000.0;
 velocity3    = velocity3    / 1000.0;
 
+% Correction for pressure offset in air - Added AForest 27-Jan-2017
+% based on first 5 measurements within 10 m range
+[~,NAME,~] = fileparts(filename);
+first_mes=pressure(1:5);
+first_mes=first_mes(first_mes<10);
+if  ~isnan(first_mes)
+    disp(['Please note: ', NAME,': pressure offset in air based on values up to ',num2str(ceil(max(first_mes))),'-m']);
+    pressure=pressure-mean(first_mes);
+    disp(['PRESSURE OFFSET APPLIED - PRESS ANY KEY TO CONTINUE']); 
+    pause;
+else
+    disp(['Please note: ', NAME,': pressure offset in air contains values up to ',num2str(ceil(max(pressure(1:5)))),'-m']);
+    disp(['PRESSURE OFFSET NOT APPLIED - PRESS ANY KEY TO CONTINUE OR BREAK']);  
+    pause;
+end
+
 if velocityProcessed
     % velocity has been processed
     % velocities  / 1000.0 (mm/s     -> m/s) assuming earth coordinates
