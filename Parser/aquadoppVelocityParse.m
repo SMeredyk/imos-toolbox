@@ -127,22 +127,6 @@ velocity1    = velocity1    / 1000.0;
 velocity2    = velocity2    / 1000.0;
 velocity3    = velocity3    / 1000.0;
 
-% Correction for pressure offset in air - Added AForest 27-Jan-2017
-% based on first 5 measurements within 10 m range
-[~,NAME,~] = fileparts(filename);
-first_mes=pressure(1:5);
-first_mes=first_mes(first_mes<10);
-if  ~isnan(first_mes)
-    disp(['Please note: ', NAME,': pressure offset in air based on values up to ',num2str(ceil(max(first_mes))),'-m']);
-    pressure=pressure-mean(first_mes);
-    disp(['PRESSURE OFFSET APPLIED - PRESS ANY KEY TO CONTINUE']); 
-    pause;
-else
-    disp(['Please note: ', NAME,': pressure offset in air contains values up to ',num2str(ceil(max(pressure(1:5)))),'-m']);
-    disp(['PRESSURE OFFSET NOT APPLIED - PRESS ANY KEY TO CONTINUE OR BREAK']);  
-    pause;
-end
-
 sample_data = struct;
     
 sample_data.toolbox_input_file              = filename;
@@ -158,6 +142,27 @@ sample_data.meta.instrument_sample_interval = median(diff(time*24*3600));
 sample_data.meta.instrument_average_interval= user.AvgInterval;
 sample_data.meta.beam_angle                 = 45;   % http://wiki.neptunecanada.ca/download/attachments/18022846/Nortek+Aquadopp+Current+Meter+User+Manual+-+Rev+C.pdf
 sample_data.meta.featureType                = mode;
+
+% Correction for pressure offset in air - Added AForest 27-Jan-2017 with
+% comments for history on 30-Jan-2017
+% based on first 5 measurements within 10 m range
+[~,NAME,~] = fileparts(filename);
+first_mes=pressure(1:5);
+first_mes=first_mes(first_mes<10);
+if  ~isnan(first_mes)
+    disp(['Please note: ', NAME,': pressure offset in air based on values up to ',num2str(ceil(max(first_mes))),'-dbar']);
+    pressure=pressure-mean(first_mes);
+    disp(['PRESSURE OFFSET APPLIED - PRESS ANY KEY TO CONTINUE']); 
+    pause;
+    PressureOffsetComment=[mfilename,'.m: Raw pressure data from this instrument were corrected for a pressure offset in air of ', num2str(round(mean(first_mes),1)),'dbar'];
+    sample_data.history = sprintf('%s - %s', ...
+            datestr(now_utc, readProperty('exportNetCDF.dateFormat')), ...
+            PressureOffsetComment);
+else
+    disp(['Please note: ', NAME,': pressure offset in air contains values up to ',num2str(ceil(max(pressure(1:5)))),'-dbar']);
+    disp(['PRESSURE OFFSET NOT APPLIED - PRESS ANY KEY TO CONTINUE OR BREAK']);  
+    pause;
+end
 
 % add dimensions with their data mapped
 dims = {
