@@ -131,7 +131,8 @@ function [header, channel,nChannels] = readHeader(rawText)
   for i=1:nFields
       tuple = textscan(headerCell{i}, fmtHeader, 'Delimiter', delimHeader);
       if 1 == isempty(tuple{2}), tuple{2} = {'NAN'}; end
-        
+      
+      tuple{1}{1}=strrep(tuple{1}{1},' ','_');  %% Added Aforest 30-Jan-2107 for valid field name (no space)
       header.(tuple{1}{1}) = tuple{2}{1};
   end   % end of for loop
 
@@ -141,8 +142,8 @@ function [header, channel,nChannels] = readHeader(rawText)
     
   startCoefficient 	= '[Coef]';
   endCoefficient 	= '[Data]';
-  delimCoef         = ',';
-  fmtCoef           = '%f%f%f%f'; % 4 coefficients
+  delimCoef         = {',','='};
+  fmtCoef           = '%s%f%f%f%f'; % 4 coefficients
   
   iStartCoef 	= find(strcmp(startCoefficient, rawText)) + 1;
   iEndCoef      = find(strcmp(endCoefficient, rawText))-1;
@@ -155,7 +156,7 @@ function [header, channel,nChannels] = readHeader(rawText)
       coef 	= textscan(coefCell{i}, fmtCoef,'Delimiter', delimCoef);
       
       for j=1:4
-          eval(['channel.Ch' num2str(i) '(j) = coef{j};']); end 
+          eval(['channel.Ch' num2str(i) '(j) = coef{1,j+1};']); end 
   end   %end for loop
   
 end % end of readHeader function
@@ -191,7 +192,7 @@ function data = readData(filename, channel, nChannels)
     data.TEMP.comment = ['Celcius']; 
                
     %Conductivity (mS/cm) = 10-1*(S/m)	
-    data.CNDC.values = (channel.Ch2(1)+ (channel.Ch2(2).*(values{3})))/10;
+    data.CNDC.values = (channel.Ch2(1)+ (channel.Ch2(2).*(values{3})))./10;
     % data.CNDC.values = (values{i})/10;  
     data.CNDC.comment = ['converted from mS/cm to S/m by Toolbox'];
 				  			  

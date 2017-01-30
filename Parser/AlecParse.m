@@ -151,7 +151,8 @@ function header = readHeader(rawText)
       tuple = textscan(headerCell{i}, fmtHeader, 'Delimiter', delimHeader);
       
       if 1 == isempty(tuple{2}), tuple{2} = {'NAN'}; end
-        
+      
+      tuple{1}{1}=strrep(tuple{1}{1},' ','_');  %% Added Aforest 30-Jan-2107 for valid field name (no space)
       header.(tuple{1}{1}) = tuple{2}{1};
      
   end
