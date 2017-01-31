@@ -169,8 +169,8 @@ function data = readData(filename, iData)
                   %Date Time (dd.mm.yyyy hh:mm:ss) 
                   case 'Time tag (Gmt)', 
                     name = 'TIME';
-                    data.TIME.values = datenum(values{i}, 'dd.mm.yyyy HH:MM:SS');
-					data.TIME.comment = ['Date Time (dd.mm.yyyy hh:mm:ss)'];
+                    data.TIME.values = datenum(values{i}, 'mm.dd.yyyy HH:MM:SS');
+					data.TIME.comment = ['Date Time (mm.dd.yyyy hh:mm:ss)'];
 					
                   %Reference Parameter (unitless) - not used by Toolbox
                   case 'Reference', 
