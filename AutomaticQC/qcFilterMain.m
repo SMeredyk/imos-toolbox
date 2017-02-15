@@ -145,12 +145,21 @@ function sam = qcFilterMain(sam, filterName, auto, rawFlag, goodFlag, probGoodFl
                     else
                         if strcmpi(filterName, 'imosHistoricalManualSetQC')
                             tmpFilterName = 'Author manually';
+                        elseif strcmpi(filterName, 'imosBinDepthInterferenceSetQC') && isfield(fsam.meta,'badbins') %Added Aforest, 15-Feb-2017
+                            tmpFilterName = filterName; %Added Aforest, 15-Feb-2017
                         else
                             tmpFilterName = [filterName '(' flog ')'];
                         end
+                        
+                        if strcmpi(filterName, 'imosBinDepthInterferenceSetQC') && isfield(fsam.meta,'badbins') %Added Aforest, 15-Feb-2017                         
+                        sam.meta.log{end+1} = [tmpFilterName ... %Added Aforest, 15-Feb-2017
+                            ' flagged bin(s) #' sprintf('%d,',fsam.meta.badbins) ' corresponding to ' num2str(nFlag) ' ' ...  %Added Aforest, 15-Feb-2017
+                            sam.(type{m}){k}.name ' samples with flag ' flagString '.']; %Added Aforest, 15-Feb-2017                             
+                        else 
                         sam.meta.log{end+1} = [tmpFilterName ...
                             ' flagged ' num2str(nFlag) ' ' ...
                             sam.(type{m}){k}.name ' samples with flag ' flagString '.'];
+                        end
                         
                         sam.meta.QCres.(filterName).(sam.(type{m}){k}.name).nFlag = nFlag;
                         sam.meta.QCres.(filterName).(sam.(type{m}){k}.name).codeFlag = uFlags(i);
@@ -251,7 +260,11 @@ function sam = qcFilterMain(sam, filterName, auto, rawFlag, goodFlag, probGoodFl
                         sam.meta.log{end+1} = [filterName '(' l ')' ...
                             ' did not fail on any ' ...
                             sam.(type{m}){k}.name ' sample.'];
-                    else
+                    elseif strcmpi(filterName, 'imosBinDepthInterferenceSetQC') && isfield(fsam.meta,'badbins') %Added Aforest, 15-Feb-2017
+                        sam.meta.log{end+1} = [filtername ... %Added Aforest, 15-Feb-2017
+                            ' flagged bin(s) #' sprintf('%d,',fsam.meta.badbins) ' corresponding to ' num2str(nFlag) ' ' ... %Added Aforest, 15-Feb-2017
+                            sam.(type{m}){k}.name ' samples with flag ' flagString '.']; %Added Aforest, 15-Feb-2017                             
+                    else                    
                         sam.meta.log{end+1} = [filterName '(' l ')' ...
                             ' flagged ' num2str(nFlag) ' ' ...
                             sam.(type{m}){k}.name ' samples with flag ' flagString '.'];
