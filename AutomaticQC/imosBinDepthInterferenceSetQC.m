@@ -140,6 +140,7 @@ flagsidelobes(:,full_flags>0.5)=true;
 speed(flags_outofwater | flagsidelobes)=NaN;
 EAA(flags_outofwater | flagsidelobes)=NaN;
 binDepth(flags_outofwater | flagsidelobes)=NaN;
+size_EAA=size(EAA,3);
 
 speed=nanmean(speed,1);
 EAA=nanmean(EAA,3); 
@@ -148,8 +149,6 @@ binDepth=nanmean(binDepth,1);
 bin_nonan=~isnan(binDepth);
 binDepth_nonan=binDepth(bin_nonan);
 
-disp('Visual inspection of suspicious bins affected by instrument interference');
-disp('Look at where both Speed decreases and Echo Intensity increases and identify suspicious bins');
 % Prep. figure
 scrsz = get(0,'ScreenSize');
 fig=figure('visible','on','Position',[scrsz(1)+50 scrsz(2)+50 scrsz(3)*0.8 scrsz(4)*0.8],'Name','Visual inspection of suspicious bins');
@@ -179,10 +178,19 @@ if ~isUpwardLooking
 set(gca,'ydir','reverse');
 end
 set(gca,'yticklabel',ytl);
-suptitle(['Visual inspection of ',sample_data.meta.instrument_model,' #',sample_data.meta.instrument_serial_no,' on ',sample_data.deployment_code]);
+if size_EAA ==4 %RDI 4 beams
+    suptitle(['Visual inspection of ',sample_data.meta.instrument_model,' #',sample_data.meta.instrument_serial_no,' on ',sample_data.deployment_code]);
+else %Nortek 3 beams
+    suptitle(['Visual inspection of ',sample_data.meta.instrument_model,' #',sample_data.meta.head.SerialNo,' on ',sample_data.deployment_code]);
+end
 
 % Make the flag
-badbins = input('Please enter suspicious bin numbers within brackets (e.g., [7 8 9])');
+xx = inputdlg(sprintf('\nLook at where both Speed decreases and Echo Intensity increases and identify suspicious bins.\n\nEnter space-separated numbers e.g: 7 8 9\n\nIf no suspicuous bins, just click cancel\n'),'Visual inspection of suspicious bins affected by instrument interference',[2 100]);
+if ~isempty(xx)
+    badbins = str2num(xx{:});
+else
+    badbins=[];
+end
 % same flags are given to any variable
 flags = ones(sizeCur, 'int8')*rawFlag;
 flags(:,badbins) = badFlag;
