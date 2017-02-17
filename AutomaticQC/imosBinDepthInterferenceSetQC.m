@@ -72,9 +72,9 @@ idWcur = 0;
 idCspd = 0;
 idCdir = 0;
 lenVar = length(sample_data.variables);
-idABSI = cell(4, 1);
+idABSIC = cell(4, 1);
 for j=1:4
-    idABSI{j}  = 0;
+    idABSIC{j}  = 0;
 end
 tTime = 'dimensions';
 iTime = getVar(sample_data.(tTime), 'TIME');
@@ -95,14 +95,14 @@ for i=1:lenVar
     % Extract echo intensity
     for j=1:4
         cc = int2str(j);
-        if strcmpi(paramName, ['ABSI' cc]), idABSI{j} = i; 
-        EAA(:,:,j)=sample_data.variables{idABSI{j}}.data;
+        if strcmpi(paramName, ['ABSIC' cc]), idABSIC{j} = i; 
+        EAA(:,:,j)=sample_data.variables{idABSIC{j}}.data;
         end
     end
 end
 
 % check if the data is compatible with the QC algorithm
-idMandatory = idABSI{1} & iTime &(idUcur | idVcur | idWcur | idCspd | idCdir);
+idMandatory = idABSIC{1} & iTime &(idUcur | idVcur | idWcur | idCspd | idCdir);
 
 if ~idMandatory, return; end
 
@@ -184,8 +184,8 @@ else %Nortek 3 beams
     suptitle(['Visual inspection of ',sample_data.meta.instrument_model,' #',sample_data.meta.head.SerialNo,' on ',sample_data.deployment_code]);
 end
 
-% Make the flag
-xx = inputdlg(sprintf('\nLook at where both Speed decreases and Echo Intensity increases and identify suspicious bins.\n\nEnter space-separated numbers e.g: 7 8 9\n\nIf no suspicuous bins, just click cancel\n'),'Visual inspection of suspicious bins affected by instrument interference',[2 100]);
+% Make the flags
+xx = inputdlg(sprintf('\nLook at where both Speed decreases and Echo Intensity increases and identify suspicious bins.\n\nEnter space-separated numbers e.g: 7 8 9\n\nIf no suspicious bins, just click cancel\n'),'Visual inspection of suspicious bins affected by instrument interference',[2 100]);
 if ~isempty(xx)
     badbins = str2num(xx{:});
 else
