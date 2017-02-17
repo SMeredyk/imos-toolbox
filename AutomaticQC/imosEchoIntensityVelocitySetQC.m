@@ -8,6 +8,10 @@ function [sample_data, varChecked, paramsLog] = imosEchoIntensityVelocitySetQC( 
 % above/below it are also considered to have failed. This test is designed to get 
 % rid of above/below surface/bottom bins.
 %
+% Test was modified from initial version by A. Forest to include Nortek
+% instruments in addition of TRDI. Also correction for ABSIC was
+% implemented.
+%
 % Inputs:
 %   sample_data - struct containing the entire data set and dimension data.
 %   auto - logical, run QC in batch mode
@@ -19,8 +23,12 @@ function [sample_data, varChecked, paramsLog] = imosEchoIntensityVelocitySetQC( 
 %   paramsLog   - string containing details about params' procedure to include in QC log
 %
 % Author:       Guillaume Galibert <guillaume.galibert@utas.edu.au>
+% Contibutor:   Alexandre Forest <alexandre.forest@arcticnet.ulaval.ca>
 %
-
+% Copyright (c) 2017, Amundsen Science & ArcticNet
+% http://www.amundsen.ulaval.ca/
+% http://www.arcticnet.ulaval.ca/
+% All rights reserved.
 %
 % Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated
 % Marine Observing System (IMOS).
@@ -65,9 +73,9 @@ idVcur = 0;
 idWcur = 0;
 idCspd = 0;
 idCdir = 0;
-idABSI = cell(4, 1);
+idABSIC = cell(4, 1);
 for j=1:4
-    idABSI{j}  = 0;
+    idABSIC{j}  = 0;
 end
 lenVar = length(sample_data.variables);
 for i=1:lenVar
@@ -80,21 +88,29 @@ for i=1:lenVar
     if strncmpi(paramName, 'CDIR', 4),  idCdir = i; end
     for j=1:4
         cc = int2str(j);
-        if strcmpi(paramName, ['ABSI' cc]), idABSI{j} = i; end
+        if strcmpi(paramName, ['ABSIC' cc]), idABSIC{j} = i; end
     end
 end
 
 % check if the data is compatible with the QC algorithm
 idMandatory = (idUcur | idVcur | idWcur | idCspd | idCdir);
-for j=1:4
-    idMandatory = idMandatory & idABSI{j};
+
+% check if we have nortek
+if idABSIC{j}==0
+    beams=3;
+else
+    beams=4;
+end
+
+for j=1:beams
+    idMandatory = idMandatory & idABSIC{j};
 end
 if ~idMandatory, return; end
 
 % let's get the associated vertical dimension
-idVertDim = sample_data.variables{idABSI{1}}.dimensions(2);
+idVertDim = sample_data.variables{idABSIC{1}}.dimensions(2);
 if strcmpi(sample_data.dimensions{idVertDim}.name, 'DIST_ALONG_BEAMS')
-    disp(['Warning : imosEchoIntensityVelocitySetQC applied with a non tilt-corrected ABSIn (no bin mapping) on dataset ' sample_data.toolbox_input_file]);
+    disp(['Warning : imosEchoIntensityVelocitySetQC applied with a non tilt-corrected ABSICn (no bin mapping) on dataset ' sample_data.toolbox_input_file]);
 end
 
 qcSet           = str2double(readProperty('toolbox.qc_set'));
@@ -103,10 +119,10 @@ goodFlag        = imosQCFlag('good',            qcSet, 'flag');
 rawFlag         = imosQCFlag('raw',             qcSet, 'flag');
 
 %Pull out echo intensity
-sizeData = size(sample_data.variables{idABSI{1}}.data);
-ea = nan(4, sizeData(1), sizeData(2));
-for j=1:4;
-    ea(j, :, :) = sample_data.variables{idABSI{j}}.data;
+sizeData = size(sample_data.variables{idABSIC{1}}.data);
+ea = nan(beams, sizeData(1), sizeData(2));
+for j=1:beams;
+    ea(j, :, :) = sample_data.variables{idABSIC{j}}.data;
 end
 
 % read in filter parameters
@@ -118,9 +134,9 @@ ea_thresh = str2double(readProperty('ea_thresh',   propFile));
 currentQCtest = mfilename;
 ea_thresh = readDatasetParameter(sample_data.toolbox_input_file, currentQCtest, 'ea_thresh', ea_thresh);
 
-paramsLog = ['ea_thresh=' num2str(ea_thresh)];
-
 sizeCur = size(sample_data.variables{idUcur}.flags);
+
+paramsLog = ['ea_thresh=' num2str(ea_thresh)];
 
 % same flags are given to any variable
 flags = ones(sizeCur, 'int8')*rawFlag;
@@ -134,14 +150,21 @@ lenTime = sizeCur(1);
 lenBin  = sizeCur(2);
 
 % if the following test is successfull, the bin gets good
+if beams==3
+ib = uint8(abs(diff(squeeze(ea(1, :,:)),1,2)) <= ea_thresh) + ...
+     uint8(abs(diff(squeeze(ea(2, :,:)),1,2)) <= ea_thresh) + ...
+     uint8(abs(diff(squeeze(ea(3, :,:)),1,2)) <= ea_thresh);
+% we look for the bins that have 2 or more beams that pass the tests for Nortek
+ib = ib >= 2; 
+else
 ib = uint8(abs(diff(squeeze(ea(1, :,:)),1,2)) <= ea_thresh) + ...
      uint8(abs(diff(squeeze(ea(2, :,:)),1,2)) <= ea_thresh) + ...
      uint8(abs(diff(squeeze(ea(3, :,:)),1,2)) <= ea_thresh) + ...
      uint8(abs(diff(squeeze(ea(4, :,:)),1,2)) <= ea_thresh);
-
-% we look for the bins that have 3 or more beams that pass the tests
+% we look for the bins that have 3 or more beams that pass the tests for RDI
 ib = ib >= 3;
- 
+end
+
 % we assume that the first half of bins should always be good
 ib = [true(lenTime, 1), ib];
 for i=1:round(lenBin/2)
