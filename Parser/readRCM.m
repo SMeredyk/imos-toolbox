@@ -208,9 +208,9 @@ function data = readData(filename, iData)
                   
 				  %Pressure (MPa) = 100-1*(dBarr)
                   case 'Pressure(MPa)', 
-                     name = 'PRES_REL';
-                     data.PRES_REL.values = (values{i}*100);   
-					 data.PRES_REL.comment = ['Pressure data converted from MPa to dBarr for toolbox'];	
+                     name = 'PRES';
+                     data.PRES.values = (values{i}*100);   
+					 data.PRES.comment = ['Pressure data converted from MPa to dBarr for toolbox'];	
 				
                   %Pressure (kPa) = 10-1*(dBarr) 
                   case 'Pressure(kPa)', 
