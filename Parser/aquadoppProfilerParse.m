@@ -174,18 +174,22 @@ velocity3    = velocity3    / 1000.0;
 first_mes=pressure(1:5);
 first_mes=first_mes(first_mes<10);
 if  ~isnan(first_mes)
-    disp(['Please note: ', NAME,': pressure offset in air based on values up to ',num2str(ceil(max(first_mes))),'-dbar']);
+    disp(['Please note: ', NAME,': pressure offset in air : ',...
+        num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
     pressure=pressure-mean(first_mes);
-    disp(['PRESSURE OFFSET APPLIED - PRESS ANY KEY TO CONTINUE']); 
-    pause;
-    PressureOffsetComment=[mfilename,'.m: Raw pressure data from this instrument were corrected for a pressure offset in air of ', num2str(round(mean(first_mes),1)),'dbar'];
+    
+    % Commenting the Metadata history
+    PressureOffsetComment=[mfilename,'.m: Raw pressure data from ', NAME,...
+        ' was corrected for a pressure offset in air of ',...
+        num2str(round(mean(first_mes),1)),'dbar'];
+    
     sample_data.history = sprintf('%s - %s', ...
             datestr(now_utc, readProperty('exportNetCDF.dateFormat')), ...
             PressureOffsetComment);
 else
-    disp(['Please note: ', NAME,': pressure offset in air contains values up to ',num2str(ceil(max(pressure(1:5)))),'-dbar']);
-    disp(['PRESSURE OFFSET NOT APPLIED - PRESS ANY KEY TO CONTINUE OR BREAK']);  
-    pause;
+    disp(['Please note: ', NAME,': pressure offset in air : ',...
+        num2str(ceil(max(pressure(1:5)))),...
+        '-dbar and NO pressure offset was applied']);
 end
 
 if velocityProcessed

@@ -22,7 +22,12 @@ function sample_data = readSeaguard(filename, mode)
 % Contributors: Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
 %               Pascal_Guillot@uqar.ca (UQAR - Canada)			
 %
-% Copyright (c) 2010, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2017, Amundsen Science & ArcticNet
+% http://www.amundsen.ulaval.ca/
+% http://www.arcticnet.ulaval.ca/
+% All rights reserved.
+%
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -34,7 +39,7 @@ function sample_data = readSeaguard(filename, mode)
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -202,20 +207,20 @@ data = struct;
 					  'photodetector paired with an optical filter which measures everything '...
 					  'that backscatters in the region of 650nm to 1000nm.']';
                   
-				  % Two pressure options MPa or kPa, depending on .cdb file
+				  % Two pressure resolution options MPa or kPa, depending on .cdb file
                   % export from 5059 software
                   
 				  %Pressure (MPa) = 100-1*(dBarr)
                   case 'Pressure(MPa)', 
                      name = 'PRES';
-                     data.PRES.values = (values{i})/100;   
-					 data.PRES.comment = ['Pressure data in kPa converted to dBarr for toolbox'];	
+                     data.PRES.values = (values{i}*100);   
+					 data.PRES.comment = ['Pressure data converted from MPa to dBarr for toolbox'];	
 				
-                  %Pressure (kPa) = 10-1*(dBarr)
+                  %Pressure (kPa) = 10-1*(dBarr) 
                   case 'Pressure(kPa)', 
                      name = 'PRES';
-                     data.PRES.values = (values{i})/10;   
-					 data.PRES.comment = ['Pressure data in kPa converted to dBarr for toolbox'];	
+                     data.PRES.values = (values{i}*10);   
+					 data.PRES.comment = ['Pressure data converted from kPa to dBarr for toolbox'];	
 
 				  %Temperature (Celsius degree)
                   case 'Temperature(DegC)', 

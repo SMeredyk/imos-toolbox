@@ -71,12 +71,6 @@ narginchk(1, 2);
   % wave data separately (.PD0 and .WVS)
   [filePath, fileRadName, ~] = fileparts(filename);
   
-    filename=which(filename); %ADDED AForest 24-Jan-2017 to prevent error with RDI files not found
-  if isempty(filename) %ADDED AForest 24-Jan-2017
-      filename=uigetfile([filePath,'\*.*'],['Select the file: ', fileRadName,'.000']); %ADDED AForest 24-Jan-2017
-      filename=[filePath,'\',filename]; %ADDED AForest 24-Jan-2017
-  end %ADDED AForest 24-Jan-2017
-  
   currentFile   = fullfile(filePath, [fileRadName '.PD0']);
   waveFile      = fullfile(filePath, [fileRadName '.WVS']);
   

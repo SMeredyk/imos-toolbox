@@ -15,9 +15,13 @@ function sample_data = XRParse( filename, mode )
 % Outputs:
 %   sample_data - Struct containing imported sample data.
 %
-% Author : 		Guillaume Galibert <guillaume.galibert@utas.edu.au>
-% Contributors :Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
+% Author : 		 Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
+% Contributors : Guillaume Galibert <guillaume.galibert@utas.edu.au>			
 %
+% Copyright (c) 2017, Amundsen Science & ArcticNet
+% http://www.amundsen.ulaval.ca/
+% http://www.arcticnet.ulaval.ca/
+% All rights reserved.
 %
 % Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
@@ -77,10 +81,10 @@ if strcmpi(ext, '.dat') && strcmp(line(1:9), 'Model=RBR')
     % use the classic XR420 parser for RBR Windows v 6.13 file format
     sample_data = readXR420(filename, mode);
 elseif strcmpi(ext, '.txt') && strcmp(line(1:12), 'Model=XR-420')
-            sample_data = readXR620(filename, mode); % This is a neewer Ruskin exported XR420 dataset, 
+            sample_data = readXR620(filename, mode); % This is a newer Ruskin exported XR420 dataset, 
 			% imports CT, CT-FL-Tu-DO ; no salinity or depth imported
 elseif strcmpi(ext, '.txt') && strcmp(line(1:12), 'Model=XR-620')
-            sample_data = readXR620(filename, mode); % This is a neewer Ruskin exported XR420 dataset, 
+            sample_data = readXR620(filename, mode); % This is a newer Ruskin exported XR420 dataset, 
 			% imports CT, CT-FL-Tu-DO ; no salinity or depth imported		
 elseif strcmpi(ext, '.txt') && strcmp(line(1:12), 'Model=RBRcon')		
 		   	sample_data = readXRConcertoDuo(filename, mode); % This is a Concerto model 

@@ -17,11 +17,15 @@ function sample_data = readRCM( filename, mode )
 % ProductNumber:	4430 (possibly blank)
 % SerialNumber:	30
 %
-% Author :      Guillaume Galibert <guillaume.galibert@utas.edu.au>
-% Contributors: Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
-%               Pascal_Guillot@uqar.ca (UQAR - Canada)			
+% Author : 		 Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
+% Contributors : Pascal_Guillot@uqar.ca (UQAR - Canada), Guillaume Galibert <guillaume.galibert@utas.edu.au>			
 %
-% Copyright (c) 2010, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2017, Amundsen Science & ArcticNet
+% http://www.amundsen.ulaval.ca/
+% http://www.arcticnet.ulaval.ca/
+% All rights reserved.
+%
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -33,7 +37,7 @@ function sample_data = readRCM( filename, mode )
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -166,7 +170,7 @@ function data = readData(filename, iData)
   for i=1:nParams
       switch params{i}{1}
                   
-                  %Date Time (dd.mm.yyyy hh:mm:ss) 
+                  %Date Time (mm.dd.yyyy hh:mm:ss) 
                   case 'Time tag (Gmt)', 
                     name = 'TIME';
                     data.TIME.values = datenum(values{i}, 'mm.dd.yyyy HH:MM:SS');
@@ -199,20 +203,20 @@ function data = readData(filename, iData)
 					  'photodetector paired with an optical filter which measures everything '...
 					  'that backscatters in the region of 650nm to 1000nm.']';
                   
-                  % Two pressure options MPa or kPa, depending on .cdb file
+                  % Two pressure resolution options MPa or kPa, depending on .cdb file
                   % export from 5059 software
                   
 				  %Pressure (MPa) = 100-1*(dBarr)
                   case 'Pressure(MPa)', 
-                     name = 'PRES';
-                     data.PRES.values = (values{i})/100;   
-					 data.PRES.comment = ['Pressure data in kPa converted to dBarr for toolbox'];	
+                     name = 'PRES_REL';
+                     data.PRES_REL.values = (values{i}*100);   
+					 data.PRES_REL.comment = ['Pressure data converted from MPa to dBarr for toolbox'];	
 				
-                  %Pressure (kPa) = 10-1*(dBarr)
+                  %Pressure (kPa) = 10-1*(dBarr) 
                   case 'Pressure(kPa)', 
                      name = 'PRES';
-                     data.PRES.values = (values{i})/10;   
-					 data.PRES.comment = ['Pressure data in kPa converted to dBarr for toolbox'];	
+                     data.PRES.values = (values{i}*10);   
+					 data.PRES.comment = ['Pressure data converted from kPa to dBarr for toolbox'];	
 
 				  %Temperature (Celsius degree)
                   case 'Temperature(DegC)', 
@@ -233,7 +237,7 @@ function data = readData(filename, iData)
                     data.DOX1.values = values{i};
                     data.DOX1.comment = ['Dissolved Oxygen Concentration (uM)per Litre'];
                         					  
-                  % Not sure if it's better to let the toolbox calculate the Depth (gsw) ???
+                  % it's better to let the toolbox calculate the Depth (gsw) 
                   %Depth (m)	Latitude corrected in Aanderaa software
                   % case 'Depth(m)', 
 					% name = 'DEPTH';
@@ -241,7 +245,7 @@ function data = readData(filename, iData)
 					% data.DEPTH.comment = ['Derived SeaWater Depth Calculated by Aanderaa Seaguard Studio'...
 						%					' and latitude corrected'];
 						
-                  %Density(kg/m^3)	 - Derived by Aanderaa software  - Not sure if its better to let the toolbox derive this?
+                  %Density(kg/m^3)	 -  its better to let the toolbox derive this
                    % case 'Density(kg/m^3)', 
 					%	name = 'DENS';
                     %   data.DENS.values = values{i};
@@ -250,10 +254,10 @@ function data = readData(filename, iData)
                   
                  %% Single-Point Current Meter - Very Basic current Measurements - assumed no mag. decl. applied
                  
-                 %Absolute Speed (cm/s) = 10-1*(m/s)
-                  case 'Abs Speed(cm/s)', 
+                 %Absolute Speed (cm/s) = 100-1*(m/s)
+                  case 'AbsSpeed(cm/s)', 
                     name = 'CSPD';
-                    data.CSPD.values = (values{i})/10; 
+                    data.CSPD.values = (values{i})/100; 
 					data.CSPD.comment = ['Absolute SeaWater Velocity m/s'];
 					
 				%Absolute Water Direction (Deg.M)

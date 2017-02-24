@@ -1,12 +1,12 @@
 % what
-S, project                      = ArcticNet Mooring Observing System (AMOS)
+S, project                      = [ddb Site Sites ResearchActivity]
 S, conventions                  = CF-1.6,IMOS-1.4
 S, standard_name_vocabulary     = NetCDF Climate and Forecast (CF) Metadata Convention Standard Name Table 27
 S, title                        = [ddb Site]: [ddb Site Sites ResearchActivity]
-S, institution                  = [ddb Site Sites ResearchActivity]
+S, institution                  = ArcticNet
 D, date_created                 = [mat now_utc]
 D, date_modified                = [ddb Modified]
-S, abstract                     = [ddb Site]: [ddb Site Sites Description]
+S, abstract                     = [ddb Site]: [ddb Site Sites ResearchActivity]: [ddb Site Sites Description]
 S, comment                      = [ddb Comment]
 S, source                       = [ddb DeploymentType]
 S, instrument                   = [ddb InstrumentID Instruments Make] [ddb InstrumentID Instruments Model]
@@ -14,20 +14,22 @@ S, keywords                     = [ddb InstrumentID Instruments Model], [mat cel
 S, keywords_vocabulary          = IMOS parameter names. See https://github.com/aodn/imos-toolbox/blob/master/IMOS/imosParameters.txt
 S, references                   = http://www.imos.org.au
 S, site_code                    = [ddb Site]
-S, platform_code                = [mat ['Amundsen (CGDT) ' '[ddb Site]']]
+S, platform_code                = [ddb Site Sites Platform]
 S, deployment_code              = [ddb Site]
 S, featureType                  = [mat updateIfEmpty('[mat sample_data.meta.featureType]', 'profile')]
 S, cdm_data_type                = Station
-S, naming_authority             = AMOS
+S, naming_authority             = Amundsen Science
 S, metadata                     = 
+S, rosetteCTD					= QC Processed Rosette CTD Profile Filenames : Deploy - [ddb Station] ; Recovery - [ddb EndStation]
 S, sensorML                     = 
 S, instrument_serial_number     = [mat updateIfEmpty('[ddb InstrumentID Instruments SerialNumber]', sample_data.meta.instrument_serial_no)]
 N, instrument_sample_interval   = [mat sample_data.meta.instrument_sample_interval]
 N, instrument_beam_angle        = [mat sample_data.meta.beam_angle]
 N, instrument_burst_interval    = [mat sample_data.meta.instrument_burst_interval]
 N, instrument_burst_duration    = [mat sample_data.meta.instrument_burst_duration]
-S, instrument_calib_info		= [ddb CalibSite]: [ddb CalibDate] : [ddb CalibStatus] : StdDevErr [ddb CalibErr]
-
+S, instrument_calib_status		= [ddb CalibSite]: Status :[ddb CalibStatus]
+D, instrument_calib_date		= [ddb CalibDate]
+N, instrument_calib_stdDevErr	= [ddb CalibErr]
 
 % these fields are automatically populated upon creation/export
 S, file_version                 = 
@@ -36,12 +38,13 @@ S, history                      =
 S, quality_control_log          = 
 
 % where
-N, geospatial_lat_min       = [ddb Site Sites NominalLatitude]
-N, geospatial_lat_max       = [ddb Site Sites NominalLatitude]
-N, geospatial_lon_min       = [ddb Site Sites NominalLongitude]
-N, geospatial_lon_max       = [ddb Site Sites NominalLongitude]
+N, geospatial_lat_min       = [ddb Site Sites Latitude]
+N, geospatial_lat_max       = [ddb Site Sites Latitude]
+N, geospatial_lon_min       = [ddb Site Sites Longitude]
+N, geospatial_lon_max       = [ddb Site Sites Longitude]
 N, instrument_nominal_height= 
 N, instrument_nominal_depth = [ddb InstrumentDepth]
+N, instrument_actual_depth  = 
 N, site_nominal_depth       = [ddb Site Sites Depth]
 N, site_depth_at_deployment = [ddb Site Sites Depth]
 
@@ -65,18 +68,18 @@ D, time_coverage_end            = [ddb TimeEstimatedRetrieval]
 % who
 S, data_centre                  = ArcticNet - Universite Laval
 S, institution_address          = 1045 Ave. de la Medecine, Quebec, QC
-S, institution_postal_address   = G1V 0A6  Canada
-S, data_centre_email            = pdc@arcticnet.ulaval.ca
-S, author_email                 = shawn.meredyk@arcticnet.ulaval.ca
-S, author                       = Shawn Meredyk
+S, institution_postal_address   = G1V 0A6,  Canada
+S, data_centre_email            = data@arcticnet.ulaval.ca
+S, author_email                 = info@arcticnet.ulaval.ca
+S, author                       = ArcticNet
 S, principal_investigator       = Louis Fortier
 S, principal_investigator_email = louis.fortier@bio.ulaval.ca
 S, institution_references       = http://www.arcticnet.ulaval.ca
 
 % how
-S, lineage                 = 
+S, lineage                 = Ver 2.1
 S, citation                = The citation in a list of references is: "ArcticNet [year-of-data-download], [Title], Project [ddb FieldDescription], [data-access-URL], accessed [date-of-access].".
-s, credit				   = [ddb FieldDescription]
-S, acknowledgement         = Any users of AMOS data are required to clearly acknowledge the source of the material derived from AMOS in the format: "Data was sourced from the ArcticNet Marine Observing System (AMOS) - AMOS is a collaborative research infrastructure, supported by the Canadian Government." If relevant, also credit other organisations involved in collection of this particular datastream (as listed in 'credit' in the metadata record).
-S, disclaimer              = Data, products and services from AMOS are provided "as is" without any warranty as to fitness for a particular purpose.
+s, credit				   = [ddb Site Sites ResearchActivity]
+S, acknowledgement         = Any users of ArcticNet data are required to clearly acknowledge the source of the material derived from ArcticNet in the format: "Data was sourced from the ArcticNet Marine Observing System (ArcticNet) - ArcticNet is a collaborative research infrastructure, supported by the Canadian Government." If relevant, also credit other organisations involved in collection of this particular datastream (as listed in 'credit' in the metadata record).
+S, disclaimer              = Data, products and services from ArcticNet are provided "as is" without any warranty as to fitness for a particular purpose.
 S, license                 = http://creativecommons.org/licenses/by/4.0/

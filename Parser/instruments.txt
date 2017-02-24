@@ -42,7 +42,7 @@ RDI, 					WHS,                              								workhorse
 RDI,            		WH,                                                             workhorse
 RDI, 					ADCP - WH-Sentinel,             								workhorse
 RDI, 					ADCP - WORKHORSE SENTINEL, 										workhorse
-RDI,					Sentinel-V,														sentinelV
+RDI,					SV100,															sentinelV
 RDI, 					ADCP-Workhorse, 												workhorse
 Teledyne-RDI, 			Workhorse ADCP, 												workhorse
 TRDI, 					Workhorse ADCP, 												workhorse
@@ -53,7 +53,7 @@ RDI, 					ADCP - WORKHORSE SENTINEL NEMO, 								workhorse
 RDI, 					ADCP-WORKHORSE-SENTINEL, 										workhorse
 RDI,					DVS750,															DVS
 RDI,					DVS6000,														DVS
-RDI, 					WHSV, 															workhorse
+
 
 NORTEK, 				ADCP - AQUAPRO, 												aquadoppProfiler
 Nortek, 				AquaPro,         												aquadoppProfiler
@@ -108,7 +108,7 @@ JFE_ALEC,				Infinity-CLW2-USB,												Alec
 JFE_ALEC,				Compact-CTHR,													Alec
 JFE_ALEC, 				Infinity-CLW-USB, 												Alec
 
-Satlantic,				ISUS,															isus
+Satlantic,				ISUS,															satlantic
 
 Sequoia,				LISST100X,														sequoia
 
@@ -119,3 +119,4 @@ Aanderaa,				RCM7,															Aanderaa
 Aanderaa,				RCM11,															Aanderaa
 Aanderaa,				Seaguard,													    Aanderaa
 
+Satlantic, 				ISUS-V3, 														satlantic

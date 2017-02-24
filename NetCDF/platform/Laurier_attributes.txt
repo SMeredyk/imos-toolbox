@@ -1,0 +1,32 @@
+S, platform_code    = CGJK
+S, callsign			= CGJK
+S, vessel_name		= Laurier
+S, IMO				= 78320456
+S, home_port        = Victoria, BC
+S, operator			= Canadian Coast Guard
+S, platform_acknowledgement = CCGS ; http://www.ccg-gcc.gc.ca/Fleet/Vessel?vessel_id=100
+
+N, frequency_38                     = 38
+S, acquisition_software_version_38  = 
+S, processing_software_version_38   = 
+S, processing_template_38           =
+S, calibration_date_38              = 
+N, calibration_accuracy_38          =
+S, transceiver_manufacturer_38      = SiTex Koden
+S, transceiver_model_38             = CVS 108
+S, transceiver_serial_38            =
+S, transceiver_firmware_38          =
+N, transceiver_power_38             =
+N, transceiver_pulse_38             =
+N, transceiver_gain_38              =
+N, transceiver_sa_correction_38     =
+N, transceiver_absorption_38        =
+N, transceiver_sound_speed_38       = 1500
+S, transducer_manufacturer_38       = Skipper
+S, transducer_model_38              = GDS 101
+S, transducer_serial_38             =
+S, transducer_location_38           = Hull
+S, transducer_aperture_38           = split
+N, transducer_depth_38              =
+N, transducer_orientation_38        = 0
+N, transducer_psi_38                =
