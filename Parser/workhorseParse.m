@@ -80,6 +80,12 @@ narginchk(1, 2);
       isWaveData = true;
   end
   
+  filename=which(filename); %ADDED AForest 24-Jan-2017 to prevent error with RDI files not found
+  if isempty(filename) %ADDED AForest 24-Jan-2017
+      filename=uigetfile([filePath,'\*.*'],['Select the file: ', fileRadName,'.000']); %ADDED AForest 24-Jan-2017
+      filename=[filePath,'\',filename]; %ADDED AForest 24-Jan-2017
+  end %ADDED AForest 24-Jan-2017
+  
   ensembles = readWorkhorseEnsembles( filename );
   
   if isempty(ensembles), error(['no ensembles found in file ' filename]); end
