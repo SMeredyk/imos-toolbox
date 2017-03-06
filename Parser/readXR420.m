@@ -258,7 +258,7 @@ function sample_data = readXR420( filename, mode )
                   case 'Pres', name = 'PRES';
                       
                   %Depth (m)
-                  case 'Depth', name = 'DEPTH';
+                  % case 'Depth', name = 'DEPTH'; % letting toolbox calculate this.
                       
                   %Fluorometry-chlorophyl (ug/l) = (mg.m-3)
                   case {'FlCa', 'FLC'},
@@ -337,7 +337,7 @@ function sample_data = readXR420( filename, mode )
                   case 'Pres', name = 'PRES';
                       
                   %Depth (m)
-                  case 'Depth', name = 'DEPTH';
+                  %case 'Depth', name = 'DEPTH'; % letting toolbox calculate this.
                       
                   %Fluorometry-chlorophyl (ug/l) = (mg.m-3)
                   case {'FlCa', 'FLC'},

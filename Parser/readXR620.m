@@ -275,7 +275,7 @@ function sample_data = readXR620( filename, mode )
                   case 'R_D_O2', name = 'DOXS';
                       
                       %Depth (m)
-                  case {'Depth', 'dpth01'}, name = 'DEPTH';
+                  %case {'Depth', 'dpth01'}, name = 'DEPTH'; % letting toolbox calculate this.
                       
 					  % commented -out due to possible latitude miscalculation from Ruskin software
                       %Salinity (PSU)
@@ -545,7 +545,7 @@ function sample_data = readXR620( filename, mode )
                   case 'R_D_O2', name = 'DOXS';
                       
                       %Depth (m)
-                  case {'Depth', 'dpth01'}, name = 'DEPTH';
+                  %case {'Depth', 'dpth01'}, name = 'DEPTH'; % letting toolbox calculate this.
                       
                       %Salinity (PSU)
                   %case {'Salin', 'sal_00'}, name = 'PSAL';
@@ -556,10 +556,10 @@ function sample_data = readXR620( filename, mode )
                       data.(fields{k}) = data.(fields{k})/10000;
                       
                       %Density anomaly (n/a)
-                 % case {'DensAnom', 'density'}, name = '';
+                 % case {'DensAnom', 'density'}, name = ''; % % letting toolbox calculate this.
                       
                       %Speed of sound (m/s)
-                  %case {'SoSUN', 'sos_00'}, name = 'SSPD';
+                  %case {'SoSUN', 'sos_00'}, name = 'SSPD'; % % letting toolbox calculate this.
                       
                       %Rinko dissolved O2 concentration (mg/l) => (umol/l)
                   case 'rdO2C'

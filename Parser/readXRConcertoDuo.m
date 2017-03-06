@@ -275,7 +275,7 @@ function sample_data = readXRConcertoDuo( filename, mode )
                   case 'R_D_O2', name = 'DOXS';
                       
                       %Depth (m)
-                  case {'Depth', 'dpth01'}, name = 'DEPTH';
+                  % case {'Depth', 'dpth01'}, name = 'DEPTH'; % letting toolbox calculate this.
                       
                       %Salinity (PSU)
                   %case 'sal_00', name = 'PSAL'; % removed 'Salin' due to possible bad salinty data from Ruskin
@@ -543,7 +543,7 @@ function sample_data = readXRConcertoDuo( filename, mode )
                   case 'R_D_O2', name = 'DOXS';
                       
                       %Depth (m)
-                  case {'Depth', 'dpth01'}, name = 'DEPTH';
+                  %% case {'Depth', 'dpth01'}, name = 'DEPTH'; % letting the toolbox calculate Depth
                       
                       %Salinity (PSU)
                  %% case 'sal_00', name = 'PSAL'; % removed 'Salin' due to possible bad salinty data from Ruskin
