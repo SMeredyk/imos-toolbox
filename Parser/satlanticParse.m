@@ -1,11 +1,11 @@
 function sample_data = satlanticParse(filename, mode )
 % satlanticPARSE reads a folder with .dat files from an ISUS-V2/V3 
 % nitrate sensor, extracted via the ISUSCom 2.1.6 software.
-%
+% the data is then converted into CSV via SatCon software.
 % The nitrate data is returned in a sample_data struct.
 %
 % Inputs:
-%   foldername  - Cell array containing the name of the folder to parse.
+%   filename  - Cell array containing the name of the file to parse.
 %   mode        - Toolbox data type mode ('profile' or 'timeSeries').
 %
 % Outputs:
@@ -46,13 +46,13 @@ function sample_data = satlanticParse(filename, mode )
 % and that it is a cell array of strings
 narginchk(1,2);
 
-if ~iscellstr(filename), error('foldername must be a cell array of strings'); end
+if ~iscellstr(filename), error('filename must be a cell array of strings'); end
 
 % only one file supported currently
-foldername = filename{1};
-if ~ischar(foldername), error('foldername must contain a string'); end
+filename = filename{1};
+if ~ischar(filename), error('filename must contain a string'); end
 
-sample_data = readISUS(foldername, mode);
+sample_data = readISUS(filename, mode);
 
 end
 
