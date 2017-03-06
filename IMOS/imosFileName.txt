@@ -1,5 +1,5 @@
 %
-% IMOS NetCDF file names are generated from the values given below. Value 
+% Amundsen Science NetCDF file names are generated from the values given below. Value 
 % definitions follow the same syntax as in NetCDF template files. Any fields
 % which are not present in this file, or are not given a value, will be given
 % a default value.
@@ -10,14 +10,15 @@
 %   dateFmt     - Format which should be used for date fields.
 %   ddb and mat tokens can be used like in the NetCDF templates
 %
-% The IMOS NetCDF file naming convention is as follows:
+% The Amundsen Sience NetCDF file naming convention is as follows:
 %
-%   IMOS_<facility_code>_<data_code>_<start_date>_<platform_code>_<file_version>_<product_type>_END<end_date>_C-<creation_date>.nc
+%   <facility_code>_<data_code>_<start_date>_<platform_code>_<site_code>_<file_version>_<product_type>_END<end_date>_C-<creation_date>.nc
 %
 facility_code = 
 data_code     = 
 start_date    = 
-platform_code = 
+platform_code =
+site_code	  = 
 file_version  = 
 product_type  = 
 end_date      = 
