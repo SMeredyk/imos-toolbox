@@ -11,7 +11,7 @@ S, comment                      = [ddb Comment]
 S, source                       = [ddb DeploymentType]
 S, instrument                   = [ddb InstrumentID Instruments Make] [ddb InstrumentID Instruments Model]
 S, keywords                     = [ddb InstrumentID Instruments Model], [mat cellStructCons(sample_data.dimensions, 'name', ', ')], [mat cellStructCons(sample_data.variables, 'name', ', ')]
-S, keywords_vocabulary          = IMOS parameter names. See https://github.com/aodn/imos-toolbox/blob/master/IMOS/imosParameters.txt
+S, keywords_vocabulary          = Standard IMOS parameter names. See https://github.com/aodn/imos-toolbox/blob/master/IMOS/imosParameters.txt
 S, references                   = http://www.imos.org.au
 S, site_code                    = [ddb Site]
 S, platform_code                = [ddb Site Sites Platform]
@@ -69,17 +69,13 @@ D, time_coverage_end            = [ddb TimeEstimatedRetrieval]
 S, data_centre                  = ArcticNet - Universite Laval
 S, institution_address          = 1045 Ave. de la Medecine, Quebec, QC
 S, institution_postal_address   = G1V 0A6,  Canada
-S, data_centre_email            = data@arcticnet.ulaval.ca
-S, author_email                 = info@arcticnet.ulaval.ca
-S, author                       = ArcticNet
-S, principal_investigator       = Louis Fortier
-S, principal_investigator_email = louis.fortier@bio.ulaval.ca
+S, data_centre_email            = pdc@arcticnet.ulaval.ca
 S, institution_references       = http://www.arcticnet.ulaval.ca
 
 % how
-S, lineage                 = Ver 2.1
-S, citation                = The citation in a list of references is: "ArcticNet [year-of-data-download], [Title], Project [ddb FieldDescription], [data-access-URL], accessed [date-of-access].".
-s, credit				   = [ddb Site Sites ResearchActivity]
-S, acknowledgement         = Any users of ArcticNet data are required to clearly acknowledge the source of the material derived from ArcticNet in the format: "Data was sourced from the ArcticNet Marine Observing System (ArcticNet) - ArcticNet is a collaborative research infrastructure, supported by the Canadian Government." If relevant, also credit other organisations involved in collection of this particular datastream (as listed in 'credit' in the metadata record).
-S, disclaimer              = Data, products and services from ArcticNet are provided "as is" without any warranty as to fitness for a particular purpose.
-S, license                 = http://creativecommons.org/licenses/by/4.0/
+S, citation                = The citation in a list of references is: "Amundsen Science Data Collection. Data collected by ArcticNet through the [ddb Sites ResearchActivity] conducted from the CCGS Amundsen in the Canadian Arctic. Mooring [ddb Site]. Processed data. Version 1. DOI: [DOI]. Archived at www.polardata.ca, https://doi.org/[DOI]. Accessed on [Date].". 
+s, credit		   		   = Proper acknowledgement and citation of the data allows for the tracking of the scientific output of the Amundsen Science program and is important for the CCGS Amundsen's continued support of the scientific community.
+S, acknowledgement         = Please include this statement in a paragraph at the end of your publication, before the reference list: [Some of] The data presented herein were collected by the Canadian research icebreaker CCGS Amundsen and made available by the Amundsen Science program, which is supported by the Canada Foundation for Innovation Major Science Initiatives Fund. The views expressed in this publication do not necessarily represent the views of Amundsen Science or that of its partners. 
+S, disclaimer              = Data provided therein are provided "as is" without any warranty as to fitness for a particular purpose.
+S, license                 = Amundsen Science datasets are licensed under the Creative Commons Attribution  International (CC BY 4.0) Public License. A summary of the license is available at https://creativecommons.org/licenses/by/4.0/. By using Amundsen Science data, you accept the terms and conditions of this License. The license grants the public the rights to use and share the data and results derived therefrom as long as the proper acknowledgement is given to the data licensor, that any alteration to the data is clearly indicated, and that a link to the original data and the license is made available.
+
