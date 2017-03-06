@@ -239,6 +239,7 @@ if adcpOrientation == 1
     % case of a downward looking ADCP -> negative values
     height = -height;
     distance = -distance;
+    velocity3 = -velocity3; % Turnaround to correct inverted WCUR when down-looking profiler % AForest 3-March-2017
 end
 iWellOriented = adcpOrientations == adcpOrientation; % we'll only keep data collected when ADCP is oriented as expected
 dims = {
