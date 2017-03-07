@@ -104,6 +104,12 @@ end
 % check if the data is compatible with the QC algorithm
 idMandatory = idABSIC{1} & iTime &(idUcur | idVcur | idWcur | idCspd | idCdir);
 
+% check if we do have a profiler, routine is not made for single points
+if exist('EAA','var') == 1
+ss=size(sample_data.variables{idABSIC{1}});
+idMandatory =idMandatory & ss(1)>1 & ss(2)>1;
+end
+
 if ~idMandatory, return; end
 
  % Verify if we have current speed, if not calculate
