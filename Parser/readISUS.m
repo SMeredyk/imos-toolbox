@@ -64,9 +64,7 @@ sample_data.toolbox_input_file              = filename;
 sample_data.meta.instrument_make            = 'Satlantic';
 sample_data.meta.instrument_model           = 'V3';
 sample_data.meta.instrument_serial_no       = serNum; 
-% sample_data.meta.instrument_sample_interval =
-% median(diff(data.TIME.values*24*3600)); causes an error because data is
-% not parsed correctly yet.
+sample_data.meta.instrument_sample_interval = median(diff(data.TIME.values*24*3600)); %causes an error because data is
 sample_data.meta.featureType                = mode;
 
 sample_data.dimensions = {};
@@ -119,7 +117,7 @@ data = struct;
   dataDelim = ',';	% comma delimited data 
   
   fid = fopen(filename, 'rt');
-  params = textscan(fid, '%s', 1, 'HeaderLines', 1, 'Delimiter', ',');   
+  params = textscan(fid, '%s','Delimiter', ',');   
   params = params{1};
   iParams = strfind(params, ',');
   nParams = length(iParams{1});
@@ -146,7 +144,7 @@ data = struct;
                     data.TIME.values = datenum(values{i}, 'HH:MM:SS.mmm');
                     data.TIME.comment = ['HH:MM:SS.mmm'];    
 										  
-				  case 'NITRATE	RMSe', 
+				  case 'NITRATE_RMSe', 
 				    name = 'NTRA';
                     data.NTRA.values = values{i};
 					data.NTRA.comment = ['mole_concentration_of_nitrate_in_sea_water : [mole l-1]']';
