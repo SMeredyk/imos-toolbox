@@ -74,6 +74,7 @@ RBR,            		XR-420-CT-Tu-Do,                                              
 RBR,            		XR-420-CTD-Tu-DO-Fl,                                            XR
 RBR,            		XR-420-CTD+Tu-DO,                                               XR
 RBR,                    Concerto-CTD-Tu-DO-FL,                                          XR
+RBR,                    XR-420-CT+Tu-DO-FL,                                             XR
 RBR,            		XR-420-CTD,                                                     XR
 RBR,            		XR-420-CT,                                                      XR
 RBR,            		Concerto-CT,                                                    XR
@@ -122,3 +123,4 @@ Aanderaa,				Seaguard,													    Aanderaa
 
 Satlantic, 				ISUS-V3, 														satlantic
 RBR, XR-420-CT+Tu-DO, XR
+RBR, XR-420-CT+Tu-DO-FL, XR

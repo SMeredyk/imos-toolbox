@@ -820,10 +820,12 @@ function header = readHeader(fid)
       if length(startDate) == 8 
           header.start    = datenum([startDate ' ' startTime],  'yy/mm/dd HH:MM:SS.FFF');
       else
-          header.start    = datenum([startDate ' ' startTime],  'yyyy/mmm/dd HH:MM:SS.FFF');
+          header.start    = datenum([startDate ' ' startTime],  'yyyy/mm/dd HH:MM:SS.FFF');
       end
   elseif isempty(startDate) && ~isempty(startTime) % ruskin v1.7
-      header.start    = datenum(startTime,  'dd-mmm-yyyy HH:MM:SS.FFF');
+      header.start    = datenum(startTime,  'dd-mmm-yyyy HH:MM:SS.FFF'); % up to ruskin v1.12.6
+	  else
+	  header.start    = datenum(startTime,  'yyyy-mm-dd HH:MM:SS.FFF'); % ruskin v1.13.7
   end
   
   if ~isempty(endDate) && ~isempty(endTime) % ruskin v1.5
@@ -832,8 +834,10 @@ function header = readHeader(fid)
       else
           header.end      = datenum([endDate   ' ' endTime],    'yyyy/mmm/dd HH:MM:SS.FFF');
       end
-  elseif isempty(endDate) && ~isempty(endTime) % ruskin v1.7
-      header.end    = datenum(endTime,  'dd-mmm-yyyy HH:MM:SS.FFF');
+  elseif isempty(endDate) && ~isempty(endTime) % ruskin v1.7 - v1.12.6
+		header.end    = datenum(endTime,  'dd-mmm-yyyy HH:MM:SS.FFF');
+	  else
+		header.end    = datenum(endTime,  'yyyy-mm-dd HH:MM:SS.FFF'); % Ruskin V1.13.7
   end
   
 end
@@ -886,13 +890,14 @@ function data = readData(fid, header)
   
   if length(data.Date{1}) == 8 
       data.time = datenum(data.Date, 'yy/mm/dd') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS');
-  else
-      if isempty(strfind(data.Date{1}, '-'))
-          data.time = datenum(data.Date, 'yyyy/mmm/dd') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS');
-      else
-          data.time = datenum(data.Date, 'dd-mmm-yyyy') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS');
-      end
-  end
+  
+  elseif isempty(strfind(data.Date{1}, '-'))
+          data.time = datenum(data.Date, 'yyyy/mm/dd') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS');
+  
+  elseif header.firmware < 1.2
+          data.time = datenum(data.Date, 'dd-mmm-yyyy') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); %ruskin v1.12.6
+		  else
+		  data.time = datenum(data.Date, 'yyyy-mm-dd') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); % ruskin v1.13.7
   
   data = rmfield(data, 'Date');
   data = rmfield(data, 'Time');

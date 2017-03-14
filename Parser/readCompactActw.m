@@ -9,8 +9,8 @@ function sample_data = readCompactActw( filename, mode )
 % Outputs:
 %   sample_data - Struct containing imported sample data.
 %
-% Author : 		Guillaume Galibert <guillaume.galibert@utas.edu.au> 
-% Contributor: 	Shawn.Meredyk@arcticNet.ulaval.ca (ArcticNet - ULaval - Canada)
+% Author : 		Shawn.Meredyk@arcticNet.ulaval.ca (ArcticNet - ULaval - Canada)
+% Contributor: 	Guillaume Galibert <guillaume.galibert@utas.edu.au> 
 
 %
 % Copyright (c) 2010, eMarine Information Infrastructure (eMII) and Integrated 
@@ -174,7 +174,7 @@ function data = readData(filename, channel, nChannels)
     c = 1;
     headerL{c} = fgetl(fid); 
     
-    % Read file until [Item]   
+    % Read file until [Data]   
     while isempty( strfind( headerL{c}, '[Data]'))
         c = c + 1; 
         headerL{c}= fgetl(fid);
