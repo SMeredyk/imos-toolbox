@@ -1,8 +1,10 @@
 function sample_data = readISUS(filename, mode )
 %readISUS Parses several data files retrieved from a Satlantic nitrate sensor ISUS V2 /V3 
 %
-% This function is able to read a folder of .dat files retrieved from an ISUS unit.
-% The data is recovered via the ISUSCom 2.1.6 software and converted into a single CSV file.
+% This function is able to read a concatenated dataset of .dat files retrieved from an ISUS unit.
+% The data is recovered via the ISUSCom 2.1.6 software and converted into a
+% single CSV file via SatCon 1.5.5.2. No header and the Date and Time
+% columns have been concatenated and formatted in dd-mm-yyyy hh:mm:ss.
 %
 % Inputs:
 %   filename  	- Cell array containing the name of the file to parse.
@@ -12,7 +14,7 @@ function sample_data = readISUS(filename, mode )
 %   sample_data - Struct containing imported sample data.
 %
 % Author : 		 Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
-% Contributors : Pascal_Guillot@uqar.ca (UQAR - Canada), Guillaume Galibert <guillaume.galibert@utas.edu.au>			
+% Contributors : Guillaume Galibert <guillaume.galibert@utas.edu.au>			
 %
 % Copyright (c) 2017, Amundsen Science & ArcticNet
 % http://www.amundsen.ulaval.ca/
@@ -52,19 +54,20 @@ narginchk(1,2);
 
 if ~ischar(filename), error('filename must contain a string'); end
 
-[~, serNum, ext] = fileparts(filename);
+[~, name, ~] = fileparts(filename);
+%extracting all characters except "Satlantic_ISUS-V3_" with '_' delimiter
+unitInfo = textscan(name, '%s %s %d', 'Delimiter', '_');
    
-data = readData(filename);
-    
+data = readData(filename);   
  
 % copy all of the information over to the sample data struct
 sample_data = struct;
 
 sample_data.toolbox_input_file              = filename;
-sample_data.meta.instrument_make            = 'Satlantic';
-sample_data.meta.instrument_model           = 'V3';
-sample_data.meta.instrument_serial_no       = serNum; 
-sample_data.meta.instrument_sample_interval = median(diff(data.TIME.values*24*3600)); %causes an error because data is
+sample_data.meta.instrument_make            = unitInfo{1}';
+sample_data.meta.instrument_model           = unitInfo{2}';
+sample_data.meta.instrument_serial_no       = unitInfo{3}; 
+sample_data.meta.instrument_sample_interval = median(diff(data.TIME.values*24*3600)); 
 sample_data.meta.featureType                = mode;
 
 sample_data.dimensions = {};
@@ -113,51 +116,48 @@ end %end of main function
 function data = readData(filename)
 %READDATA Reads the sample data from the file.
 
-data = struct;
+  data = struct;
   dataDelim = ',';	% comma delimited data 
   
   fid = fopen(filename, 'rt');
-  params = textscan(fid, '%s','Delimiter', ',');   
+  params = textscan(fid, '%s', 1, 'Delimiter', '');   
   params = params{1};
   iParams = strfind(params, ',');
-  nParams = length(iParams{1});
+  nParams = length(iParams{1})+1; % +1 shouldn`t be necessary....but it is.
   paramsFmt = repmat('%s', 1, nParams);
-  params = textscan(params{1}, paramsFmt, 'Delimiter', dataDelim);
-  dataFmt = ['%s', repmat('%f', 1, nParams-1)];
-  values = textscan(fid, dataFmt, 'Delimiter', dataDelim);
+  params = textscan(params{1}, paramsFmt, 'Delimiter', ','); 
+  dataFmt = ['%s', repmat('%f', 1, nParams-1)]; 
+  values = textscan(fid, dataFmt, 'Delimiter', dataDelim); 
   fclose(fid);
   
-% other variables exported by SatCon
-%   T_SPEC	T_LAMP	LAMP_TIME	HUMIDITY	VOLT_12	VOLT_5	REF_AVG	REF_STD	SW_DARK	SPEC_AVG	UV(189.17)
+% other variables exported by SatCon and avaiable for analysis
+%   T_SPEC	T_LAMP	LAMP_TIME	HUMIDITY	VOLT_12	VOLT_5	REF_AVG	REF_STD
+%   SW_DARK	SPEC_AVG	UV(189.17) - all wavelengths
+
   for i=1:nParams
-      switch params{i}{1}
-                  
-				  %Date : Still needs testing
-                  case 'DATEFIELD', 
-                    name = 'DATE';																
-                    data.DATE.values = datenum(values{i}, 'yyyy'-'juliandate');
-					data.DATE.comment = ['yyyy-DDD'];
-					
-				%Time (HH:MM:SS.mmm)
-                  case 'TIMEFIELD'
+      switch params{i}{1}  
+				  				
+				%DateTime (dd-mm-yyyy HH:MM:SS)
+                  case 'DATETIME',
                     name = 'TIME';
-                    data.TIME.values = datenum(values{i}, 'HH:MM:SS.mmm');
-                    data.TIME.comment = ['HH:MM:SS.mmm'];    
+                    data.TIME.values = datenum(values{i},'dd-mm-yyyy HH:MM:SS');			
+                    data.TIME.comment = ['dd-mm-yyyy HH:MM:SS'];  				
 										  
-				  case 'NITRATE_RMSe', 
+				  case 'NITRATE', 
 				    name = 'NTRA';
                     data.NTRA.values = values{i};
 					data.NTRA.comment = ['mole_concentration_of_nitrate_in_sea_water : [mole l-1]']';
 				
 				case 'T_INT', 
-				    name = 'TEMP';
-                    data.TEMP.values = values{i};
-					data.TEMP.comment = ['internal temp of nitrate sensor']';	
+				    name = 'DRYT';
+                    data.DRYT.values = values{i};
+					data.DRYT.comment = ['degrees celcius - dry internal temp of nitrate sensor lamp']';	
                 
 				case 'VOLT_MAIN', 
 				    name = 'VOLT';
                     data.VOLT.values = values{i};
-					data.VOLT.comment = ['Voltage main of nitrate sensor']';              
+					data.VOLT.comment = ['Voltage main of nitrate sensor for diagnostic purposes']';  
+                    
       end % end of Switch
   end % end of For loop
 end % end of readData function

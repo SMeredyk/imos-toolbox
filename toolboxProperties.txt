@@ -40,7 +40,7 @@ autoQCManager.autoQCDefaultChain.timeSeries = imosImpossibleDateQC imosImpossibl
 autoQCManager.autoQCDefaultChain.profile = imosImpossibleDateQC imosImpossibleLocationSetQC imosInOutWaterQC imosGlobalRangeQC imosImpossibleDepthQC imosSalinityFromPTQC imosHistoricalManualSetQC
 
 % last selected set of auto QC routines
-autoQCManager.autoQCChain.timeSeries = imosImpossibleDateQC imosImpossibleLocationSetQC imosGlobalRangeQC imosInOutWaterQC imosImpossibleDepthQC imosSalinityFromPTQC imosSideLobeVelocitySetQC imosTiltVelocitySetQC imosHorizontalVelocitySetQC imosCorrMagVelocitySetQC imosVerticalVelocitySetQC imosPercentGoodVelocitySetQC imosErrorVelocitySetQC imosRateOfChangeQC imosBinDepthInterferenceSetQC imosEchoIntensityInAirManualSetQC imosHistoricalManualSetQC
+autoQCManager.autoQCChain.timeSeries = imosImpossibleDateQC imosImpossibleLocationSetQC imosGlobalRangeQC imosInOutWaterQC imosImpossibleDepthQC imosSalinityFromPTQC imosSideLobeVelocitySetQC imosTiltVelocitySetQC imosHorizontalVelocitySetQC imosCorrMagVelocitySetQC imosVerticalVelocitySetQC imosPercentGoodVelocitySetQC imosErrorVelocitySetQC imosRateOfChangeQC imosVerticalSpikeQC imosBinDepthInterferenceSetQC imosEchoIntensityInAirManualSetQC imosHistoricalManualSetQC
 autoQCManager.autoQCChain.profile = imosImpossibleDateQC imosImpossibleLocationSetQC imosInOutWaterQC imosGlobalRangeQC imosImpossibleDepthQC imosSalinityFromPTQC imosHistoricalManualSetQC
 
 % prompt for preprocessing (if false, 
@@ -63,7 +63,7 @@ dataFileStatusDialog.noFileFormat          = bold
 dataFileStatusDialog.multipleFileFormat    = italic
 
 % last selected values for start dialog
-startDialog.dataDir.timeSeries = F:\Analysis\2015\Re-Processed\WF2-15
+startDialog.dataDir.timeSeries = C:\Analysis\CA05-15
 startDialog.dataDir.profile = 
 startDialog.fieldTrip.timeSeries = 2016_3a
 startDialog.fieldTrip.profile = 
@@ -76,7 +76,7 @@ startDialog.highDate.profile =
 importManager.manualDir = 
 
 % last selected directory for file export
-exportDialog.defaultDir = F:\Analysis\2015\Re-Processed\WF2-15\IMOS_QC
+exportDialog.defaultDir = C:\Analysis\CA05-15
 
 % prompt user to select parser if an appropriate one 
 % cannot be found (if false, the data is not imported)
