@@ -54,8 +54,9 @@ narginchk(1,2);
 
 if ~ischar(filename), error('filename must contain a string'); end
 
-[~, serNum, ext] = fileparts(filename);
-serial = regexp(serNum,'\d+', 'tokens'); % extracting the serial number from the filename
+[~, name, ~] = fileparts(filename);
+%extracting all characters except "Satlantic_ISUS-V3_" with '_' delimiter
+unitInfo = textscan(name, '%s %s %d', 'Delimiter', '_');
    
 data = readData(filename);   
  
@@ -63,9 +64,9 @@ data = readData(filename);
 sample_data = struct;
 
 sample_data.toolbox_input_file              = filename;
-sample_data.meta.instrument_make            = 'Satlantic';
-sample_data.meta.instrument_model           = 'V3';
-sample_data.meta.instrument_serial_no       = 'serNum'; %regexp(serNum,'\d+', 'tokens')
+sample_data.meta.instrument_make            = unitInfo{1}';
+sample_data.meta.instrument_model           = unitInfo{2}';
+sample_data.meta.instrument_serial_no       = unitInfo{3}; 
 sample_data.meta.instrument_sample_interval = median(diff(data.TIME.values*24*3600)); 
 sample_data.meta.featureType                = mode;
 
@@ -94,7 +95,7 @@ sample_data.variables{end}.data             = sample_data.variables{end}.typeCas
 sample_data.variables{end}.dimensions       = [];
 
 % copy variable data over
-%data = rmfield(data, 'TIME');
+data = rmfield(data, 'TIME');
 fields = fieldnames(data);
 
 for k = 1:length(fields)
@@ -122,7 +123,7 @@ function data = readData(filename)
   params = textscan(fid, '%s', 1, 'Delimiter', '');   
   params = params{1};
   iParams = strfind(params, ',');
-  nParams = length(iParams{1})+1; % =1 shouldn`t be necessary....but it is.
+  nParams = length(iParams{1})+1; % +1 shouldn`t be necessary....but it is.
   paramsFmt = repmat('%s', 1, nParams);
   params = textscan(params{1}, paramsFmt, 'Delimiter', ','); 
   dataFmt = ['%s', repmat('%f', 1, nParams-1)]; 
@@ -136,7 +137,7 @@ function data = readData(filename)
   for i=1:nParams
       switch params{i}{1}  
 				  				
-				%DateTime (yyyy-mm-dd HH:MM:SS.mmm)
+				%DateTime (dd-mm-yyyy HH:MM:SS)
                   case 'DATETIME',
                     name = 'TIME';
                     data.TIME.values = datenum(values{i},'dd-mm-yyyy HH:MM:SS');			
@@ -150,7 +151,7 @@ function data = readData(filename)
 				case 'T_INT', 
 				    name = 'DRYT';
                     data.DRYT.values = values{i};
-					data.DRYT.comment = ['degrees celcius - internal temp of nitrate sensor']';	
+					data.DRYT.comment = ['degrees celcius - dry internal temp of nitrate sensor lamp']';	
                 
 				case 'VOLT_MAIN', 
 				    name = 'VOLT';

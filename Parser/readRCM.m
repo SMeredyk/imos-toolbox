@@ -179,7 +179,7 @@ function data = readData(filename, iData)
                   %Reference Parameter (unitless) - not used by Toolbox
                   case 'Reference', 
                     name = 'REF';
-                    data.REF.comment = [''];
+                    data.REF.comment = ['calibration reference value from Aanderaa'];
 				
 				  %Turbidity (Ftu) - NTU and FTU have similar values ,
 				  %though calibration method is different chemicals
