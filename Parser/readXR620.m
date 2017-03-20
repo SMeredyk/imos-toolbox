@@ -896,9 +896,11 @@ function data = readData(fid, header)
   
   elseif header.firmware < 1.2
           data.time = datenum(data.Date, 'dd-mmm-yyyy') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); %ruskin v1.12.6
-		  else
+  elseif header.firmware < 6
 		  data.time = datenum(data.Date, 'yyyy-mm-dd') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); % ruskin v1.13.7
-  
+		  else
+		  data.time = datenum(data.Date, 'dd-mmm-yyyy') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); %ruskin v1.11.1
+  end
   data = rmfield(data, 'Date');
   data = rmfield(data, 'Time');
 end
