@@ -124,3 +124,4 @@ Aanderaa,				Seaguard,													    Aanderaa
 Satlantic, 				ISUS-V3, 														satlantic
 RBR, XR-420-CT+Tu-DO, XR
 RBR, XR-420-CT+Tu-DO-FL, XR
+RBR, Concerto-CT-Tu-DO-FL, XR
