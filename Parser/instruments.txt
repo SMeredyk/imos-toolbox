@@ -7,28 +7,61 @@
 %
 % format: make, model, parser
 
-Sea-Bird Electronics, 	SBE19plusV2, 													SBE19
-Sea-Bird Electronics, 	SBE37SM, 														SBE37SM
-Sea-Bird Electronics, 	SBE39, 															SBE39
-SEABIRD, 				SBE37 - CONDUCTIVITY TEMPERATURE AND PRESSURE RECORDER, 		SBE37
-SEABIRD, 				SBE37IM - CONDUCTIVITY TEMPERATURE AND PRESSURE RECORDER, 		SBE37
-SEABIRD, 				SBE39 - TEMPERATURE RECORDER, 									SBE39
-SEABIRD, 				SBE39P - TEMPERATURE AND PRESSURE RECORDER, 					SBE39
-SEABIRD, 				SBE37SM - MicroCAT C-T Recorder Serial Interface and Memory, 	SBE37SM
-SeaBird,       		 	SBE37,                                                          SBE37
-SeaBird,        		SBE37-SM,                                                       SBE37SM
-SEABIRD, 				SBE19plus V2, 													SBE19
-SEABIRD, 				SBE39P - TEMPERATURE & PRESSURE RECORDER, 						SBE39
-SEABIRD, 				SBE39IM - TEMPERATURE RECORDER, 								SBE39
-SEABIRD, 				CTD - SBE19Plus, 												SBE19
-Seabird, 				SBE39 [600m] temp only, 										SBE39
-SEABIRD, 				CTD - SBE 9 Plus, 												SBE19
-SEABIRD,				SBE37SM - MicroCAT C-T Recorder with RS-232 Interface, 			NIWA
-Seabird, 				SBE39 [600m] temp & press., 									SBE39
-Seabird, 				SBE19plus, 														SBE19
-SEABIRD, 				SBE16 - CONDUCTIVITY TEMPERATURE LOGGER, 						SBE19
-SEABIRD, 				CTD - SBE19PLUS V2 SEACAT, 										SBE19
-Seabird,				SBE26,															SBE26
+Aanderaa,				RCM4,															Aanderaa
+Aanderaa,				RCM7,															Aanderaa
+Aanderaa,				RCM11,															Aanderaa
+Aanderaa,				Seaguard,													    Aanderaa
+
+Aquatec, 				Aqualogger 520T, 												aquatec
+Aquatec, 				Aqualogger 520PT, 												aquatec
+AQUATEC, 				AQUALOGGER, 													aquatec
+AQUATEC, 				AQUALOGGER MODEL 520, 											aquatec
+
+FSI, 					NXIC BIO-500, 													NXICBinary
+FSI, 					FSI, 															NXICBinary
+FSI, 					NXIC-CTD-BIO, 													NXICBinary
+
+JFE_ALEC,				Compact-LW,														Alec
+JFE_ALEC,				Compact-CLW,													Alec
+JFE_ALEC,				Compact-CTW,													Alec
+JFE_ALEC,				Compact-CT,														Alec
+JFE_ALEC,				Infinity-CTW-USB,												Alec
+JFE_ALEC,				Infinity-CLW2-USB,												Alec
+JFE_ALEC,				Compact-CTHR,													Alec
+JFE_ALEC, 				Infinity-CLW-USB, 												Alec
+
+Mclane,					MMP,															mmp
+
+NORTEK, 				ADCP - AQUAPRO, 												aquadoppProfiler
+Nortek, 				AquaPro,         												aquadoppProfiler
+Nortek,					AQP,															aquadoppProfiler
+Nortek,         		Aquadopp,                                                       aquadoppVelocity
+Nortek, 				AQD,															aquadoppVelocity
+Nortek, 				Aquadopp-DW, 													aquadoppVelocity
+Nortek,					ADCP 190kHz, 													continental
+NORTEK, 				ADCP - CONTINENTAL, 											continental
+Nortek, 				Continental,        											continental
+NORTEK, 				ADCP - AWAC AST, 												awac
+NORTEK, 				ADCP - AWAC, 													awac
+
+RBR, 					TWR-2050, 														XR
+BRANCKER, 				TEMPERATURE PRESSURE - TDR-2050, 								XR
+BRANCKER, 				TEMPERATURE LOGGER TR-1060P, 									XR
+RBR,            		XR-420-CT-Tu-Do,                                                XR
+RBR,            		XR-420-CTD-Tu-DO-Fl,                                            XR
+RBR,            		XR-420-CTD+Tu-DO,                                               XR
+RBR,                    Concerto-CTD-Tu-DO-FL,                                          XR
+RBR,                    Concerto-CT-Tu-DO-FL,                                           XR
+RBR,                    XR-420-CT+Tu-DO-FL,                                             XR
+RBR,                    XR-420-CT+Tu-DO,                                                XR
+RBR,            		XR-420-CTD,                                                     XR
+RBR,            		XR-420-CT,                                                      XR
+RBR,            		Concerto-CT,                                                    XR
+RBR,            		Concerto-CT-Tu-DO,                                              XR
+RBR, 					Concerto-CTD-Tu-DO, 											XR
+RBR, 					Concerto-CTD-Tu, 												XR
+RBR, 					Concerto-CTD,	 												XR
+RBR, 					DR1050P, 														DR1050
 
 RDI, 					ADCP300 Sentinel, 												workhorse
 RDI, 					ADCP - WORKHORSE, 												workhorse
@@ -54,73 +87,42 @@ RDI, 					ADCP-WORKHORSE-SENTINEL, 										workhorse
 RDI,					DVS750,															DVS
 RDI,					DVS6000,														DVS
 
+REEFNET, 				SENSUS ULTRA, 													sensusUltra
 
-NORTEK, 				ADCP - AQUAPRO, 												aquadoppProfiler
-Nortek, 				AquaPro,         												aquadoppProfiler
-Nortek,					AQP,															aquadoppProfiler
-Nortek,         		Aquadopp,                                                       aquadoppVelocity
-Nortek, 				AQD,															aquadoppVelocity
-Nortek, 				Aquadopp-DW, 													aquadoppVelocity
-Nortek,					ADCP 190kHz, 													continental
-NORTEK, 				ADCP - CONTINENTAL, 											continental
-Nortek, 				Continental,        											continental
-NORTEK, 				ADCP - AWAC AST, 												awac
-NORTEK, 				ADCP - AWAC, 													awac
+Satlantic,				ISUS-V3,														satlantic
 
-RBR, 					TWR-2050, 														XR
-BRANCKER, 				TEMPERATURE PRESSURE - TDR-2050, 								XR
-BRANCKER, 				TEMPERATURE LOGGER TR-1060P, 									XR
-RBR,            		XR-420-CT-Tu-Do,                                                XR
-RBR,            		XR-420-CTD-Tu-DO-Fl,                                            XR
-RBR,            		XR-420-CTD+Tu-DO,                                               XR
-RBR,                    Concerto-CTD-Tu-DO-FL,                                          XR
-RBR,                    XR-420-CT+Tu-DO-FL,                                             XR
-RBR,            		XR-420-CTD,                                                     XR
-RBR,            		XR-420-CT,                                                      XR
-RBR,            		Concerto-CT,                                                    XR
-RBR,            		Concerto-CT-Tu-DO,                                              XR
-RBR, 					Concerto-CTD-Tu-DO, 											XR
-RBR, 					Concerto-CTD-Tu, 												XR
-RBR, 					Concerto-CTD,	 												XR
-RBR, 					DR1050P, 														DR1050
+Sea-Bird Electronics, 	SBE19plusV2, 													SBE19
+Sea-Bird Electronics, 	SBE37SM, 														SBE37SM
+Sea-Bird Electronics, 	SBE39, 															SBE39
+SEABIRD, 				SBE37 - CONDUCTIVITY TEMPERATURE AND PRESSURE RECORDER, 		SBE37
+SEABIRD, 				SBE37IM - CONDUCTIVITY TEMPERATURE AND PRESSURE RECORDER, 		SBE37
+SEABIRD, 				SBE39 - TEMPERATURE RECORDER, 									SBE39
+SEABIRD, 				SBE39P - TEMPERATURE AND PRESSURE RECORDER, 					SBE39
+SEABIRD, 				SBE37SM - MicroCAT C-T Recorder Serial Interface and Memory, 	SBE37SM
+SeaBird,       		 	SBE37,                                                          SBE37
+SeaBird,        		SBE37-SM,                                                       SBE37SM
+SEABIRD, 				SBE19plus V2, 													SBE19
+SEABIRD, 				SBE39P - TEMPERATURE & PRESSURE RECORDER, 						SBE39
+SEABIRD, 				SBE39IM - TEMPERATURE RECORDER, 								SBE39
+SEABIRD, 				CTD - SBE19Plus, 												SBE19
+Seabird, 				SBE39 [600m] temp only, 										SBE39
+SEABIRD, 				CTD - SBE 9 Plus, 												SBE19
+SEABIRD,				SBE37SM - MicroCAT C-T Recorder with RS-232 Interface, 			NIWA
+Seabird, 				SBE39 [600m] temp & press., 									SBE39
+Seabird, 				SBE19plus, 														SBE19
+SEABIRD, 				SBE16 - CONDUCTIVITY TEMPERATURE LOGGER, 						SBE19
+SEABIRD, 				CTD - SBE19PLUS V2 SEACAT, 										SBE19
+Seabird,				SBE26,															SBE26
+
+Sequoia,				LISST100X,														sequoia
 
 Star Oddi, 				Starmon mini, 													StarmonMini
-
-REEFNET, 				SENSUS ULTRA, 													sensusUltra
 
 WETLABS, 				WQM, 															WQM
 WET Labs, 				WQM, 															WQM
 Weblabs, 				WQM, 															WQM
 
-Aquatec, 				Aqualogger 520T, 												aquatec
-Aquatec, 				Aqualogger 520PT, 												aquatec
-AQUATEC, 				AQUALOGGER, 													aquatec
-AQUATEC, 				AQUALOGGER MODEL 520, 											aquatec
 
-FSI, 					NXIC BIO-500, 													NXICBinary
-FSI, 					FSI, 															NXICBinary
-FSI, 					NXIC-CTD-BIO, 													NXICBinary
 
-JFE_ALEC,				Compact-LW,														Alec
-JFE_ALEC,				Compact-CLW,													Alec
-JFE_ALEC,				Compact-CTW,													Alec
-JFE_ALEC,				Compact-CT,														Alec
-JFE_ALEC,				Infinity-CTW-USB,												Alec
-JFE_ALEC,				Infinity-CLW2-USB,												Alec
-JFE_ALEC,				Compact-CTHR,													Alec
-JFE_ALEC, 				Infinity-CLW-USB, 												Alec
 
-Satlantic,				ISUS-V3,														satlantic
 
-Sequoia,				LISST100X,														sequoia
-
-Mclane,					MMP,															mmp
-
-Aanderaa,				RCM4,															Aanderaa
-Aanderaa,				RCM7,															Aanderaa
-Aanderaa,				RCM11,															Aanderaa
-Aanderaa,				Seaguard,													    Aanderaa
-
-Satlantic, 				ISUS-V3, 														satlantic
-RBR, XR-420-CT+Tu-DO, XR
-RBR, XR-420-CT+Tu-DO-FL, XR
