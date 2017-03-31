@@ -1,21 +1,20 @@
-function [graphs lines vars] = graphXvY( parent, sample_data, vars )
-%GRAPHTRANSECT Graphs the first two variables from the given data set
+function [graphs, lines, vars] = graphXvY( parent, sample_data, vars )
+%GRAPHTRANSECT Graphs the two variables selected from the given data set
 % against each other on an X-Y axis.
 %
 % Inputs:
 %   parent             - handle to the parent container.
 %   sample_data        - struct containing sample data.
-%   vars               - Indices of variables that should be graphed..
+%   vars               - Indices of variables that should be graphed.
 %
 % Outputs:
-%   graphs             - A vector of handles to axes on which the data has 
+%   graphs             - A vector of handles to the axes on which the data has 
 %                        been graphed.
-%   lines              - A matrix of handles to line or surface (or other) 
-%                        handles which have been drawn, the same length as 
-%                        graphs.
+%   lines              - A matrix of handles to lines which has been drawn.
 %   vars               - Indices of variables which were graphed.
 %
-% Author: Paul McCarthy <paul.mccarthy@csiro.au>
+% Author:       Paul McCarthy <paul.mccarthy@csiro.au>
+% Contributor:  Guillaume Galibert <guillaume.galibert@utas.edu.au>
 %
 
 %
@@ -56,48 +55,47 @@ function [graphs lines vars] = graphXvY( parent, sample_data, vars )
   graphs = [];
   lines  = [];
     
-  if length(vars) < 2
-    warning('not enough variables to graph');
+  if length(vars) ~= 2
+    warning('only 2 variables need to be selected to graph');
     return; 
   end
   
-  vars = vars(1:2);
+  % get the toolbox execution mode
+  mode = readProperty('toolbox.mode');
+  
+  switch mode
+      case 'profile'
+          % we don't want to plot TIME, PROFILE, DIRECTION, LATITUDE, LONGITUDE, BOT_DEPTH
+          p = getVar(sample_data.variables, 'BOT_DEPTH');
+      case 'timeSeries'
+          % we don't want to plot TIMESERIES, PROFILE, TRAJECTORY, LATITUDE, LONGITUDE, NOMINAL_DEPTH
+          p = getVar(sample_data.variables, 'NOMINAL_DEPTH');
+  end
+  vars = vars + p;
   
   if length(sample_data.variables{vars(1)}.dimensions) > 1 ...
   || length(sample_data.variables{vars(2)}.dimensions) > 1
     error('XvY only supports single dimensional data');
   end
   
-  for k = 1:length(vars)
-        
-    % m points to the other variable
-    m = k;
-    if m == 1, m = 2;
-    else       m = 1;
-    end
-    
-    xname = sample_data.variables{vars(k)}.name;
-    yname = sample_data.variables{vars(m)}.name;
-    
-    xdata = sample_data.variables{vars(k)}.data;
-    ydata = sample_data.variables{vars(m)}.data;
-    
-    % create the axes
-    graphs(k) = subplot(1, length(vars), k);
-    
-    set(graphs(k), 'Parent', parent,...
-                   'XGrid',  'on',...
-                   'Color', 'none',...
-                   'YGrid',  'on', ...
-                   'ZGrid',  'on');
-    
-    lines(k) = line(xdata, ydata);
-    
-    % set labels
-    set(get(graphs(k), 'XLabel'), 'String', xname, 'Interpreter', 'none');
-    set(get(graphs(k), 'YLabel'), 'String', yname, 'Interpreter', 'none');
-  end
+  xname = sample_data.variables{vars(1)}.name;
+  yname = sample_data.variables{vars(2)}.name;
   
-  set(lines(1), 'Color', 'blue');
-  set(lines(2), 'Color', 'red');
+  xdata = sample_data.variables{vars(1)}.data;
+  ydata = sample_data.variables{vars(2)}.data;
+  
+  % create the axes
+  graphs = axes('Parent', parent,...
+      'XGrid',  'on',...
+      'Color', 'none',...
+      'YGrid',  'on', ...
+      'ZGrid',  'on');
+  
+  lines = line(xdata, ydata);
+  
+  % set labels
+  set(get(graphs, 'XLabel'), 'String', xname, 'Interpreter', 'none');
+  set(get(graphs, 'YLabel'), 'String', yname, 'Interpreter', 'none');
+  
+  set(lines, 'Color', 'blue');
 end
