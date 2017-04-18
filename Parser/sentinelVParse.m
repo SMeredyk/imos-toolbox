@@ -1,5 +1,5 @@
-function sample_data = workhorseParse( filename, tMode )
-%WORKHORSEPARSE Parses a raw (binary) data file from a Teledyne RD Workhorse 
+function sample_data = sentinelVParse( filename, tMode )
+%SENTINELVPARSE Parses a raw (binary) data file from a Teledyne RDI Sentinel V 
 % ADCP.
 %
 % This function uses the readWorkhorseEnsembles function to read in a set
@@ -27,12 +27,12 @@ function sample_data = workhorseParse( filename, tMode )
 %   sample_data - sample_data struct containing the data retrieved from the
 %                 input file.
 %
-% Author:       Paul McCarthy <paul.mccarthy@csiro.au>
+% Author:       Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
 % Contributors: Leeying Wu <Wu.Leeying@saugov.sa.gov.au>
 %               Bradley Morris <b.morris@unsw.edu.au>
 %               Charles James May 2010 <charles.james@sa.gov.au>
 %               Guillaume Galibert <guillaume.galibert@utas.edu.au>
-%         
+%         		Paul McCarthy <paul.mccarthy@csiro.au>
 
 %
 % Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
