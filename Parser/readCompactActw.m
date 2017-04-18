@@ -69,7 +69,7 @@ sample_data.meta.instrument_make            = 'JFE_ALEC';
 sample_data.meta.instrument_model           = header.SensorType;
 sample_data.meta.instrument_serial_no       = header.SerialNo;
 sample_data.meta.instrument_sample_interval = median(diff(data.TIME.values*24*3600));
-%sample_data.meta.instrument_burst_interval  = header.BurstTime*60; % seconds between bursts
+%sample_data.meta.instrument_burst_interval  = header.Burst; % seconds between bursts
 sample_data.meta.featureType                = mode;
 
 sample_data.dimensions = {};
@@ -132,7 +132,7 @@ function [header, channel,nChannels] = readHeader(rawText)
       tuple = textscan(headerCell{i}, fmtHeader, 'Delimiter', delimHeader);
       if 1 == isempty(tuple{2}), tuple{2} = {'NAN'}; end
       
-      tuple{1}{1}=strrep(tuple{1}{1},' ','_');  %% Added Aforest 30-Jan-2107 for valid field name (no space)
+      tuple{1}{1}=strrep(tuple{1}{1},' ','_');  %% Added Aforest 30-Jan-2107 for field name with no spaces
       header.(tuple{1}{1}) = tuple{2}{1};
   end   % end of for loop
 
@@ -142,8 +142,8 @@ function [header, channel,nChannels] = readHeader(rawText)
     
   startCoefficient 	= '[Coef]';
   endCoefficient 	= '[Data]';
-  delimCoef         = {',','='};
-  fmtCoef           = '%s%f%f%f%f'; % 4 coefficients
+  delimCoef         = ',';
+  fmtCoef           = '%f%f%f%f'; % 4 coefficients
   
   iStartCoef 	= find(strcmp(startCoefficient, rawText)) + 1;
   iEndCoef      = find(strcmp(endCoefficient, rawText))-1;
@@ -156,7 +156,9 @@ function [header, channel,nChannels] = readHeader(rawText)
       coef 	= textscan(coefCell{i}, fmtCoef,'Delimiter', delimCoef);
       
       for j=1:4
-          eval(['channel.Ch' num2str(i) '(j) = coef{1,j+1};']); end 
+          eval(['channel.Ch' num2str(i) '(j) = coef{1,j};']); 
+            j = j+1;
+      end 
   end   %end for loop
   
 end % end of readHeader function
@@ -185,8 +187,8 @@ function data = readData(filename, channel, nChannels)
     fclose( fid );
 
     % convert the raw data into real values      
-    data.TIME.values = datenum(values{1});
-    data.TIME.comment = 'Time'; 
+    data.TIME.values = datenum(values{1},'yyyy/mm/dd HH:MM:SS');
+    data.TIME.comment = ['Time']; 
      
     data.TEMP.values = channel.Ch1(1)+(channel.Ch1(2).*(values{2}))+ (channel.Ch1(3).*(values{2}.^2))+ (channel.Ch1(4).*(values{2}.^3));
     data.TEMP.comment = ['Celcius']; 

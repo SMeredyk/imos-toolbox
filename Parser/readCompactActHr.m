@@ -155,7 +155,9 @@ function [header, channel,nChannels] = readHeader(rawText)
       coef 	= textscan(coefCell{i}, fmtCoef,'Delimiter', delimCoef);
       
       for j=1:4
-          eval(['channel.Ch' num2str(i) '(j) = coef{j};']); end 
+          eval(['channel.Ch' num2str(i) '(j) = coef{1,j};']); 
+            j = j+1;
+      end
   end   %end for loop
   
 end % end of readHeader function
