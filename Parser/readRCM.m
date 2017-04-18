@@ -75,6 +75,34 @@ end % end of File read
 % copy all of the information over to the sample data struct
 sample_data = struct;
 
+% Correction for pressure offset in air - Originally added by AForest 27-Jan-2017 with
+% comments for history on 30-Jan-2017 to Nortek current profiler toolbox code.
+
+% based on first 5 measurements within 10 m range
+[~,NAME,~] = fileparts(filename);
+first_mes=data.PRES.values{1:5};
+first_mes=first_mes(first_mes<10);
+
+if  ~isnan(first_mes)
+    disp(['Please note: ', NAME,': pressure offset in air : ',...
+        num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
+    pressure=pressure-mean(first_mes);
+    
+    % Commenting the Metadata history
+    PressureOffsetComment=[mfilename,'.m: Raw pressure data from ', NAME,...
+        ' was corrected for a pressure offset in air of ',...
+        num2str(round(mean(first_mes),1)),'dbar'];
+    
+    sample_data.history = sprintf('%s - %s', ...
+            datestr(now_utc, readProperty('exportNetCDF.dateFormat')), ...
+            PressureOffsetComment);
+else
+    disp(['Please note: ', NAME,': pressure offset in air : ',...
+        num2str(ceil(max(pressure(1:5)))),...
+        '-dbar and NO pressure offset was applied']);
+end
+
+
 sample_data.toolbox_input_file              = filename;
 sample_data.meta.instrument_make            = 'Aanderaa';
 sample_data.meta.instrument_model           = header.Model;
@@ -105,6 +133,32 @@ sample_data.variables{end+1}.name           = 'NOMINAL_DEPTH';
 sample_data.variables{end}.typeCastFunc     = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
 sample_data.variables{end}.data             = sample_data.variables{end}.typeCastFunc(NaN);
 sample_data.variables{end}.dimensions       = [];
+
+% based on first 5 measurements within 10 m range
+[~,NAME,~] = fileparts(filename);
+first_mes=data.PRES.values(1:5);
+first_mes=first_mes(first_mes<10);
+
+if  ~isnan(first_mes)
+    disp(['Please note: ', NAME,': pressure offset in air : ',...
+        num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
+    
+	%pressure=pressure-mean(first_mes);
+    data.PRES.values=data.PRES.values-mean(first_mes);
+    
+	% Commenting the Metadata history
+    PressureOffsetComment=[mfilename,'.m: Raw pressure data from ', NAME,...
+        ' was corrected for a pressure offset in air of ',...
+        num2str(round(mean(first_mes),1)),'dbar'];
+    
+    sample_data.history = sprintf('%s - %s', ...
+            datestr(now_utc, readProperty('exportNetCDF.dateFormat')), ...
+            PressureOffsetComment);
+else
+    disp(['Please note: ', NAME,': pressure offset in air : ',...
+        num2str(ceil(max(data.PRES.values(1:5)))),...
+        '-dbar and NO pressure offset was applied']);
+end
 
 % copy variable data over
 data = rmfield(data, {'TIME','REF'});		
@@ -138,7 +192,7 @@ function [header, iData] = readHeader(rawText)
   
   iStartHeader = find(strcmp(startHeader, rawText));
   iEndHeader = find(strcmp(endHeader, rawText))-1;
-  iData = iEndHeader + 1;
+  iData = iEndHeader + 1;  %data headers-1 line after [Data]
   
   headerCell 	= rawText(iStartHeader:iEndHeader);
   nFields 		= length(headerCell);
@@ -160,7 +214,7 @@ function data = readData(filename, iData)
   params = textscan(fid, '%s', 1, 'HeaderLines', iData, 'Delimiter', '');   % iData passed the header position to readData
   params = params{1};
   iParams = strfind(params, ',');
-  nParams = length(iParams{1});
+  nParams = length(iParams{1})+1; % needs to see one other field?
   paramsFmt = repmat('%s', 1, nParams);
   params = textscan(params{1}, paramsFmt, 'Delimiter', dataDelim);
   dataFmt = ['%s', repmat('%f', 1, nParams-1)];
@@ -209,13 +263,13 @@ function data = readData(filename, iData)
 				  %Pressure (MPa) = 100-1*(dBarr)
                   case 'Pressure(MPa)', 
                      name = 'PRES';
-                     data.PRES.values = (values{i}*100);   
+                     data.PRES.values = (values{i})/100;   
 					 data.PRES.comment = ['Pressure data converted from MPa to dBarr for toolbox'];	
 				
                   %Pressure (kPa) = 10-1*(dBarr) 
                   case 'Pressure(kPa)', 
                      name = 'PRES';
-                     data.PRES.values = (values{i}*10);   
+                     data.PRES.values = (values{i})/10;   
 					 data.PRES.comment = ['Pressure data converted from kPa to dBarr for toolbox'];	
 
 				  %Temperature (Celsius degree)
