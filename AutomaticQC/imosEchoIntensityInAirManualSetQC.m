@@ -9,17 +9,18 @@ function [sample_data, varChecked, paramsLog] = imosEchoIntensityInAirManualSetQ
 % Some knowledge on underwater accoustic of a given environementis advisable.
 %
 % Inputs:
-%   sample_data - struct containing the entire data set and dimension data.
-%   auto - logical, run QC in batch mode
+%   sample_data - 	struct containing the entire data set and dimension data.
+%   auto 		- 	logical, run QC in batch mode
 %
 % Outputs:
-%   sample_data - same as input, with QC flags added for variable/dimension
-%                 data.
-%   varChecked  - cell array of variables' name which have been checked
-%   paramsLog   - string containing details about params' procedure to include in QC log
+%   sample_data - 	same as input, with QC flags added for variable/dimension
+%                 	data.
+%   varChecked  - 	cell array of variables' name which have been checked
+%   paramsLog   - 	string containing details about params' procedure to include in QC log
 %
 % Author:       Alexandre Forest <Alexandre.Forest@arcticnet.ulaval.ca>
-% Contributor:  Guillaume Galibert <guillaume.galibert@utas.edu.au>
+% Contributor:  Guillaume Galibert <guillaume.galibert@utas.edu.au>,
+%				Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
 %
 % Copyright (c) 2017, Amundsen Science & ArcticNet
 % http://www.amundsen.ulaval.ca/
@@ -153,18 +154,27 @@ ea_p=(permute(ea,[2 3 1]));
    if beams ==4 %RDI 4 beams
         nam=['Echo intensity in air of ',sample_data.meta.instrument_model,' #',sample_data.meta.instrument_serial_no,' on ',sample_data.deployment_code];
    else %Nortek 3 beams
-        nam=['Echo intensity in air of ',sample_data.meta.instrument_model,' #',sample_data.meta.head.SerialNo,' on ',sample_data.deployment_code];
+        nam=['Echo intensity in air of ',sample_data.meta.instrument_model,' #',sample_data.meta.instrument_serial_no,' on ',sample_data.deployment_code];
    end
 if sum(sum(outofwater))==0
     ea_p=ea_p(:); %in counts
+   
+    % can be commented out as code requires additional toolbox licenses for nanmin
     ea_min=[sprintf('%.0f',nanmin(ea_p)),' counts'];
     ea_max=[sprintf('%.0f',nanmax(ea_p)),' counts'];
     ea_mean=[sprintf('%.0f',nanmean(ea_p)),' counts'];
     ea_median=[sprintf('%.0f',nanmedian(ea_p)),' counts'];
-    ea_95p=[sprintf('%.0f',(ea_p(round(0.95*length(ea_p))))),' counts'];
     ea_std=[sprintf('%.0f',nanstd(ea_p)),' counts'];
+    %ea_p95=[sprintf('%.0f',(ea_p(round(0.95*length(ea_p))))),' counts'];
+    
+	%ea_p(ea_p<=0)=NaN; ea_p(isnan(ea_p))=[]; ea_p=sort(ea_p);% If any negative or NaN ea
+	%ea_min=[sprintf('%.0f',min(ea_p)),' counts'];
+	%ea_max=[sprintf('%.0f',max(ea_p)),' counts'];
+	%ea_mean=[sprintf('%.0f',mean(ea_p)),' counts'];
+	%ea_median=[sprintf('%.0f',median(ea_p)),' counts'];
+	        
     str1=sprintf(['Info: imosEchoIntensityInAirManualSetQC cannot filter data based on echo intensity in air.\n\n***** Not enough out-of-water data available.']);
-    str2=sprintf(['\n\nDo you want to use a threshold echo intensity flag based on the following echo intensity statistics when deployed?\n\nMin: ' ea_min '\nMax: ' ea_max '\nMean: ' ea_mean '\nMedian: ' ea_median '\n95th percentile: ' ea_95p '\nStandard deviation: ' ea_std]);
+    str2=sprintf(['\n\nDo you want to use a threshold echo intensity flag based on the following echo intensity statistics when deployed?\n\nMin: ' ea_min '\nMax: ' ea_max '\nMean: ' ea_mean '\nMedian: ' ea_median '\nStandard deviation: ' ea_std]);
     str3=sprintf(['\n\nIf yes, please enter a given value. If not, click cancel.\n']);
     str4=[str1,str2,str3];
     xx = inputdlg(str4,nam,[1 120]);
@@ -172,15 +182,23 @@ if sum(sum(outofwater))==0
     ea_thresh_in_air = str2num(xx{:}); % new ea_thresh_in_air 
     end
 else
-   ea_p=(ea_p(repmat(outofwater,[1,1,size(ea_p,3)]))); %in counts
-   ea_p(ea_p<=0)=NaN; ea_p(isnan(ea_p))=[]; ea_p=sort(ea_p);% If any negative or NaN ea
-   ea_min=[sprintf('%.0f',min(ea_p)),' counts'];
-   ea_max=[sprintf('%.0f',max(ea_p)),' counts'];
-   ea_mean=[sprintf('%.0f',mean(ea_p)),' counts'];
-   ea_median=[sprintf('%.0f',median(ea_p)),' counts'];
-   ea_95p=[sprintf('%.0f',(ea_p(round(0.95*length(ea_p))))),' counts'];
-   ea_std=[sprintf('%.0f',std(ea_p)),' counts'];
-   str1=sprintf(['Info: imosEchoIntensityInAirManualSetQC requires your input\n\nThe following statistics for echo intensity in air have been found:\n\nMin: ' ea_min '\nMax: ' ea_max '\nMean: ' ea_mean '\nMedian: ' ea_median '\n95th percentile: ' ea_95p '\nStandard deviation: ' ea_std]);   
+    ea_p=(ea_p(repmat(outofwater,[1,1,size(ea_p,3)]))); %in counts
+      
+    ea_min=[sprintf('%.0f',nanmin(ea_p)),' counts'];
+    ea_max=[sprintf('%.0f',nanmax(ea_p)),' counts'];
+    ea_mean=[sprintf('%.0f',nanmean(ea_p)),' counts'];
+    ea_median=[sprintf('%.0f',nanmedian(ea_p)),' counts'];
+    ea_std=[sprintf('%.0f',nanstd(ea_p)),' counts'];
+   
+   %ea_p(ea_p<=0)=NaN; ea_p(isnan(ea_p))=[]; ea_p=sort(ea_p);% If any negative or NaN ea
+   %ea_min=[sprintf('%.0f',min(ea_p)),' counts'];
+   %ea_max=[sprintf('%.0f',max(ea_p)),' counts'];
+   %ea_mean=[sprintf('%.0f',mean(ea_p)),' counts'];
+   %ea_median=[sprintf('%.0f',median(ea_p)),' counts'];
+   %ea_std=[sprintf('%.0f',std(ea_p)),' counts'];
+   %ea_p95=[sprintf('%.0f',ea_p(round(0.95*length(ea_p)))),' counts'];  %works only if there are no NANs, otherwise gives logical error
+    
+   str1=sprintf(['Info: imosEchoIntensityInAirManualSetQC requires your input\n\nThe following statistics for echo intensity in air have been found:\n\nMin: ' ea_min '\nMax: ' ea_max '\nMean: ' ea_mean '\nMedian: ' ea_median '\nStandard deviation: ' ea_std]);   
    str2=sprintf(['\n\nDo you want to use the default echo intensity  of ',int2str(ea_thresh_in_air), ' counts as criterion to flag velocity data?\n\nIf not, please enter a new value. If yes, click cancel.\n']); 
    str3=sprintf(['\nPlease note that using the mean echo in air is suggested, but using at least the minimum value is strongly advisable.\n']);
    str4=[str1,str2,str3];
