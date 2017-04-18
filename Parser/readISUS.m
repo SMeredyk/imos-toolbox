@@ -3,8 +3,8 @@ function sample_data = readISUS(filename, mode )
 %
 % This function is able to read a concatenated dataset of .dat files retrieved from an ISUS unit.
 % The data is recovered via the ISUSCom 2.1.6 software and converted into a
-% single CSV file via SatCon 1.5.5.2. No header and the Date and Time
-% columns have been concatenated and formatted in dd-mm-yyyy hh:mm:ss.
+% single CSV file via SatCon 1.5.5.2. The Date and Time
+% columns have been concatenated and formatted in DATETIME as dd-mm-yyyy hh:mm:ss.
 %
 % Inputs:
 %   filename  	- Cell array containing the name of the file to parse.
@@ -55,17 +55,19 @@ narginchk(1,2);
 if ~ischar(filename), error('filename must contain a string'); end
 
 [~, name, ~] = fileparts(filename);
-%extracting all characters except "Satlantic_ISUS-V3_" with '_' delimiter
+%extracting filename parts 
 unitInfo = textscan(name, '%s %s %d', 'Delimiter', '_');
-   
+%unitMake = char(unitInfo{1});
+%unitModel = char(unitInfo{2});
+
 data = readData(filename);   
  
 % copy all of the information over to the sample data struct
 sample_data = struct;
 
 sample_data.toolbox_input_file              = filename;
-sample_data.meta.instrument_make            = unitInfo{1}';
-sample_data.meta.instrument_model           = unitInfo{2}';
+sample_data.meta.instrument_make            = char(unitInfo{1}); 
+sample_data.meta.instrument_model           = char(unitInfo{2});
 sample_data.meta.instrument_serial_no       = unitInfo{3}; 
 sample_data.meta.instrument_sample_interval = median(diff(data.TIME.values*24*3600)); 
 sample_data.meta.featureType                = mode;
@@ -123,7 +125,7 @@ function data = readData(filename)
   params = textscan(fid, '%s', 1, 'Delimiter', '');   
   params = params{1};
   iParams = strfind(params, ',');
-  nParams = length(iParams{1})+1; % +1 shouldn`t be necessary....but it is.
+  nParams = length(iParams{1})+1; %
   paramsFmt = repmat('%s', 1, nParams);
   params = textscan(params{1}, paramsFmt, 'Delimiter', ','); 
   dataFmt = ['%s', repmat('%f', 1, nParams-1)]; 
@@ -131,7 +133,7 @@ function data = readData(filename)
   fclose(fid);
   
 % other variables exported by SatCon and avaiable for analysis
-%   T_SPEC	T_LAMP	LAMP_TIME	HUMIDITY	VOLT_12	VOLT_5	REF_AVG	REF_STD
+%   T_SPEC	T_LAMP	HUMIDITY    VOLT_12	VOLT_5	REF_AVG	REF_STD
 %   SW_DARK	SPEC_AVG	UV(189.17) - all wavelengths
 
   for i=1:nParams
@@ -151,7 +153,12 @@ function data = readData(filename)
 				case 'T_INT', 
 				    name = 'DRYT';
                     data.DRYT.values = values{i};
-					data.DRYT.comment = ['degrees celcius - dry internal temp of nitrate sensor lamp']';	
+					data.DRYT.comment = ['degrees celcius - dry internal temp of nitrate sensor lamp']';
+                    
+                case 'T_LAMP', 
+				    name = 'TEMP';
+                    data.TEMP.values = values{i};
+					data.TEMP.comment = ['degrees celcius - dry internal temp of nitrate sensor']';
                 
 				case 'VOLT_MAIN', 
 				    name = 'VOLT';
