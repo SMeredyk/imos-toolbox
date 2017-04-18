@@ -32,6 +32,7 @@ function sample_data = workhorseParse( filename, tMode )
 %               Bradley Morris <b.morris@unsw.edu.au>
 %               Charles James May 2010 <charles.james@sa.gov.au>
 %               Guillaume Galibert <guillaume.galibert@utas.edu.au>
+%               Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
 %         
 
 %
@@ -269,6 +270,33 @@ narginchk(1, 2);
   else
       sample_data.meta.beam_angle       =  mode(fixed.beamAngle); % we set a static value for this variable to the most frequent value found
   end
+  
+% Correction for pressure offset in air - Added by Shawn Meredyk. 
+% Original code from AForest 27-Jan-2017 with
+% comments for history on 30-Jan-2017
+% based on first 5 measurements within 10 m range
+[~,NAME,~] = fileparts(filename);
+first_mes=pressure(1:5);
+first_mes=first_mes(first_mes<10);
+if  ~isnan(first_mes)
+    disp(['Please note: ', NAME,': pressure offset in air : ',...
+        num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
+    pressure=pressure-mean(first_mes);
+    
+    % Commenting the Metadata history
+    PressureOffsetComment=[mfilename,'.m: Raw pressure data from ', NAME,...
+        ' was corrected for a pressure offset in air of ',...
+        num2str(round(mean(first_mes),1)),'dbar'];
+    
+    sample_data.history = sprintf('%s - %s', ...
+            datestr(now_utc, readProperty('exportNetCDF.dateFormat')), ...
+            PressureOffsetComment);
+else
+    disp(['Please note: ', NAME,': pressure offset in air : ',...
+        num2str(ceil(max(pressure(1:5)))),...
+        '-dbar and NO pressure offset was applied']);
+end
+  
   
   % add dimensions with their data mapped
   adcpOrientations = str2num(fixed.systemConfiguration(:, 1)); % str2num is actually more relevant than str2double here
