@@ -67,6 +67,8 @@ try
     
     [header, iData] = readHeader(rawText{1});
     data = readData(filename, iData);
+    
+% cleaning-up, checking to see if the file is still open. if so, close it.    
 catch e
     if fid ~= -1, fclose(fid); end
     rethrow(e);
@@ -80,15 +82,17 @@ sample_data = struct;
 
 % based on first 5 measurements within 10 m range
 [~,NAME,~] = fileparts(filename);
-first_mes=data.PRES.values{1:5};
+first_mes=data.PRES.values(1:5);
 first_mes=first_mes(first_mes<10);
 
 if  ~isnan(first_mes)
     disp(['Please note: ', NAME,': pressure offset in air : ',...
         num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
-    pressure=pressure-mean(first_mes);
     
-    % Commenting the Metadata history
+	%pressure=pressure-mean(first_mes);
+    data.PRES.values=data.PRES.values-mean(first_mes);
+    
+	% Commenting the Metadata history
     PressureOffsetComment=[mfilename,'.m: Raw pressure data from ', NAME,...
         ' was corrected for a pressure offset in air of ',...
         num2str(round(mean(first_mes),1)),'dbar'];
@@ -98,10 +102,9 @@ if  ~isnan(first_mes)
             PressureOffsetComment);
 else
     disp(['Please note: ', NAME,': pressure offset in air : ',...
-        num2str(ceil(max(pressure(1:5)))),...
+        num2str(ceil(max(data.PRES.values(1:5)))),...
         '-dbar and NO pressure offset was applied']);
 end
-
 
 sample_data.toolbox_input_file              = filename;
 sample_data.meta.instrument_make            = 'Aanderaa';
@@ -133,32 +136,6 @@ sample_data.variables{end+1}.name           = 'NOMINAL_DEPTH';
 sample_data.variables{end}.typeCastFunc     = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
 sample_data.variables{end}.data             = sample_data.variables{end}.typeCastFunc(NaN);
 sample_data.variables{end}.dimensions       = [];
-
-% based on first 5 measurements within 10 m range
-[~,NAME,~] = fileparts(filename);
-first_mes=data.PRES.values(1:5);
-first_mes=first_mes(first_mes<10);
-
-if  ~isnan(first_mes)
-    disp(['Please note: ', NAME,': pressure offset in air : ',...
-        num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
-    
-	%pressure=pressure-mean(first_mes);
-    data.PRES.values=data.PRES.values-mean(first_mes);
-    
-	% Commenting the Metadata history
-    PressureOffsetComment=[mfilename,'.m: Raw pressure data from ', NAME,...
-        ' was corrected for a pressure offset in air of ',...
-        num2str(round(mean(first_mes),1)),'dbar'];
-    
-    sample_data.history = sprintf('%s - %s', ...
-            datestr(now_utc, readProperty('exportNetCDF.dateFormat')), ...
-            PressureOffsetComment);
-else
-    disp(['Please note: ', NAME,': pressure offset in air : ',...
-        num2str(ceil(max(data.PRES.values(1:5)))),...
-        '-dbar and NO pressure offset was applied']);
-end
 
 % copy variable data over
 data = rmfield(data, {'TIME','REF'});		
@@ -263,13 +240,13 @@ function data = readData(filename, iData)
 				  %Pressure (MPa) = 100-1*(dBarr)
                   case 'Pressure(MPa)', 
                      name = 'PRES';
-                     data.PRES.values = (values{i})/100;   
+                     data.PRES.values = (values{i})*100;   
 					 data.PRES.comment = ['Pressure data converted from MPa to dBarr for toolbox'];	
 				
                   %Pressure (kPa) = 10-1*(dBarr) 
                   case 'Pressure(kPa)', 
                      name = 'PRES';
-                     data.PRES.values = (values{i})/10;   
+                     data.PRES.values = (values{i})*10;   
 					 data.PRES.comment = ['Pressure data converted from kPa to dBarr for toolbox'];	
 
 				  %Temperature (Celsius degree)

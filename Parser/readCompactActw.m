@@ -137,7 +137,7 @@ function [header, channel,nChannels] = readHeader(rawText)
   end   % end of for loop
 
 %Now the header function reads the coefficients, to create the channel struct
-
+% 'CH1=' , CHX= need to be removed from data header in-order for parser
   channel	= struct;
     
   startCoefficient 	= '[Coef]';
@@ -183,13 +183,25 @@ function data = readData(filename, channel, nChannels)
     end
     
     % Read the data
-    values = textscan( fid, dataFmt, 'delimiter', dataDelim );
-    fclose( fid );
+    values = textscan(fid, dataFmt, 'delimiter', dataDelim );
+    fclose(fid);
 
-    % convert the raw data into real values      
-    data.TIME.values = datenum(values{1},'yyyy/mm/dd HH:MM:SS');
-    data.TIME.comment = ['Time']; 
-     
+    % convert the raw data into real values
+    
+    
+    % Sometimes the time format alternates between / or - 
+    %k = strfind(values{1}, '-');
+    %g = isempty(k{1,1});
+    
+    %if g == 0
+            data.TIME.values = datenum(values{1},'yyyy/mm/dd HH:MM:SS');
+            data.TIME.comment = ['Time']; 
+            
+  % select date-time format with dashes
+    %else    data.TIME.values = datenum(values{1},'yyyy-mm-dd HH:MM:SS');
+    %        data.TIME.comment = ['Time']; 
+    %end
+    
     data.TEMP.values = channel.Ch1(1)+(channel.Ch1(2).*(values{2}))+ (channel.Ch1(3).*(values{2}.^2))+ (channel.Ch1(4).*(values{2}.^3));
     data.TEMP.comment = ['Celcius']; 
                

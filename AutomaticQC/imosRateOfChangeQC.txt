@@ -16,6 +16,6 @@ CSPD = 3*stdDev
 UCUR = 3*stdDev
 VCUR = 3*stdDev
 WCUR = 3*stdDev
-NTRA = 2*stdDev
+NTRA = 3*stdDev
 PAR = 3*stdDev
 DENS = 3*stdDev

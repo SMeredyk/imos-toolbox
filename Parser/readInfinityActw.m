@@ -119,7 +119,7 @@ function [header, channel,nChannels] = readHeader(rawText)
   header = struct;
       
   startHeader   = '[Head]';
-  endHeader     = '[Coef]'; %all file types have [Item] except compactActw , which has [Data]
+  endHeader     = {'[Coef]', 'CoefDate'}'; %all file types have [Item] except compactActw , which has [Data]
   fmtHeader     = '%s%s';
   delimHeader   = '=';
   
@@ -136,10 +136,11 @@ function [header, channel,nChannels] = readHeader(rawText)
   end   % end of for loop
 
 %Now the header function reads the coefficients, to create the channel struct
+% 'CH1=' , CHX= need to be removed from data header in-order for parser
 
   channel	= struct;
     
-  startCoefficient 	= '[Coef]';
+  startCoefficient 	= {'[Coef]', 'CoefDate'};
   endCoefficient 	= '[Item]';
   delimCoef         = ',';
   fmtCoef           = '%f%f%f%f'; % 4 coefficients
@@ -155,7 +156,10 @@ function [header, channel,nChannels] = readHeader(rawText)
       coef 	= textscan(coefCell{i}, fmtCoef,'Delimiter', delimCoef);
       
       for j=1:4
-          eval(['channel.Ch' num2str(i) '(j) = coef{j};']); end 
+          %eval(['channel.Ch' num2str(i) '(j) = coef{j};']); end 
+      %if the above line gives an error, use lines below
+            eval(['channel.Ch' num2str(i) '(j) = coef{1,j};']); 
+            j = j+1;
   end   %end for loop
   
 end % end of readHeader function
@@ -184,12 +188,17 @@ function data = readData(filename, channel, nChannels)
     fclose( fid );
 
     % convert the raw data into real values      
-    data.TIME.values = datenum(values{1});
-    data.TIME.comment = 'Time'; 
-    
+   %if isempty(strfind(values{1}, '-'))
+            data.TIME.values = datenum(values{1},'yyyy/mm/dd HH:MM:SS');
+            data.TIME.comment = ['Time format - yyyy/mm/dd HH:MM:SS']; 
+            
+  % select date-time format with dashes
+    %else    data.TIME.values = datenum(values{1},'yyyy-mm-dd HH:MM:SS');
+    %        data.TIME.comment = ['Time']; 
+        
     % 6 coefficients for Temp calculation
-    data.TEMP.values = channel.Ch1(1)+(channel.Ch1(2).*((values{2})/640))+ (channel.Ch1(3).*(((values{2})/640).^2)))+ (channel.Ch1(4).*(((values{2})/640).^3)))+ (channel.Ch1(5).*(((values{2})/640).^4)))+ (channel.Ch1(6).*(((values{2})/640).^5)));
-    data.TEMP.comment = ['Celcius']; 
+    data.TEMP.values = channel.Ch1(1)+(channel.Ch1(2).*((values{2})/640))+ (channel.Ch1(3).*(((values{2})/640).^2))+ (channel.Ch1(4).*(((values{2})/640).^3))+ (channel.Ch1(5).*(((values{2})/640).^4))+ (channel.Ch1(6).*(((values{2})/640).^5));
+    data.TEMP.comment = ['Deg. Celcius']; 
                
     %Conductivity (mS/cm) = 10-1*(S/m)	
     data.CNDC.values = (channel.Ch2(1)+ (channel.Ch2(2).*(values{3})))/10;

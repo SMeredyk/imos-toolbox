@@ -93,7 +93,7 @@ sample_data.meta.instrument_model           = header.SondeName;
 sample_data.meta.instrument_serial_no       = header.SondeNo;
   
 	% Infinity Model and Serial number
-	equipname = regexp(header.SondeName,'T0K0U3B0');
+	equipname = regexp(header.SensorType,'T0K0U3B0');
     if equipname == 1
 	    sample_data = readInfinityAclw(filename, mode); % This is an ACLW-USB model 
 	else
@@ -142,12 +142,12 @@ function header = readHeader(rawText)
   header = struct;
       
   startHeader   = '[Head]';
-  endHeader     = {'[Coef]' '[Item]' '[Data]'}; %all file types have [Item] except compactActw , which has [Data]
+  endHeader     = {'[Coef]' 'CoefDate' '[Item]' '[Data]'}; %all file types have [Item] except compactActw , which has [Data]
   fmtHeader     = '%s%s';
   delimHeader   = '=';
   
   iStartHeader = find(strcmp(startHeader, rawText)) + 1;
-  iEndHeader = find(cellfun('isempty', regexp(rawText, '^\[Coef]|^\[Item\]|^\[Data\]') ) == 0 ) - 1;   
+  iEndHeader = find(cellfun('isempty', regexp(rawText, '^\[Coef]|^\CoefDate|^\[Item\]|^\[Data\]') ) == 0 ) - 1;   
       
   headerCell = rawText(iStartHeader:iEndHeader(1));
   nFields = length(headerCell);

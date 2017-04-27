@@ -752,6 +752,7 @@ function header = readHeader(fid)
     ['^NumberOfChannels=+' '(\d+)']
     ['^CorrectionToConductivity=+' '(\d+)']
     ['^NumberOfSamples=+' '(\d+)']
+    ['^HostVersion=+' '(\S+\s?\S+\s?\S+\s?\S+\s?\S+)$'] % this is used to determine date formating of data
   };
   
   startDate = '';
@@ -812,9 +813,15 @@ function header = readHeader(fid)
           % number of samples
           case 12
               header.samples  = str2double(tkns{1}{1});
+              
+          % Ruskin Version - used to select date format
+          case 13
+              header.hostversion  = tkns{1}{1};
       end
     end
   end
+  
+  ruskinVer = strfind(header.hostversion, '1.13.7');
   
   if ~isempty(startDate) && ~isempty(startTime) % ruskin v1.5
       if length(startDate) == 8 
@@ -825,7 +832,7 @@ function header = readHeader(fid)
   end    
   
   if isempty(startDate) && ~isempty(startTime) % ruskin v1.7+
-      if length(startTime) == 11 
+      if length(startTime) == 11 && ruskinVer == 0
           header.start    = datenum([startDate ' ' startTime],  'dd-mmm-yyyy HH:MM:SS.FFF');
       else
           header.start    = datenum([startDate ' ' startTime],  'yyyy-mm-dd HH:MM:SS.FFF');  
@@ -841,7 +848,7 @@ function header = readHeader(fid)
   end   
   
   if isempty(endDate) && ~isempty(endTime) % ruskin v1.7+
-      if length(endTime) == 11
+      if length(endTime) == 11 && ruskinVer == 0
           header.end    = datenum([endDate ' ' endTime],  'dd-mmm-yyyy HH:MM:SS.FFF');
       else
           header.end    = datenum([endDate ' ' endTime],  'yyyy-mm-dd HH:MM:SS.FFF');
@@ -858,7 +865,7 @@ function data = readData(fid, header)
   %firmwareNum to be used to select for date- time formatting unique to
   %various versions of Ruskin and firmware
   firmwareNum = str2double(header.firmware);
-  
+  ruskinVer = strfind(header.hostversion, '1.13.7');
   
   % get the column names
   header.variables = strrep(header.variables, ' & ', '|');
@@ -901,21 +908,19 @@ function data = readData(fid, header)
       data.(cols{k}) = samples{k}; 
   end
   
-  if length(data.Date{1}) == 8 
+   if length(data.Date{1}) == 8 
       data.time = datenum(data.Date, 'yy/mm/dd') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS');
   
   elseif isempty(strfind(data.Date{1}, '-'))
           data.time = datenum(data.Date, 'yyyy/mm/dd') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS');
           
   % select date-time format by ruskin and firmware version
-  elseif firmwareNum < 1.2
+  elseif firmwareNum == 10.550
           data.time = datenum(data.Date, 'dd-mmm-yyyy') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); %ruskin v1.12.6
-  elseif firmwareNum < 6
+  elseif firmwareNum < 7 & ruskinVer > 0
 		  data.time = datenum(data.Date, 'yyyy-mm-dd') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); % ruskin v1.13.7
-  elseif firmwareNum < 7
+  else 
 		  data.time = datenum(data.Date, 'dd-mmm-yyyy') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); %ruskin v1.11.1
-    else
-          data.time = datenum(data.Date, 'yyyy-mm-dd') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); %ruskin v1.8		  
  end
   data = rmfield(data, 'Date');
   data = rmfield(data, 'Time');

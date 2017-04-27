@@ -240,13 +240,19 @@ data = struct;
 				  % Two pressure resolution options MPa or kPa, depending on .cdb file
                   % export from 5059 software
                   
-				  %Pressure (MPa) = 100-1*(dBarr)
+				  %Pressure (MPa) = 100-1*(dBarr)- These should be * but
+                  %the Seaguard Studio software is exporting the data in
+                  %the dbarr sometimes. Caution is needed from the data
+                  %processor.
                   case 'Pressure(MPa)', 
                      name = 'PRES';
                      data.PRES.values = (values{i})/100;   
 					 data.PRES.comment = ['Pressure data converted from MPa to dBarr for toolbox'];	
 				
-                  %Pressure (kPa) = 10-1*(dBarr) ?
+                  %Pressure (kPa) = 10-1*(dBarr) - These should be * but
+                  %the Seaguard Studio software is exporting the data in
+                  %the dbarr sometimes. Caution is needed from the data
+                  %processor.
                   case 'Pressure(kPa)', 
                      name = 'PRES';
                      data.PRES.values = (values{i})/10;   
@@ -297,7 +303,7 @@ data = struct;
                     data.VCUR.values = (values{i})/100;
 					data.VCUR.comment = ['Northward water velocity converted from cm/s to m/ s for toolbox'];
 					
-				%East(cm/s)  = 10-1*(m/s)
+				%East(cm/s)  = 100-1*(m/s)
                   case 'East(cm/s)', 
                     name = 'UCUR';
                     data.UCUR.values = (values{i})/100;

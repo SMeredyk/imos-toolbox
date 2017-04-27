@@ -119,7 +119,7 @@ function [header, channel,nChannels] = readHeader(rawText)
   header = struct;
       
   startHeader   = '[Head]';
-  endHeader     = '[Coef]'; %all file types have [Item] except compactActw , which has [Data]
+  endHeader     ='[CoefStart]'; %[CoefStart] and [CoefEnd] are to be added to dataset
   fmtHeader     = '%s%s';
   delimHeader   = '=';
   
@@ -128,6 +128,7 @@ function [header, channel,nChannels] = readHeader(rawText)
     
   headerCell = rawText(iStartHeader:iEndHeader);
   nFields = length(headerCell);
+  
   for i=1:nFields
       tuple = textscan(headerCell{i}, fmtHeader, 'Delimiter', delimHeader);
       if 1 == isempty(tuple{2}), tuple{2} = {'NAN'}; end
@@ -139,10 +140,10 @@ function [header, channel,nChannels] = readHeader(rawText)
 
   channel	= struct;
     
-  startCoefficient 	= '[Coef]';
-  endCoefficient 	= '[Item]';
+  startCoefficient 	= '[CoefStart]';
+  endCoefficient 	= '[CoefEnd]';
   delimCoef         = ',';
-  fmtCoef           = '%f%f%f%f'; % 4 coefficients
+  fmtCoef           = '%f%f%f%f%f%f%f%f'; % first 4 coefficients are used
   
   iStartCoef 	= find(strcmp(startCoefficient, rawText)) + 1;
   iEndCoef      = find(strcmp(endCoefficient, rawText))-1;
@@ -155,7 +156,9 @@ function [header, channel,nChannels] = readHeader(rawText)
       coef 	= textscan(coefCell{i}, fmtCoef,'Delimiter', delimCoef);
       
       for j=1:4
-          eval(['channel.Ch' num2str(i) '(j) = coef{j};']); end 
+          eval(['channel.Ch' num2str(i) '(j) = coef{1,j};']); 
+            j = j+1; 
+      end 
   end   %end for loop
   
 end % end of readHeader function
@@ -167,14 +170,14 @@ function data = readData(filename, channel, nChannels)
   data = struct;
   
   dataDelim = ',';
-  dataFmt = ['%s', repmat('%f', 1, nChannels)];
+  dataFmt = ['%s', repmat('%f', 1, nChannels+5)]; % 5 extra columns old software version
    
   fid = fopen( filename, 'rt' );
     c = 1;
     headerL{c} = fgetl(fid); 
     
     % Read file until [Item]   
-    while isempty( strfind( headerL{c}, 'Item'))
+    while isempty( strfind( headerL{c}, '[Item]'))
         c = c + 1; 
         headerL{c}= fgetl(fid);
     end
@@ -184,11 +187,11 @@ function data = readData(filename, channel, nChannels)
     fclose( fid );
 
     % convert the raw data into real values      
-    data.TIME.values = datenum(values{1});
-    data.TIME.comment = 'Time'; 
+    data.TIME.values = datenum(values{1}, 'yyyy/mm/dd HH:MM:SS');
+    data.TIME.comment = 'Time format  - yyyy/mm/dd HH:MM:SS'; 
      
     data.TEMP.values = channel.Ch1(1)+(channel.Ch1(2).*(values{2}))+ (channel.Ch1(3).*(values{2}.^2))+ (channel.Ch1(4).*(values{2}.^3));
-    data.TEMP.comment = ['Celcius']; 
+    data.TEMP.comment = ['Degrees Celcius']; 
                
     data.CPHL.values = channel.Ch2(1)+ (channel.Ch2(2).*(values{3}));
     data.CPHL.comment = ['Artificial chlorophyll data '...
@@ -207,7 +210,7 @@ function data = readData(filename, channel, nChannels)
               
     %Skipping Channel 4 \ column 5 - data not usable (company diagnostics)
     
-    data.VOLT.values = channel.Ch5(1)+ (channel.Ch5(2).*values{6});
+    data.VOLT.values = channel.Ch4(1)+ (channel.Ch4(2).*values{5});
     data.VOLT.comment = '';   
 			  
 end % end of readData function
