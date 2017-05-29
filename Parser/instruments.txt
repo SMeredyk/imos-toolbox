@@ -53,6 +53,7 @@ RDI, 					ADCP - WORKHORSE SENTINEL NEMO, 								workhorse
 RDI, 					ADCP-WORKHORSE-SENTINEL, 										workhorse
 RDI,					DVS750,															DVS
 RDI,					DVS6000,														DVS
+RDI,                    Monitor,                                                        workhorse
 
 
 NORTEK, 				ADCP - AQUAPRO, 												aquadoppProfiler
