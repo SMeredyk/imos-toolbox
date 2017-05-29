@@ -74,7 +74,7 @@ end
 if strcmpi(ext, '.txt') && strcmp(line(1:7), 'Model:S')
     % use the Seaguard file format
     sample_data = readSeaguard(filename, mode);
-elseif strcmpi(ext, '.txt') && strcmp(line(1:11), 'Model:RCM11')
+elseif strcmpi(ext, '.txt') && strcmp(line(1:9), 'Model:RCM')
     % use the RCM4,7,11 file format
     sample_data = readRCM(filename, mode);
 else 

@@ -1,5 +1,5 @@
 function sample_data = readRCM( filename, mode )
-% readRCM reads a data file retrieved from an RCM4,7,11 data logger.
+% readRCM reads a data file retrieved from an RCM4,7,11 data loggers.
 %
 % This function is able to read in a single text file (tab delimited) retrieved from an 
 % RCM4,7,11 data logger exported by the 5059 Data Reading software. 
@@ -12,10 +12,10 @@ function sample_data = readRCM( filename, mode )
 % Outputs:
 %   sample_data - Struct containing imported sample data.
 %
-% Header Example:
-% Model: RCM4 / RCM7 / RCM11
-% ProductNumber:	4430 (possibly blank)
-% SerialNumber:	30
+% Header Example: (no spaces)
+% Model:RCM4 / RCM7 / RCM11
+% ProductNumber:4430 (possibly blank)
+% SerialNumber:30
 %
 % Author : 		 Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
 % Contributors : Pascal_Guillot@uqar.ca (UQAR - Canada), Guillaume Galibert <guillaume.galibert@utas.edu.au>			
@@ -161,13 +161,13 @@ function [header, iData] = readHeader(rawText)
   header 	= struct;
   iData 	= [];
   
-  startHeader 	= 'Model:RCM11';      
+  %startHeader 	= 'Model:RCM';      
   endHeader 	= '[Data]';   
   fmtHeader  	= '%s%s';
   delimHeader 	= ':';
   
   
-  iStartHeader = find(strcmp(startHeader, rawText));
+  iStartHeader = 1;
   iEndHeader = find(strcmp(endHeader, rawText))-1;
   iData = iEndHeader + 1;  %data headers-1 line after [Data]
   

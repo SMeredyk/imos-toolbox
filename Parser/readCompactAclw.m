@@ -177,7 +177,7 @@ function data = readData(filename, channel, nChannels)
     headerL{c} = fgetl(fid); 
     
     % Read file until [Item]   
-    while isempty( strfind( headerL{c}, 'Item'))
+    while isempty( strfind( headerL{c}, '[Item]'))
         c = c + 1; 
         headerL{c}= fgetl(fid);
     end

@@ -119,20 +119,21 @@ function [header, channel,nChannels] = readHeader(rawText)
   header = struct;
       
   startHeader   = '[Head]';
-  endHeader     ='[CoefStart]'; %[CoefStart] and [CoefEnd] are to be added to dataset
+  endHeader     = '[Coef]'; % Processor needs to remove CHx= and add [Coef] and [CoefEnd]
   fmtHeader     = '%s%s';
   delimHeader   = '=';
   
   iStartHeader = find(strcmp(startHeader, rawText)) + 1;
   iEndHeader = find(strcmp(endHeader, rawText))-1;
-    
+  
   headerCell = rawText(iStartHeader:iEndHeader);
   nFields = length(headerCell);
   
   for i=1:nFields
       tuple = textscan(headerCell{i}, fmtHeader, 'Delimiter', delimHeader);
       if 1 == isempty(tuple{2}), tuple{2} = {'NAN'}; end
-        
+      
+      tuple{1}{1}=strrep(tuple{1}{1},' ','_');  %% Added Aforest 30-Jan-2107 for field name with no spaces  
       header.(tuple{1}{1}) = tuple{2}{1};
   end   % end of for loop
 
@@ -140,7 +141,7 @@ function [header, channel,nChannels] = readHeader(rawText)
 
   channel	= struct;
     
-  startCoefficient 	= '[CoefStart]';
+  startCoefficient 	= '[Coef]';
   endCoefficient 	= '[CoefEnd]';
   delimCoef         = ',';
   fmtCoef           = '%f%f%f%f%f%f%f%f'; % first 4 coefficients are used

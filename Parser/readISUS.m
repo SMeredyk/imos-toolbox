@@ -127,8 +127,8 @@ function data = readData(filename)
   iParams = strfind(params, ',');
   nParams = length(iParams{1})+1; %
   paramsFmt = repmat('%s', 1, nParams);
-  params = textscan(params{1}, paramsFmt, 'Delimiter', ','); 
-  dataFmt = ['%s', repmat('%f', 1, nParams-1)]; 
+  params = textscan(params{1}, paramsFmt, 'Delimiter', dataDelim); 
+  dataFmt = ['%s', repmat('%f', 1, nParams-1)];  
   values = textscan(fid, dataFmt, 'Delimiter', dataDelim); 
   fclose(fid);
   

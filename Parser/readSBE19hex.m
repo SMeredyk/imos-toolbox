@@ -99,8 +99,8 @@ function [data, comment] = readSBE19hex( dataLines, instHeader )
     l    = 1;
     line = dataLines{k};
     
-                     data.temperature (k) = hex2dec(line(l:l+5)); l=l+6;
-                     data.conductivity(k) = hex2dec(line(l:l+5)); l=l+6;
+    if temperature,  data.temperature (k) = hex2dec(line(l:l+5)); l=l+6;
+    if conductivity, data.conductivity(k) = hex2dec(line(l:l+5)); l=l+6;
     if pressure,     data.pressure    (k) = hex2dec(line(l:l+5)); l=l+6; end
     if pressureVolt, data.pressureVolt(k) = hex2dec(line(l:l+3)); l=l+4; end
     if volt0,        data.volt0       (k) = hex2dec(line(l:l+3)); l=l+4; end
