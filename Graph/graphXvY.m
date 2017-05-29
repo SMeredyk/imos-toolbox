@@ -56,7 +56,7 @@ function [graphs, lines, vars] = graphXvY( parent, sample_data, vars )
   lines  = [];
     
   if length(vars) ~= 2
-    warning('only 2 variables need to be selected to graph');
+    warning('2 variables and only 2 need to be selected to graph');
     return; 
   end
   
@@ -81,9 +81,6 @@ function [graphs, lines, vars] = graphXvY( parent, sample_data, vars )
   xname = sample_data.variables{vars(1)}.name;
   yname = sample_data.variables{vars(2)}.name;
   
-  xdata = sample_data.variables{vars(1)}.data;
-  ydata = sample_data.variables{vars(2)}.data;
-  
   % create the axes
   graphs = axes('Parent', parent,...
       'XGrid',  'on',...
@@ -91,11 +88,70 @@ function [graphs, lines, vars] = graphXvY( parent, sample_data, vars )
       'YGrid',  'on', ...
       'ZGrid',  'on');
   
-  lines = line(xdata, ydata);
-  
-  % set labels
-  set(get(graphs, 'XLabel'), 'String', xname, 'Interpreter', 'none');
-  set(get(graphs, 'YLabel'), 'String', yname, 'Interpreter', 'none');
+  % plot the variable
+  plotFunc        = getGraphFunc('XvY', 'graph', xname);
+  [lines, labels] = plotFunc(graphs, sample_data, vars);
   
   set(lines, 'Color', 'blue');
+  
+  % set x label
+  uom = '';
+  try      uom = [' (' imosParameters(labels{1}, 'uom') ')'];
+  catch e, uom = '';
+  end
+  xLabel = [labels{1} uom];
+  set(get(graphs, 'XLabel'), 'String', xLabel, 'Interpreter', 'none');
+  
+  % set y label for the first plot
+  try      uom = [' (' imosParameters(labels{2}, 'uom') ')'];
+  catch e, uom = '';
+  end
+  yLabel = [labels{2} uom];
+  if length(yLabel) > 20, yLabel = [yLabel(1:17) '...']; end
+  set(get(graphs, 'YLabel'), 'String', yLabel, 'Interpreter', 'none');
+  
+  if sample_data.meta.level == 1 && strcmp(func2str(plotFunc), 'graphXvYGeneric')
+      qcSet     = str2double(readProperty('toolbox.qc_set'));
+      goodFlag  = imosQCFlag('good',          qcSet, 'flag');
+      pGoodFlag = imosQCFlag('probablyGood',  qcSet, 'flag');
+      rawFlag   = imosQCFlag('raw',           qcSet, 'flag');
+        
+      % set x and y limits so that axis are optimised for good/probably good/raw data only
+      curDataX = sample_data.variables{vars(1)}.data;
+      curDataY = sample_data.variables{vars(2)}.data;
+      curFlagX = sample_data.variables{vars(1)}.flags;
+      curFlagY = sample_data.variables{vars(2)}.flags;
+      
+      curFlag = max(curFlagX, curFlagY);
+      iGood = (curFlag == goodFlag) | (curFlag == pGoodFlag) | (curFlag == rawFlag);
+      
+      yLimits = [floor(min(curDataY(iGood))*10)/10, ceil(max(curDataY(iGood))*10)/10];
+      xLimits = [floor(min(curDataX(iGood))*10)/10, ceil(max(curDataX(iGood))*10)/10];
+      
+      %check for xLimits max=min
+      if diff(xLimits)==0;
+          if xLimits(1) == 0
+              xLimits = [-1, 1];
+          else
+              eps=0.01*xLimits(1);
+              xLimits=[xLimits(1)-eps, xLimits(1)+eps];
+          end
+      end
+      
+      %check for yLimits max=min
+      if diff(yLimits)==0;
+          if yLimits(1) == 0
+              yLimits = [-1, 1];
+          else
+              eps=0.01*yLimits(1);
+              yLimits=[yLimits(1)-eps, yLimits(1)+eps];
+          end
+      end
+      
+      if any(iGood)
+          set(graphs, 'YLim', yLimits);
+          set(graphs, 'XLim', xLimits);
+      end
+  end
+
 end

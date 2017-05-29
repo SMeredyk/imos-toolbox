@@ -53,9 +53,12 @@ function [graphs, lines, vars] = graphTimeSeries( parent, sample_data, vars )
 %
   narginchk(3,3);
   
-  if ~ishandle( parent),       error('parent must be a handle');      end
-  if ~isstruct( sample_data),  error('sample_data must be a struct'); end
+  if ~ishandle(parent),        error('parent must be a handle');      end
+  if ~isstruct(sample_data),   error('sample_data must be a struct'); end
   if ~isnumeric(vars),         error('vars must be a numeric');       end
+  
+  graphs = [];
+  lines  = [];
   
   if isempty(vars)
     return; 
@@ -118,11 +121,13 @@ function [graphs, lines, vars] = graphTimeSeries( parent, sample_data, vars )
             
             if sample_data.meta.level == 1
                 qcSet     = str2double(readProperty('toolbox.qc_set'));
-                goodFlag  = imosQCFlag('good',  qcSet, 'flag');
-                rawFlag   = imosQCFlag('raw',  qcSet, 'flag');
+                goodFlag  = imosQCFlag('good',          qcSet, 'flag');
+                pGoodFlag = imosQCFlag('probablyGood',  qcSet, 'flag');
+                rawFlag   = imosQCFlag('raw',           qcSet, 'flag');
                 
-                % set x and y limits so that axis are optimised for good/raw data only
+                % set x and y limits so that axis are optimised for good/probably good/raw data only
                 iGood = sample_data.variables{k}.flags == goodFlag;
+                iGood = iGood | (sample_data.variables{k}.flags == pGoodFlag);
                 iGood = iGood | (sample_data.variables{k}.flags == rawFlag);
                 if any(iGood)
                     varData = sample_data.variables{k}.data(iGood);
@@ -130,8 +135,7 @@ function [graphs, lines, vars] = graphTimeSeries( parent, sample_data, vars )
                     
                     minData = min(varData);
                     maxData = max(varData);
-                    yLimits = [floor(minData*10)/10, ...
-                        ceil(maxData*10)/10];
+                    yLimits = [floor(minData*10)/10, ceil(maxData*10)/10];
                 end
             end
         case 'graphTimeSeriesTimeDepth'
