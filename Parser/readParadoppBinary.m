@@ -80,9 +80,6 @@ catch e
     rethrow e;
 end
 
-dataLen = length(data);
-dIdx    = 1;
-
 % read in all of the structures contained in the file
 % all files should start off with the following sections,
 % although this is not checked:
@@ -93,158 +90,236 @@ dIdx    = 1;
 structures = struct;
 [~, ~, cpuEndianness] = computer;
 
-% the while loop below involves poor performances so we display a waitbar 
-% dialog to make sure the user knows the toolbox is doing something
-[~, fName, ext] = fileparts(filename);
-lastStepProgress = 0;
-hWaitbar = waitbar(lastStepProgress,    '  0 %', ...
-    'Name',                             ['Reading file ' fName ext],...
-    'DefaultTextInterpreter',           'none');
+
 % list of sectors with their Ids and their Size
 genericIds  = [ 5;   4;   0];
 genericSize = [48; 224; 512];
 
 
-while dIdx < dataLen
-    
-    [sect, len] = readSection(filename, data, dIdx, cpuEndianness);
-    if ~isempty(sect)
-        curField = ['Id' sprintf('%d', sect.Id)];
-        
-        if ~isfield(structures, curField)
-            % copy first instance of IdX structure
-            structures.(curField) = sect;
-        else
-            % append current IdX structure to existing
-            % no pre-allocation is still faster than allocating more than needed and then removing the excess
-            structures.(curField)(end+1) = sect;
-        end
-    end
-    
-    % we don't want to update the waitbar for every single section (too
-    % slow) instead we update it every percent of a step
-    progress = dIdx/dataLen;
-    percentProgress = floor(progress * 100);
-    stepProgress = percentProgress/100;
-    if stepProgress > lastStepProgress
-        lastStepProgress = stepProgress;
-        waitbar(stepProgress, hWaitbar, [sprintf('%3u', percentProgress) ' %']);
-    end
-    
-    dIdx = dIdx + len; % if len is empty, then dIdx is going to be empty and will fail the while test
+continentalIds  = 36;
+continentalSize = NaN; % NaN means variable
+
+
+aquadoppVelocityIds  = [ 1;  6; 128];
+aquadoppVelocitySize = [42; 36;  42];
+
+aquadoppProfilerIds  = [ 33; 48; 49;  42];
+aquadoppProfilerSize = [NaN; 24; 60; NaN];
+
+
+awacIds  = [ 32; 54;  66];
+awacSize = [NaN; 24; NaN];
+
+
+prologIds  = [96; 97;  98;  99; 101; 106];
+prologSize = [80; 48; NaN; NaN; NaN; NaN]; % Wave fourier coefficient spectrum (id99) is actually not fixed length of 816!
+
+knownIds   = [genericIds;  continentalIds;  aquadoppVelocityIds;  aquadoppProfilerIds;  awacIds;  prologIds];
+knownSizes = [genericSize; continentalSize; aquadoppVelocitySize; aquadoppProfilerSize; awacSize; prologSize];
+
+noSizeIds  = [16; 54; 81]; % a few sectors do not include their size in their data
+noSizeSize = [24; 24; 22]; % yet for these sectors the size is known
+
+% we look for any start of record structure
+% Sync = 165 % hex a5
+iSync = data == 165;
+
+% we check that the id following any Sync is known
+% otherwise we get rid of those false Syncs
+iId = ismember(data, knownIds);
+iSync = [iSync(1:end-1) & iId(2:end); false];
+
+% we check that the size read in data record (when exist) is consistent 
+% with the expected one (when known) otherwise we get rid of those false Syncs.
+iIds = [false; iSync(1:end-1)];
+ids = data(iIds);
+uniqIds = unique(sort(ids));
+
+iSizes = [false; false; iSync(1:end-2)] | [false; false; false; iSync(1:end-3)];
+sizesFromData = bytecast(data(iSizes), 'L', 'uint16', cpuEndianness)*2; % 1 word = 2 bytes
+
+% when size info not available from sector we replace it with its expected value
+for i=1:length(noSizeIds), sizesFromData(ids == noSizeIds(i)) = noSizeSize(i); end
+
+sizesExpected = NaN(size(ids)); % when size is not known, set to NaN
+for i = 1:length(uniqIds)
+    sectorType = uniqIds(i);
+    sizesExpected(ids == sectorType) = knownSizes(sectorType == knownIds);
 end
 
-waitbar(1, hWaitbar, '100 %');
-close(hWaitbar);
+iUnkownSize = isnan(sizesExpected);
+sizesExpected(iUnkownSize) = sizesFromData(iUnkownSize);
 
-return;
+iSizeConsistent = sizesFromData == sizesExpected;
+iSync(iSync) = iSizeConsistent;
+clear sizesExpected;
+
+% we check that the size read in data record (when exist) is consistent 
+% with the one found between 2 Sync
+iIds = [false; iSync(1:end-1)];
+ids = data(iIds);
+uniqIds = unique(sort(ids));
+
+iSizes = [false; false; iSync(1:end-2)] | [false; false; false; iSync(1:end-3)];
+sizesFromData = bytecast(data(iSizes), 'L', 'uint16', cpuEndianness)*2; % 1 word = 2 bytes
+
+% when size info not available from sector we replace it with its expected value
+for i=1:length(noSizeIds), sizesFromData(ids == noSizeIds(i)) = noSizeSize(i); end
+
+sizesFromSync = diff(find([iSync; true]));
+isSizeConsistent = sizesFromData == sizesFromSync;
+
+% most of the time inconsistencies are due to false Sync detection,
+% a false Sync will divide a section in multiple pairs
+isPairInconsistent = [false; (~isSizeConsistent(1:end-1) & ~isSizeConsistent(2:end))];
+
+% when several inconsistent pairs in a row (next to each other), we only 
+% want to remove one at a time (the last one)
+isPairInconsistent = [xor(isPairInconsistent(1:end-1), isPairInconsistent(2:end)); false] & isPairInconsistent;
+
+while any(isPairInconsistent)
+    iSync(iSync) = ~isPairInconsistent;
+    
+    iIds = [false; iSync(1:end-1)];
+    ids = data(iIds);
+    uniqIds = unique(sort(ids));
+   
+    iSizes = [false; false; iSync(1:end-2)] | [false; false; false; iSync(1:end-3)];
+    sizesFromData = bytecast(data(iSizes), 'L', 'uint16', cpuEndianness)*2; % 1 word = 2 bytes
+    
+    % when size info not available from sector we replace it with its expected value
+    for i=1:length(noSizeIds), sizesFromData(ids == noSizeIds(i)) = noSizeSize(i); end
+
+    sizesFromSync = diff(find([iSync; true]));
+    isSizeConsistent = sizesFromData == sizesFromSync;
+    isPairInconsistent = [false; ~isSizeConsistent(1:end-1) & ~isSizeConsistent(2:end)];
+    
+    isPairInconsistent = [xor(isPairInconsistent(1:end-1), isPairInconsistent(2:end)); false] & isPairInconsistent;
 end
+
+% sometimes, inconsistencies are due to the file simply being corrupted
+% in this case we just remove the faulty Sync (also handles the case when 
+% the last section has been truncated so that we don't try to read it at all)
+iSync(iSync) = isSizeConsistent;
+
+iIds = [false; iSync(1:end-1)];
+ids = data(iIds);
+uniqIds = unique(sort(ids));
+
+iSizes = [false; false; iSync(1:end-2)] | [false; false; false; iSync(1:end-3)];
+sizesFromData = bytecast(data(iSizes), 'L', 'uint16', cpuEndianness)*2; % 1 word = 2 bytes
+
+% when size info not available from sector we replace it with its expected value
+for i=1:length(noSizeIds), sizesFromData(ids == noSizeIds(i)) = noSizeSize(i); end
+clear iIds iSizes sizesFromSync;
+
+% now we can read data sectors by type
+for i = 1:length(uniqIds)
+    sectorType = uniqIds(i);
+    
+    iId = ids == sectorType;
+    
+    sizeSections = sizesFromData(iId);
+    
+    sizeSections = unique(sizeSections);
+    
+    if length(sizeSections) > 1
+        fprintf('%s\n', ['Warning : ' filename ' contains data sector type of varying size!']);
+        fprintf('%s\n', ['Cannot read this sector type : hex ' dec2hex(sectorType) ' == ' num2str(sectorType) ', with vectorised code.']);
+        continue;
+    end
+    
+    iSyncThisId = iSync;
+    iSyncThisId(iSyncThisId) = iId;
+    
+    indexSyncStart = find(iSyncThisId);
+    indexSyncEnd   = indexSyncStart + sizeSections - 1;
+    for j=1:length(indexSyncStart)
+        iSyncThisId(indexSyncStart(j):indexSyncEnd(j)) = true;
+    end
+    clear indexSyncStart indexSyncEnd indexSync;
+    
+    dataSection = data(iSyncThisId);
+    clear iSyncThisId;
+    dataSection = reshape(dataSection, sizeSections, length(dataSection)/sizeSections)';
+    
+    % read the section in
+    switch sectorType
+        case 0,   sect = readUserConfiguration            (dataSection, cpuEndianness); % 0x00
+        case 1,   sect = readAquadoppVelocity             (dataSection, cpuEndianness); % 0x01
+        case 2,   sect = readVectrinoDistance             (dataSection, cpuEndianness); % 0x02
+        case 4,   sect = readHeadConfiguration            (dataSection, cpuEndianness); % 0x04
+        case 5,   sect = readHardwareConfiguration        (dataSection, cpuEndianness); % 0x05
+        case 6,   sect = readAquadoppDiagHeader           (dataSection, cpuEndianness); % 0x06
+        case 7,   sect = readVectorProbeCheck             (dataSection, cpuEndianness); % 0x07
+        case 16,  sect = readVectorVelocity               (dataSection, cpuEndianness); % 0x10
+        case 17,  sect = readVectorSystem                 (dataSection, cpuEndianness); % 0x11
+        case 18,  sect = readVectorVelocityHeader         (dataSection, cpuEndianness); % 0x12
+        case 32,  sect = readAwacVelocityProfile          (dataSection, cpuEndianness); % 0x20
+        case 33,  sect = readAquadoppProfilerVelocity     (dataSection, cpuEndianness); % 0x21, 3-beam aquadopp
+        %    case 34,  sect = readAquadoppProfilerVelocity     (dataSection, cpuEndianness); % 0x22, 2-beam aquadopp
+        %    case 35,  sect = readAquadoppProfilerVelocity     (dataSection, cpuEndianness); % 0x23, 1-beam aquadopp
+        case 36,  sect = readContinental                  (dataSection, cpuEndianness); % 0x24, 3-beam continental
+        %    case 37,  sect = readContinental                  (dataSection, cpuEndianness); % 0x25, 2-beam continental
+        %    case 38,  sect = readContinental                  (dataSection, cpuEndianness); % 0x26, 1-beam continental
+        case 42,  sect = readHRAquadoppProfile            (dataSection, cpuEndianness); % 0x2A
+        case 48,  sect = readAwacWaveData                 (dataSection, cpuEndianness); % 0x30
+        case 49,  sect = readAwacWaveHeader               (dataSection, cpuEndianness); % 0x31
+        case 54,  sect = readAwacWaveDataSUV              (dataSection, cpuEndianness); % 0x36
+        case 66,  sect = readAwacStageData                (dataSection, cpuEndianness); % 0x42
+        case 80,  sect = readVectrinoVelocityHeader       (dataSection, cpuEndianness); % 0x50
+        case 81,  sect = readVectrinoVelocity             (dataSection, cpuEndianness); % 0x51
+        case 96,  sect = readWaveParameterEstimates       (dataSection, cpuEndianness); % 0x60
+        case 97,  sect = readWaveBandEstimates            (dataSection, cpuEndianness); % 0x61
+        case 98,  sect = readWaveEnergySpectrum           (dataSection, cpuEndianness); % 0x62
+        case 99,  sect = readWaveFourierCoefficentSpectrum(dataSection, cpuEndianness); % 0x63
+        case 101, sect = readAwacAST                      (dataSection, cpuEndianness); % 0x65
+        case 106, sect = readAwacProcessedVelocity        (dataSection, cpuEndianness); % 0x6A
+        case 128, sect = readAquadoppDiagnostics          (dataSection, cpuEndianness); % 0x80
+    end
+
+    if isempty(sect), continue; end
+    
+    % generate and compare checksum - all section
+    % structs have a Checksum field
+    cs = genChecksum(dataSection(:, 1:end-2));
+    clear dataSection;
+    iBadChecksum = cs ~= vertcat(sect(:).Checksum);
+    if any(iBadChecksum)
+        % we don't want a keep a section with erroneous data in it
+        sect(iBadChecksum) = [];
+    end
+    clear cs iBadChecksum;
+    
+    curField = ['Id' sprintf('%d', sect(1).Id)];
+    structures.(curField) = sect;
+    clear sect;
+end
+clear data iSync sizesFromData;
+
+end
+
 
 %
 % The functions below read in each of the data structures
 % specified in the System integrator Manual.
 %
 
-function [sect, off] = readSection(filename, data, idx, cpuEndianness)
-%READSECTION Reads the next data structure in the data array, starting at
-% the given index.
-%
-sect = [];
-off = [];
+function cd = readClockData(data)
 
-sectType = data(idx+1);
-
-% check sync byte
-if data(idx) ~= 165 % hex a5
-    fprintf('%s\n', ['Warning : ' filename ' bad sync (idx '...
-        num2str(idx) ', val ' num2str(data(idx)) ')']);
-    fprintf('%s\n', ['Sect Type: ' num2str(sectType)]);
-    off = 1; % continue to the next byte
-    return;
-end
-
-%disp(['sectType : hex ' dec2hex(sectType) ' == ' num2str(sectType) ' at offset ' num2str(idx+1)]);
-
-% if a section (typically the last one) is shorter than expected, 
-% abort further data read
-len = bytecast(data(idx+2:idx+3), 'L', 'uint16', cpuEndianness) * 2;
-if length(data) < idx-1+len
-    fprintf('%s\n', ['Warning : ' filename ' bad idx/len']);
-    fprintf('%s\n', ['Sect Type: ' num2str(sectType)]);
-    fprintf('%s\n', ['idx-1+len: ' num2str(idx-1+len) ' length(data): ' num2str(length(data))]);
-    return;
-end
-
-% read the section in
-switch sectType
-    case 0,   [sect, len, off] = readUserConfiguration            (data, idx, cpuEndianness); % 0x00
-    case 1,   [sect, len, off] = readAquadoppVelocity             (data, idx, cpuEndianness); % 0x01
-    case 2,   [sect, len, off] = readVectrinoDistance             (data, idx, cpuEndianness); % 0x02
-    case 4,   [sect, len, off] = readHeadConfiguration            (data, idx, cpuEndianness); % 0x04
-    case 5,   [sect, len, off] = readHardwareConfiguration        (data, idx, cpuEndianness); % 0x05
-    case 6,   [sect, len, off] = readAquadoppDiagHeader           (data, idx, cpuEndianness); % 0x06
-    case 7,   [sect, len, off] = readVectorProbeCheck             (data, idx, cpuEndianness); % 0x07
-    case 16,  [sect, len, off] = readVectorVelocity               (data, idx, cpuEndianness); % 0x10
-    case 17,  [sect, len, off] = readVectorSystem                 (data, idx, cpuEndianness); % 0x11
-    case 18,  [sect, len, off] = readVectorVelocityHeader         (data, idx, cpuEndianness); % 0x12
-    case 32,  [sect, len, off] = readAwacVelocityProfile          (data, idx, cpuEndianness); % 0x20
-    case 33,  [sect, len, off] = readAquadoppProfilerVelocity     (data, idx, cpuEndianness); % 0x21, 3-beam aquadopp
-%    case 34,  [sect, len, off] = readAquadoppProfilerVelocity     (data, idx, cpuEndianness); % 0x22, 2-beam aquadopp
-%    case 35,  [sect, len, off] = readAquadoppProfilerVelocity     (data, idx, cpuEndianness); % 0x23, 1-beam aquadopp
-    case 36,  [sect, len, off] = readContinental                  (data, idx, cpuEndianness); % 0x24, 3-beam continental
-%    case 37,  [sect, len, off] = readContinental                  (data, idx, cpuEndianness); % 0x25, 2-beam continental
-%    case 38,  [sect, len, off] = readContinental                  (data, idx, cpuEndianness); % 0x26, 1-beam continental
-    case 42,  [sect, len, off] = readHRAquadoppProfile            (data, idx, cpuEndianness); % 0x2A
-    case 48,  [sect, len, off] = readAwacWaveData                 (data, idx, cpuEndianness); % 0x30
-    case 49,  [sect, len, off] = readAwacWaveHeader               (data, idx, cpuEndianness); % 0x31
-    case 54,  [sect, len, off] = readAwacWaveDataSUV              (data, idx, cpuEndianness); % 0x36
-    case 66,  [sect, len, off] = readAwacStageData                (data, idx, cpuEndianness); % 0x42
-    case 80,  [sect, len, off] = readVectrinoVelocityHeader       (data, idx, cpuEndianness); % 0x50
-    case 81,  [sect, len, off] = readVectrinoVelocity             (data, idx, cpuEndianness); % 0x51
-    case 96,  [sect, len, off] = readWaveParameterEstimates       (data, idx, cpuEndianness); % 0x60
-    case 97,  [sect, len, off] = readWaveBandEstimates            (data, idx, cpuEndianness); % 0x61
-    case 98,  [sect, len, off] = readWaveEnergySpectrum           (data, idx, cpuEndianness); % 0x62
-    case 99,  [sect, len, off] = readWaveFourierCoefficentSpectrum(data, idx, cpuEndianness); % 0x63
-    case 101, [sect, len, off] = readAwacAST                      (data, idx, cpuEndianness); % 0x65
-    case 106, [sect, len, off] = readAwacProcessedVelocity        (data, idx, cpuEndianness); % 0x6A
-    case 128, [sect, len, off] = readAquadoppDiagnostics          (data, idx, cpuEndianness); % 0x80
-    otherwise
-%        disp('Unknown sector type');
-%        disp(['sectType : hex ' dec2hex(sectType) ' == ' num2str(sectType) ' at offset ' num2str(idx+1)]);        
-        [sect, len, off] = readGeneric(data, idx, cpuEndianness);
-end
-
-%disp('Just read sector type');
-%disp(['sectType : hex ' dec2hex(sectType) ' == ' num2str(sectType) ' at offset ' num2str(idx+1)]);
-
-if isempty(sect), return; end
-
-% generate and compare checksum - all section
-% structs have a Checksum field
-cs = genChecksum(data, idx, len-2);
-
-if cs ~= sect.Checksum
-    fprintf('%s\n', ['Warning : ' filename ' bad checksum (idx '...
-        num2str(idx) ', checksum ' num2str(sect.Checksum) ', calculated '...
-        num2str(cs) ')']);
-    fprintf('%s\n', ['Sect Type: ' num2str(sectType)]);
-end
-end
-
-function cd = readClockData(data, idx)
 %READCLOCKDATA Reads a clock data section (pg 29 of system integrator
 %manual) and returns a matlab serial date.
 %
 
-data = data(idx:idx+5);
 date = double(10*bitand(bitshift(data, -4), 15) + bitand(data, 15));
 
-minute = date(1);
-second = date(2);
-day    = date(3);
-hour   = date(4);
-year   = date(5);
-month  = date(6);
+minute = date(:, 1);
+second = date(:, 2);
+day    = date(:, 3);
+hour   = date(:, 4);
+year   = date(:, 5);
+month  = date(:, 6);
+
 
 % pg 52 of system integrator manual
 if year >= 90, year = year + 1900;
@@ -255,7 +330,7 @@ end
 cd = datenummx(year, month, day, hour, minute, second); % direct access to MEX function, faster
 end
 
-function [sect, len, off] = readHardwareConfiguration(data, idx, cpuEndianness)
+function sect = readHardwareConfiguration(data, cpuEndianness)
 %READHARDWARECONFIGURATION
 % Id=0x05, Hardware Configuration
 % SYSTEM INTEGRATOR MANUAL (Dec 2014) pg 28-29
@@ -264,43 +339,107 @@ sect = struct;
 len = 48;
 off = len;
 
-sect.Sync       = data(idx);
-sect.Id         = data(idx+1);
-sect.Size       = data(idx+2:idx+3); % uint16
-sect.SerialNo   = data(idx+4:idx+17);
-sect.SerialNo   = char(sect.SerialNo(sect.SerialNo ~= 0)');
-block           = data(idx+18:idx+29); % uint16
-% bytes 30-41 are free
-sect.FWversion  = data(idx+42:idx+45);
-sect.FWversion  = char(sect.FWversion(sect.FWversion ~= 0)');
-sect.Checksum   = data(idx+46:idx+47); % uint16
+nRecords = size(data, 1);
+
+Sync       = data(:, 1);
+Id         = data(:, 2);
+Size       = data(:, 3:4); % uint16
+SerialNo   = data(:, 5:18);
+SerialNo(SerialNo == 0) = 32; % replace 0 by 32: code for whitespace
+SerialNo   = char(SerialNo);
+block      = data(:, 19:30); % uint16
+% bytes 30-41 are free, but
+% data(idx+30:idx+31) == (103,103) if HR
+Spare      = data(:, 31:42);
+
+FWversion  = data(:, 43:46);
+FWversion(FWversion == 0) = 32; % replace 0 by 32: code for whitespace
+FWversion  = char(FWversion);
+Checksum   = data(:, 47:48); % uint16
+
 
 % let's process uint16s in one call
-blocks = bytecast([sect.Size; block; sect.Checksum], 'L', 'uint16', cpuEndianness);
-sect.Size       = blocks(1);
-sect.Config     = blocks(2);
-sect.Frequency  = blocks(3);
-sect.PICversion = blocks(4);
-sect.HWrevision = blocks(5);
-sect.RecSize    = blocks(6);
-sect.Status     = blocks(7);
-sect.Checksum   = blocks(8);
+blocks = bytecast(reshape([Size block Checksum]', [], 1), 'L', 'uint16', cpuEndianness);
+Size       = blocks(1:8:end);
+Config     = blocks(2:8:end);
+Frequency  = blocks(3:8:end);
+PICversion = blocks(4:8:end);
+HWrevision = blocks(5:8:end);
+RecSize    = blocks(6:8:end);
+Status     = uint16(blocks(7:8:end));
+Checksum   = blocks(8:8:end);
+
+if nRecords > 1
+    Sync       = num2cell(Sync);
+    Id         = num2cell(Id);
+    Size       = num2cell(Size);
+    SerialNo   = mat2cell(SerialNo, ones(1, nRecords), 14);
+    FWversion  = mat2cell(SerialNo, ones(1, nRecords), 4);
+    Checksum   = num2cell(Checksum);
+    Config     = num2cell(Config);
+    Frequency  = num2cell(Frequency);
+    PICversion = num2cell(PICversion);
+    HWrevision = num2cell(HWrevision);
+    RecSize    = num2cell(RecSize);
+    Status     = num2cell(Status);
 end
 
-function [sect, len, off] = readHeadConfiguration(data, idx, cpuEndianness)
+SerialNo = strtrim(SerialNo);
+FWversion = strtrim(FWversion);
+
+% safety check that if instrument type is HR then the returned
+% structure should contain Id42 sectors.
+instrumentType = 'UNKNOWN';
+if any(strfind(SerialNo, 'VNO'))
+    instrumentType = 'VECTRINO';
+elseif any(strfind(SerialNo, 'VEC'))
+    instrumentType = 'VECTOR';
+elseif any(strfind(SerialNo, 'AQD'))
+    %https://github.com/pjrusello/Nortek-Binary-Ready-Utilities/blob/master/NortekDataStructure.py
+    %hrFlag == '\x67\x67', hex 0x67 = dec 103
+    if Spare(1, 1) == 103 && Spare(1, 2) == 103
+        instrumentType = 'HR_PROFILER';
+    else
+        instrumentType = 'AQUADOPP_PROFILER';
+    end
+elseif any(strfind(SerialNo, 'WPR'))
+    instrumentType = 'AWAC';
+end
+
+if nRecords > 1
+    nChar = length(instrumentType);
+    instrumentType = repmat(instrumentType, nRecords, 1);
+    instrumentType = mat2cell(instrumentType, ones(1, nRecords), nChar);
+end
+
+sect = struct('Sync', Sync, ...
+    'Id', Id, ...
+    'Size', Size, ...
+    'SerialNo', SerialNo, ...
+    'FWversion', FWversion, ...
+    'Checksum', Checksum, ...
+    'Config', Config, ...
+    'Frequency', Frequency, ...
+    'PICversion', PICversion, ...
+    'HWrevision', HWrevision, ...
+    'RecSize', RecSize, ...
+    'Status', Status, ...
+    'instrumentType', instrumentType);
+
+end
+
+function sect = readHeadConfiguration(data, cpuEndianness)
 %READHEADCONFIGURATION Reads a head configuration section.
 % Id=0x04, Head Configuration
 % SYSTEM INTEGRATOR MANUAL (Dec 2014) pg 29
 
-sect = struct;
-len = 224;
-off = len;
+nRecords = size(data, 1);
 
-sect.Sync      = data(idx);
-sect.Id        = data(idx+1);
-block1         = data(idx+2:idx+9);  % uint16
-sect.SerialNo  = data(idx+10:idx+21);
-sect.SerialNo  = char(sect.SerialNo(sect.SerialNo ~= 0)');
+Sync      = data(:, 1);
+Id        = data(:, 2);
+block1    = data(:, 3:10);  % uint16
+SerialNo  = data(:, 11:22);
+
 
 % MUST CHECK ARRAY LAYOUT
 sect.System5  = double(bytecast(data(idx+22:idx+29), 'L', 'uint16', cpuEndianness))';

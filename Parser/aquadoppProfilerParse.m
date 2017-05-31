@@ -64,9 +64,31 @@ user     = structures.Id0;
 if isfield(structures, 'Id42')
     % this is a HR profiler velocity data
     profilerType = 'Id42';
+	if ~strfind(hardware.instrumentType,'HR')
+       fprintf('%s\n', ['Warning : ' filename ' HR PROFILER instrumentType does not match Id42 sector type data']);
+    end
+
 else
     % this is a plain profiler velocity data
     profilerType = 'Id33';
+	    if strfind(hardware.instrumentType,'HR')
+        fprintf('%s\n', ['Warning : ' filename ' AQUADOPP PROFILER instrumentType does not match Id33 sector type data']);
+    end
+    
+end
+
+% still to be implemented
+value = bin2dec(num2str(bitget(user.TimCtrlReg, 7:-1:6)));
+switch value
+    case 0
+        user.TimCtrlReg_PowerLevel_ = 'HIGH';
+    case 1
+        user.TimCtrlReg_PowerLevel_ = 'HIGH-';
+    case 2
+        user.TimCtrlReg_PowerLevel_ = 'LOW+';
+    case 3
+        user.TimCtrlReg_PowerLevel_ = 'LOW';
+
 end
 
 velocityProcessed = false;
@@ -101,6 +123,15 @@ blankDist  = blankDist        * 0.0229 * cos(25 * pi / 180) - cellSize;
 distance = (blankDist:  ...
            cellSize: ...
            blankDist + (ncells-1) * cellSize)';
+% 
+velocityScaling = 1;
+if bitget(user(1).Mode, 5) == 1
+    velocityScaling = 0.1;
+end
+if strfind(hardware(1).instrumentType, 'HR_PROFILER')
+    sampleRate = double(512 / user(1).T5);
+end
+
 
 % Note this is actually the distance between the ADCP's transducers and the
 % middle of each cell
@@ -163,9 +194,9 @@ pitch        = pitch        / 10.0;
 roll         = roll         / 10.0;
 pressure     = pressure     / 1000.0;
 temperature  = temperature  / 100.0;
-velocity1    = velocity1    / 1000.0;
-velocity2    = velocity2    / 1000.0;
-velocity3    = velocity3    / 1000.0;
+velocity1    = velocity1 * velocityScaling / 1000.0;
+velocity2    = velocity2 * velocityScaling / 1000.0;
+velocity3    = velocity3 * velocityScaling / 1000.0;
 
 % Correction for pressure offset in air - Added AForest 27-Jan-2017 with
 % comments for history on 30-Jan-2017
@@ -197,9 +228,10 @@ if velocityProcessed
     % velocities  / 1000.0 (mm/s     -> m/s) assuming earth coordinates
     % 20*log10(sig2noise)  (counts   -> dB)
     % direction   / 100.0  (0.01 deg  -> deg)
-    velocity1     = velocity1Proc / 1000.0; % we update the velocity
-    velocity2     = velocity2Proc / 1000.0;
-    velocity3     = velocity3Proc / 1000.0;
+    velocity1     = velocity1Proc * velocityScaling / 1000.0; % we update the velocity
+    velocity2     = velocity2Proc * velocityScaling / 1000.0;
+    velocity3     = velocity3Proc * velocityScaling / 1000.0;
+
     sig2noise1(sig2noise1==0) = NaN;
     sig2noise2(sig2noise2==0) = NaN;
     sig2noise3(sig2noise3==0) = NaN;
@@ -214,6 +246,12 @@ if velocityProcessed
     verticalDist  = verticalDist / 1000.0; % since verticalDist is uint16, max value gives 65m but distance along beams can go up to 170m...???
 end
 
+if strfind(hardware.instrumentType, 'HR')
+    instrument_model = 'HR Aquadopp Profiler';
+else
+    instrument_model = 'Aquadopp Profiler';
+end
+
 sample_data = struct;
     
 sample_data.toolbox_input_file              = filename;
@@ -223,7 +261,7 @@ sample_data.meta.hardware                   = hardware;
 sample_data.meta.user                       = user;
 sample_data.meta.binSize                    = cellSize;
 sample_data.meta.instrument_make            = 'Nortek';
-sample_data.meta.instrument_model           = 'Aquadopp Profiler';
+sample_data.meta.instrument_model           = instrument_model;
 sample_data.meta.instrument_serial_no       = hardware.SerialNo;
 sample_data.meta.instrument_firmware        = hardware.FWversion;
 sample_data.meta.instrument_sample_interval = median(diff(time*24*3600));
