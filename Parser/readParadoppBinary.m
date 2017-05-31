@@ -100,6 +100,10 @@ lastStepProgress = 0;
 hWaitbar = waitbar(lastStepProgress,    '  0 %', ...
     'Name',                             ['Reading file ' fName ext],...
     'DefaultTextInterpreter',           'none');
+% list of sectors with their Ids and their Size
+genericIds  = [ 5;   4;   0];
+genericSize = [48; 224; 512];
+
 
 while dIdx < dataLen
     
