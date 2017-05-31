@@ -35,7 +35,7 @@ S, rosetteCTD					= QC Processed Rosette CTD Profile Filenames : Deploy - [ddb S
 
 % these fields are automatically populated upon creation/export
 S, file_version                 = 
-S, file_version_quality_control = 
+S, file_version_quality_control = QcVer1_1
 S, history                      = 
 S, quality_control_log          = 
 

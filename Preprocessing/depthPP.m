@@ -563,7 +563,7 @@ for iCurSam = 1:nDatasets
                 iFirst  = firstNearestInst(iCurSam);
                 iSecond = secondNearestInst(iCurSam);
                 
-                if iSecond == 0
+                if iSecond == 0 && iFirst ~=0
                     fprintf('%s\n', ['Warning : ' descSam{iCurSam} ...
                         ' has its actual depth inferred from only one neighbouring pressure sensor ' ...
                         'on mooring']);
@@ -652,7 +652,7 @@ for iCurSam = 1:nDatasets
                     
                     computedDepth = zOther + signOtherCurSensor*distOtherCurSensor;
                     clear zOther;
-                else
+                elseif iSecond ~=0 && iFirst ~=0
                     presIdxFirst     = getVar(sample_data{nearestInsts{iCurSam}(iFirst)}.variables, 'PRES');
                     presRelIdxFirst  = getVar(sample_data{nearestInsts{iCurSam}(iFirst)}.variables, 'PRES_REL');
                     
