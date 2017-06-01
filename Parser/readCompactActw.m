@@ -13,7 +13,7 @@ function sample_data = readCompactActw( filename, mode )
 % Contributor: 	Guillaume Galibert <guillaume.galibert@utas.edu.au> 
 
 %
-% Copyright (c) 2010, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -25,7 +25,7 @@ function sample_data = readCompactActw( filename, mode )
 %     * Redistributions in binary form must reproduce the above copyright 
 %       notice, this list of conditions and the following disclaimer in the 
 %       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the eMII/IMOS nor the names of its contributors 
+%     * Neither the name of the AODN/IMOS nor the names of its contributors 
 %       may be used to endorse or promote products derived from this software 
 %       without specific prior written permission.
 % 
@@ -69,7 +69,7 @@ sample_data.meta.instrument_make            = 'JFE_ALEC';
 sample_data.meta.instrument_model           = header.SensorType;
 sample_data.meta.instrument_serial_no       = header.SerialNo;
 sample_data.meta.instrument_sample_interval = median(diff(data.TIME.values*24*3600));
-%sample_data.meta.instrument_burst_interval  = header.Burst; % seconds between bursts
+sample_data.meta.instrument_burst_interval  = header.Burst; % seconds between bursts
 sample_data.meta.featureType                = mode;
 
 sample_data.dimensions = {};
@@ -195,7 +195,7 @@ function data = readData(filename, channel, nChannels)
     
     %if g == 0
             data.TIME.values = datenum(values{1},'yyyy/mm/dd HH:MM:SS');
-            data.TIME.comment = ['Time']; 
+            data.TIME.comment = ['Time format - yyyy/mm/dd HH:MM:SS']; 
             
   % select date-time format with dashes
     %else    data.TIME.values = datenum(values{1},'yyyy-mm-dd HH:MM:SS');
