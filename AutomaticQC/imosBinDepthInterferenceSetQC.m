@@ -170,7 +170,7 @@ if ~isUpwardLooking
 set(gca,'ydir','reverse');
 end
 for j=1:length(binDepth(bin_nonan))
-    ytl{j,1}=['Bin #',num2str(j),' at ',num2str(round(binDepth_nonan(j))),'-m'];
+    ytl{j,1}=['Bin #',num2str(j),' at ',num2str(round(binDepth_nonan(j))),'-m']; % will give ytl undefined error msg if alot of NAN data : ShawnM : june1-2017
 end
 set(gca,'yticklabel',ytl);   
 
