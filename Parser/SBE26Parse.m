@@ -1,6 +1,6 @@
 function sample_data = SBE26Parse(filename, mode )
 %SBE26Parse.m Parses a .tid (tidal) data file retrieved from SBE26WAVE 
-% software, converted into a CSV file.  
+% software, converted into a .CSV file.  
 %
 % Header Example:
 % DATETIME,Date,Time,Pressure,Temp
@@ -58,6 +58,7 @@ filename = filename{1};
 
 if ~ischar(filename), error('filename must contain a string'); end
 
+% extracting the basic metadata inherent in the filename
 [~, name, ~] = fileparts(filename);
 %extracting filename parts 
 unitInfo = textscan(name, '%s %s %d', 'Delimiter', '_');
@@ -136,26 +137,22 @@ function data = readData(filename)
   values = textscan(fid, dataFmt, 'Delimiter', dataDelim); 
   fclose(fid);
   
-% other variables exported by SatCon and avaiable for analysis
-%   T_SPEC	T_LAMP	HUMIDITY    VOLT_12	VOLT_5	REF_AVG	REF_STD
-%   SW_DARK	SPEC_AVG	UV(189.17) - all wavelengths
-
   for i=1:nParams
       switch params{i}{1}  
 				  				
 				%DateTime (dd-mm-yyyy HH:MM:SS)
-                  case 'DATETIME',
+                  case 'DATETIME'
                     name = 'TIME';
                     data.TIME.values = datenum(values{i},'dd.mm.yyyy HH:MM:SS');			
                     data.TIME.comment = ['dd.mm.yyyy HH:MM:SS'];  				
 										  
-				  case 'Pressure', 
+				  case 'Pressure' 
 				    name = 'PRES';
                     data.PRES.values = values{i}*(0.6894757);
 					data.PRES.comment = ['PSIa to dbar pressure conversion']';
 				
 				
-                case 'Temp', 
+                case 'Temp' 
 				    name = 'TEMP';
                     data.TEMP.values = values{i};
 					data.TEMP.comment = ['degrees celcius']';
