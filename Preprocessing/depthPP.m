@@ -652,6 +652,7 @@ for iCurSam = 1:nDatasets
                     
                     computedDepth = zOther + signOtherCurSensor*distOtherCurSensor;
                     clear zOther;
+					
                 elseif iSecond ~=0 && iFirst ~=0
                     presIdxFirst     = getVar(sample_data{nearestInsts{iCurSam}(iFirst)}.variables, 'PRES');
                     presRelIdxFirst  = getVar(sample_data{nearestInsts{iCurSam}(iFirst)}.variables, 'PRES_REL');
