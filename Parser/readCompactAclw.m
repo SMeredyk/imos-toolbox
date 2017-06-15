@@ -124,8 +124,8 @@ function [header, channel,nChannels] = readHeader(rawText)
   fmtHeader     = '%s%s';
   delimHeader   = '=';
   
-  iStartHeader = find(strcmp(startHeader, rawText)) + 1;
-  iEndHeader = find(strcmp(endHeader, rawText))-1;
+  iStartHeader = find(cellfun('isempty', regexp(rawText, '^\[Head]|') ) == 0 ) + 1;
+  iEndHeader = find(cellfun('isempty', regexp(rawText, '^\[Coef]|') ) == 0 ) - 1;
     
   headerCell = rawText(iStartHeader:iEndHeader);
   nFields = length(headerCell);
@@ -145,8 +145,8 @@ function [header, channel,nChannels] = readHeader(rawText)
   delimCoef         = ',';
   fmtCoef           = '%f%f%f%f'; % 4 coefficients
   
-  iStartCoef 	= find(strcmp(startCoefficient, rawText)) + 1;
-  iEndCoef      = find(strcmp(endCoefficient, rawText))-1;
+  iStartCoef 	= find(cellfun('isempty', regexp(rawText, '^\[Coef]|') ) == 0 ) + 1;
+  iEndCoef      = find(cellfun('isempty', regexp(rawText, '^\[Item]|') ) == 0 ) - 1;
  
   
   coefCell 	= rawText(iStartCoef:iEndCoef);
@@ -201,7 +201,7 @@ function data = readData(filename, channel, nChannels)
                   'that fluoresces in the region of 650nm to 1000nm. '];
 				  
     data.TURBF.values = channel.Ch3(1)+ (channel.Ch3(2).*values{4})+ (channel.Ch3(3)*(values{4}.^2)) + (channel.Ch3(4).*(values{4}.^3));
-    data.TURBF.comment = ['Turbidity data '...
+    data.TURBF.comment = ['Turbidity data (FTU)'...
                   'computed from bio-optical sensor raw counts measurements. The '...
                   'turbidity sensor is equipped with a 880nm peak wavelength LED to irradiate and a '...
                   'photodetector paired with an optical filter which measures everything '...
