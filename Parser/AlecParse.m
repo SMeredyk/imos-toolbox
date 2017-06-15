@@ -115,7 +115,7 @@ sample_data.meta.instrument_serial_no       = header.SerialNo;
 	end
 
 
-elseif isfield(header, 'InstType') == 1
+elseif isfield(header,'InstType') == 1
             sample_data.meta.instrument_model       = header.InstType;
             sample_data.meta.instrument_serial_no   = header.InstNo;
             
@@ -142,12 +142,13 @@ function header = readHeader(rawText)
   header = struct;
       
   startHeader   = '[Head]';
-  endHeader     = {'[Coef]' 'CoefDate' '[Item]' '[Data]'}; %all file types have [Item] except compactActw , which has [Data]
+  endHeader     = {'[Coef]' '[Item]' '[Data]'}; %all file types have [Item] except compactActw , which has [Data]
   fmtHeader     = '%s%s';
   delimHeader   = '=';
   
-  iStartHeader = find(strcmp(startHeader, rawText)) + 1;
-  iEndHeader = find(cellfun('isempty', regexp(rawText, '^\[Coef]|^\CoefDate|^\[Item\]|^\[Data\]') ) == 0 ) - 1;   
+  %iStartHeader = find(strcmp(startHeader, rawText)) + 1;
+  iStartHeader = find(cellfun('isempty', regexp(rawText, '^\[Head]|') ) == 0 ) + 1;
+  iEndHeader = find(cellfun('isempty', regexp(rawText, '^\[Coef]|^\[Item\]|^\[Data\]') ) == 0 ) - 1;   
       
   headerCell = rawText(iStartHeader:iEndHeader(1));
   nFields = length(headerCell);
