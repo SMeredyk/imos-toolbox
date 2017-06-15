@@ -65,16 +65,15 @@ if isfield(structures, 'Id42')
     % this is a HR profiler velocity data
     profilerType = 'Id42';
 	if ~strfind(hardware.instrumentType,'HR')
-       fprintf('%s\n', ['Warning : ' filename ' HR PROFILER instrumentType does not match Id42 sector type data']);
-    end
-
+        fprintf('%s\n', ['Warning : ' filename ' HR PROFILER instrumentType does not match Id42 sector type data']);
+	end
 else
     % this is a plain profiler velocity data
     profilerType = 'Id33';
-	    if strfind(hardware.instrumentType,'HR')
+	if strfind(hardware.instrumentType,'HR')
         fprintf('%s\n', ['Warning : ' filename ' AQUADOPP PROFILER instrumentType does not match Id33 sector type data']);
-    end
-    
+	end
+	
 end
 
 % still to be implemented
@@ -88,7 +87,6 @@ switch value
         user.TimCtrlReg_PowerLevel_ = 'LOW+';
     case 3
         user.TimCtrlReg_PowerLevel_ = 'LOW';
-
 end
 
 velocityProcessed = false;
@@ -123,15 +121,15 @@ blankDist  = blankDist        * 0.0229 * cos(25 * pi / 180) - cellSize;
 distance = (blankDist:  ...
            cellSize: ...
            blankDist + (ncells-1) * cellSize)';
+
 % 
 velocityScaling = 1;
 if bitget(user(1).Mode, 5) == 1
     velocityScaling = 0.1;
 end
 if strfind(hardware(1).instrumentType, 'HR_PROFILER')
-    sampleRate = double(512 / user(1).T5);
+	sampleRate = double(512 / user(1).T5);
 end
-
 
 % Note this is actually the distance between the ADCP's transducers and the
 % middle of each cell
@@ -198,31 +196,6 @@ velocity1    = velocity1 * velocityScaling / 1000.0;
 velocity2    = velocity2 * velocityScaling / 1000.0;
 velocity3    = velocity3 * velocityScaling / 1000.0;
 
-% Correction for pressure offset in air - Added AForest 27-Jan-2017 with
-% comments for history on 30-Jan-2017
-% based on first 5 measurements within 10 m range
-[~,NAME,~] = fileparts(filename);
-first_mes=pressure(1:5);
-first_mes=first_mes(first_mes<10);
-if  ~isnan(first_mes)
-    disp(['Please note: ', NAME,': pressure offset in air : ',...
-        num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
-    pressure=pressure-mean(first_mes);
-    
-    % Commenting the Metadata history
-    PressureOffsetComment=[mfilename,'.m: Raw pressure data from ', NAME,...
-        ' was corrected for a pressure offset in air of ',...
-        num2str(round(mean(first_mes),1)),'dbar'];
-    
-    sample_data.history = sprintf('%s - %s', ...
-            datestr(now_utc, readProperty('exportNetCDF.dateFormat')), ...
-            PressureOffsetComment);
-else
-    disp(['Please note: ', NAME,': pressure offset in air : ',...
-        num2str(ceil(max(pressure(1:5)))),...
-        '-dbar and NO pressure offset was applied']);
-end
-
 if velocityProcessed
     % velocity has been processed
     % velocities  / 1000.0 (mm/s     -> m/s) assuming earth coordinates
@@ -231,7 +204,6 @@ if velocityProcessed
     velocity1     = velocity1Proc * velocityScaling / 1000.0; % we update the velocity
     velocity2     = velocity2Proc * velocityScaling / 1000.0;
     velocity3     = velocity3Proc * velocityScaling / 1000.0;
-
     sig2noise1(sig2noise1==0) = NaN;
     sig2noise2(sig2noise2==0) = NaN;
     sig2noise3(sig2noise3==0) = NaN;
@@ -253,7 +225,7 @@ else
 end
 
 sample_data = struct;
-    
+
 sample_data.toolbox_input_file              = filename;
 sample_data.meta.featureType                = ''; % strictly this dataset cannot be described as timeSeriesProfile since it also includes timeSeries data like TEMP
 sample_data.meta.head                       = head;
@@ -270,14 +242,13 @@ sample_data.meta.beam_angle                 = 25;   % http://www.hydro-internati
 sample_data.meta.beam_to_xyz_transform      = head.TransformationMatrix;
 
 % add dimensions with their data mapped
-adcpOrientations = bin2dec(status(:, end));
+adcpOrientations = single(bitget(status, 1, 'uint8'));
 adcpOrientation = mode(adcpOrientations); % hopefully the most frequent value reflects the orientation when deployed
 height = distance;
 if adcpOrientation == 1
     % case of a downward looking ADCP -> negative values
     height = -height;
     distance = -distance;
-    
 end
 iBadOriented = adcpOrientations ~= adcpOrientation; % we'll only keep velocity data collected when ADCP is oriented as expected
 velocity2(iBadOriented, :) = NaN;
