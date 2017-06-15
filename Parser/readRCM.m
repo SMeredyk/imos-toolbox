@@ -80,10 +80,10 @@ sample_data = struct;
 % Correction for pressure offset in air - Originally added by AForest 27-Jan-2017 with
 % comments for history on 30-Jan-2017 to Nortek current profiler toolbox code.
 
-% based on first 5 measurements within 10 m range
+% based on first 5 measurements within 15 m range
 [~,NAME,~] = fileparts(filename);
 first_mes=data.PRES.values(1:5);
-first_mes=first_mes(first_mes<10);
+first_mes=first_mes(first_mes<15);
 
 if  ~isnan(first_mes)
     disp(['Please note: ', NAME,': pressure offset in air : ',...
