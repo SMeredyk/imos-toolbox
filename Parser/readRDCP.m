@@ -1,8 +1,8 @@
 function sample_data = readRDCP(filename, mode)
-% readRDCP reads a data file retrieved from a Seaguard RDCP data logger.
+% readRDCP reads a data file (*.txt) retrieved from a Seaguard RDCP data
+% logger.RDCP software flags such as {3} are removed along with the record
+% number and interval columns (exported by RDCP Studio software).
 %
-% This function is able to read in a single text file (tab delimited) retrieved from an 
-% Seaguard data logger exported by the Seaguard RDCP software. 
 % The pressure data is returned in a sample_data struct. 
 % 
 % Inputs:
@@ -21,15 +21,15 @@ function sample_data = readRDCP(filename, mode)
 % CellOverlap::50
 % DistToFirstBin::3
 % RecordInterval::3600
-% StartTime::14.08.2007 01:00
+% StartTime::14.08.2007_01:00
 % 
 % [Data]
 %
-% Author :      Guillaume Galibert <guillaume.galibert@utas.edu.au>
-% Contributors: Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
+% Author :      Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
+% Contributors: Guillaume Galibert <guillaume.galibert@utas.edu.au>
 %               Pascal_Guillot@uqar.ca (UQAR - Canada)			
 %
-% Copyright (c) 2010, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2017, eMarine Information Infrastructure (eMII) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -66,7 +66,7 @@ if ~ischar(filename), error('filename must contain a string'); end
 % open the file, and read in the data
 try
     fid = fopen(filename, 'rt');
-    rawText = textscan(fid, '%s', 'Delimiter', ''); % tab delimited text file
+    rawText = textscan(fid, '%s', 'Delimiter', ''); % comma delimited text file
     fclose(fid);
     
     [header, iData] = readHeader(rawText{1});
@@ -78,6 +78,35 @@ end % end of File read
 
 % copy all of the information over to the sample data struct
 sample_data = struct;
+
+% Correction for pressure offset in air - Originally added by AForest 27-Jan-2017 with
+% comments for history on 30-Jan-2017 to Nortek current profiler toolbox code.
+
+% based on first 5 measurements within 10 m range
+[~,NAME,~] = fileparts(filename);
+first_mes=data.PRES.values(1:5);
+first_mes=first_mes(first_mes<10);
+
+if  ~isnan(first_mes)
+    disp(['Please note: ', NAME,': pressure offset in air : ',...
+        num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
+    
+	%pressure=pressure-mean(first_mes);
+    data.PRES.values=data.PRES.values-mean(first_mes);
+    
+	% Commenting the Metadata history
+    PressureOffsetComment=[mfilename,'.m: Raw pressure data from ', NAME,...
+        ' was corrected for a pressure offset in air of ',...
+        num2str(round(mean(first_mes),1)),'dbar'];
+    
+    sample_data.history = sprintf('%s - %s', ...
+            datestr(now_utc, readProperty('exportNetCDF.dateFormat')), ...
+            PressureOffsetComment);
+else
+    disp(['Please note: ', NAME,': pressure offset in air : ',...
+        num2str(ceil(max(data.PRES.values(1:5)))),...
+        '-dbar and NO pressure offset was applied']);
+end
 
 sample_data.toolbox_input_file              = filename;
 sample_data.meta.instrument_make            = 'Aanderaa';
@@ -114,7 +143,7 @@ sample_data.variables{end}.data             = sample_data.variables{end}.typeCas
 sample_data.variables{end}.dimensions       = [];
 
 % copy variable data over
-data = rmfield(data, 'TIME');		
+data = rmfield(data, {'TIME','REF'});			
 fields = fieldnames(data);
 
 for k = 1:length(fields)
@@ -136,15 +165,15 @@ function [header, iData] = readHeader(rawText)
   header 	= struct;
   iData 	= [];
   
-  startHeader 	= 'Model:RDCP';	
+  startHeader 	= 'Model::RDCP';	
   endHeader 	= '[Data]';    
   fmtHeader  	= '%s%s';
   delimHeader 	= '::';
   
   
-  iStartHeader 	= find(strcmp(startHeader, rawText));
-  iEndHeader 	= find(strcmp(endHeader, rawText));
-  iData 		= iEndHeader + 1;   
+  iStartHeader = find(strcmp(startHeader, rawText));
+  iEndHeader = find(strcmp(endHeader, rawText))-1;
+  iData = iEndHeader + 2;  %data headers - 2 line after [Data]
   
   headerCell 	= rawText(iStartHeader:iEndHeader);
   nFields 		= length(headerCell);
@@ -160,83 +189,62 @@ function data = readData(filename, iData)
 %READDATA Reads the sample data from the file.
 
   data = struct;
-  dataDelim = ',';	% tab delimited data...or could be space.... to be tested
+  dataDelim = ',';	% comma delimited data
   
-  fid = fopen(filename, 'rt');
+ fid = fopen(filename, 'rt');
   params = textscan(fid, '%s', 1, 'HeaderLines', iData, 'Delimiter', '');   % iData passed the header position to readData
   params = params{1};
   iParams = strfind(params, ',');
-  nParams = length(iParams{1});
+  nParams = length(iParams{1})+1; % needs to see one other field?
   paramsFmt = repmat('%s', 1, nParams);
   params = textscan(params{1}, paramsFmt, 'Delimiter', dataDelim);
   dataFmt = ['%s', repmat('%f', 1, nParams-1)];
   values = textscan(fid, dataFmt, 'Delimiter', dataDelim);
   fclose(fid);
   
+  
   for i=1:nParams
-      switch params{i}{1}
-                  %Date Time (dd.mm.yy HH:MM:SS)
-                  case 'Time tag (Gmt)'
-                    data.TIME.values = datenum(values{i}, 'dd.mm.yyyy HH:MM:SS');
-                    data.TIME.comment = ['dd.mm.yyyy HH:MM:SS'];		
-              
+      switch params{i}{1} 
+                                  
+                 %Date Time (dd.mm.yy HH:MM)
+                  case 'Time Tag (Gmt)'
+                    data.TIME.values = datenum(values{i}, 'dd.mm.yyyy HH:MM');
+                    data.TIME.comment = ['dd.mm.yyyy HH:MM'];		
+                    
+                 %Reference Parameter (unitless) - not used by Toolbox
+                  case 'Reference' 
+                    name = 'REF';
+                    data.REF.comment = ['calibration reference value from Aanderaa'];
+                    
                   %Battery (Volts)
-                  case 'BatteryVoltage', 
+                  case 'BatteryVoltage' 
                     name = 'VOLT';
 					data.VOLT.comment = ['Volts'];
-				
-				  %Turbidity (Ftu) - NTU and FTU have similar values ,
-				  %though calibration method is different chemicals
-				  %(Forazine , Nephelometric)
-				  
-% 				  case 'Turbidity(Ftu)', 
-% 				    name = 'TURBF';
-% 					data.TURBF.comment = ['Turbidity data '...
-% 					  'computed from bio-optical sensor raw counts measurements. The '...
-% 					  'turbidity sensor is equipped with a 880nm peak wavelength LED to irradiate and a '...
-% 					  'photodetector paired with an optical filter which measures everything '...
-% 					  'that backscatters in the region of 650nm to 1000nm.']';
-% 
-%                   case 'Turbidity(NTU)', 
-% 				    name = 'TURB';
-% 					data.TURB.comment = ['Turbidity data '...
-% 					  'computed from bio-optical sensor raw counts measurements. The '...
-% 					  'turbidity sensor is equipped with a 880nm peak wavelength LED to irradiate and a '...
-% 					  'photodetector paired with an optical filter which measures everything '...
-% 					  'that backscatters in the region of 650nm to 1000nm.']';
-%                   
-				  % Two pressure options MPa or kPa, depending on .cdb file
-                  % export from 5059 software
-                  
-				  %Pressure (MPa) = 100-1*(dBarr)
-                  %case 'Pressure(MPa)', 
-                  %   name = 'PRES';
-                  %   data.(fields{k}) = data.(fields{k})/100;  
-					% data.PRES.comment = ['Pressure data in kPa converted to dBarr for toolbox'];	
-				
+						
                   %Pressure (kPa) = 10-1*(dBarr)
-                  case 'PressureAbs', 
+                  case 'PressureAbs' 
                      name = 'PRES';
                      data.PRES.values = (values{i})/10;  
-					 data.PRES.comment = ['Pressure data in kPa converted to dBarr for toolbox'];	
-			  
+				     data.PRES.comment = ['Pressure data in kPa converted to dBarr for toolbox'];	
+                     
+                  %Pressure (kPa) = 10-1*(dBarr)
+                  case 'PressureRel', 
+                     name = 'PRES_REL';
+                     data.PRES_REL.values = (values{i})/10;  
+			         data.PRES_REL.comment = ['Pressure data in kPa converted to dBarr for toolbox'];
+                     
 				  %Temperature (Celsius degree)
-                  case 'Temperature', 
+                  case 'Temperature' 
                     name = 'TEMP';
-                    data.TEMp.values = values{1};
+                    data.TEMP.values = values{1};
 					data.TEMP.comment = ['Deg. Cel.'];
 									  			  				  
 				  %Conductivity (mS/cm) = 10-1*(S/m)
-                  case 'Conductivity',
+                  case 'Conductivity'
                       name = 'CNDC';
                       data.CNDC.values =(values{i})/10;
                       data.CNDC.comment = ['converted from mS/cm to S/m for Toolbox'];
-					  
-				  %DO (%)
-                  %case 'AirSaturation(%)', 
-                  %  name = 'DOXS';
-                  %  data.DOXS.comment = ['Percent Dissolved Oxygen from O2 Concentration (uM)'];
-                 
+					                  
                  %% Doppler Current Meter - current Measurements similar to Nortek AquaProfiler - assumed no mag. decl. applied
                  
                  %Absolute Speed (cm/s) = 10-1*(m/s)
@@ -262,28 +270,30 @@ function data = readData(filename, iData)
 %                     data.UCUR.(values{i}) = data.(values{i})/10;
 % 					data.UCUR.comment = ['Eastward water velocity converted from cm/s to m/ s for toolbox'];
 % 					
-% 				%Heading(Deg.M)
-%                   case 'Heading(Deg.M)', 
-%                     name = 'HEADING';
-% 					data.HEADING.comment = ['Heading relative to Magnetic North'];
+ 				%Heading (deg.)
+                   case 'Heading' 
+                     name = 'HEADING';
+ 					data.HEADING.comment = ['Magnetic Compass Heading'];
 					
 				%Tilt X(Deg)
-                  case 'Pitch', 
+                  case 'Pitch' 
                     name = 'PITCH';
 					data.PITCH.comment = ['Horizontal movement'];
 					
                  %Tilt Y(Deg)
-                  case 'Roll', 
+                  case 'Roll' 
                     name = 'ROLL';
 					data.ROLL.comment = ['Vertical movement'];
                  
                  %Signal Strength (backscatter - dB)
-                  case 'PulseAttenuation', 
+                  case 'PulseAttenuation' 
                     name = 'ABSI';
 					data.ABSI.comment = ['Backscatter dB - Received Signal Strength'];
                     
-                    %%%% there are also going to be ABSCI1,2,3,4? - 4 beam
-                    %%%% unit which uses the best 3 beam solution
+                    %%%% ShawnM - Jun 9 - 2017
+                    %%%% The dataset contains the speed and direction of
+                    %%%% each beam at each bin depth. Code to extract this
+                    %%%% information , will go here eventually.
               
       end % end of Switch
   end % end of For loop
