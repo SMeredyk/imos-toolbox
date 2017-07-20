@@ -123,9 +123,12 @@ elseif isfield(header,'InstType') == 1
                
 		case 'QB'
             sample_data = readCompactAlw(filename, mode); % This is an ALW-USB model
+        
+        case 'L'
+            sample_data = readMkvL(filename, mode); % This is an MKV - L model
 		
 		case 'TC'
-			sample_data = readCompactActHr(filename, mode); % This is an ACT-HR model 'TC' 
+			sample_data = readCompactActHr(filename, mode); % This is an ACT-HR model 
 			
 		case 'TKURB'
            	sample_data = readCompactAclw(filename, mode); % This is a Compact-CLW model

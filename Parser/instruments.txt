@@ -17,6 +17,7 @@ SEABIRD, 				SBE39P - TEMPERATURE AND PRESSURE RECORDER, 					SBE39
 SEABIRD, 				SBE37SM - MicroCAT C-T Recorder Serial Interface and Memory, 	SBE37SM
 SeaBird,       		 	SBE37,                                                          SBE37
 SeaBird,        		SBE37-SM,                                                       SBE37SM
+Seabird,        		SBE37-SM,                                                       SBE37SM
 SEABIRD, 				SBE19plus V2, 													SBE19
 SEABIRD, 				SBE39P - TEMPERATURE & PRESSURE RECORDER, 						SBE39
 SEABIRD, 				SBE39IM - TEMPERATURE RECORDER, 								SBE39
@@ -111,6 +112,7 @@ JFE_ALEC,				Infinity-CTW-USB,												Alec
 JFE_ALEC,				Infinity-CLW2-USB,												Alec
 JFE_ALEC,				Compact-CTHR,													Alec
 JFE_ALEC, 				Infinity-CLW-USB, 												Alec
+JFE_ALEC,               MkV-L,                                                          Alec
 
 Satlantic,				ISUS-V3,														satlantic
 
@@ -123,4 +125,3 @@ Aanderaa,				RCM7,															Aanderaa
 Aanderaa,				RCM11,															Aanderaa
 Aanderaa,				Seaguard,													    Aanderaa
 Aanderaa,               RDCP,                                                           Aanderaa
-
