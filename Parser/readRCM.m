@@ -66,7 +66,7 @@ try
     fclose(fid);
     
     [header, iData] = readHeader(rawText{1});
-    data = readData(filename, iData);
+    [data, iData] = readData(filename, iData);
     
 % cleaning-up, checking to see if the file is still open. if so, close it.    
 catch e
@@ -79,14 +79,34 @@ sample_data = struct;
 
 % Correction for pressure offset in air - Originally added by AForest 27-Jan-2017 with
 % comments for history on 30-Jan-2017 to Nortek current profiler toolbox code.
+% code updated to first test if Pressure Sensor was ON / Installed. ShawnM
+% - July18 - 2017
 
 % based on first 5 measurements within 15 m range
 [~,NAME,~] = fileparts(filename);
-first_mes=data.PRES.values(1:5);
-first_mes=first_mes(first_mes<15);
 
-if  ~isnan(first_mes)
-    disp(['Please note: ', NAME,': pressure offset in air : ',...
+ dataDelim = ',';	% comma delimited data
+  
+  fid = fopen(filename, 'rt');
+  params = textscan(fid, '%s', 1, 'HeaderLines', iData, 'Delimiter', '');
+  fclose(fid);
+  % iData passed the header position to readData
+  params = params{1};
+  %iParams = strfind(params, ',');
+  %nParams = length(iParams{1})+1; % needs to see one other field?
+  %paramsFmt = repmat('%s', 1, nParams);
+  %params = textscan(params{1}, paramsFmt, 'Delimiter', dataDelim);
+  
+%for i = 1:nParams
+%  pressureON{i} = strfind(params{1}{i}, 'Pressure(MPa)');
+A = count(params{1},"Pressure(MPa)");
+if A > 0
+ 
+    first_mes=data.PRES.values(1:5);
+    first_mes=first_mes(first_mes<15);
+
+    if  ~isnan(first_mes)
+        disp(['Please note: ', NAME,': pressure offset in air : ',...
         num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
     
 	%pressure=pressure-mean(first_mes);
@@ -100,10 +120,14 @@ if  ~isnan(first_mes)
     sample_data.history = sprintf('%s - %s', ...
             datestr(now_utc, readProperty('exportNetCDF.dateFormat')), ...
             PressureOffsetComment);
-else
-    disp(['Please note: ', NAME,': pressure offset in air : ',...
+    else
+        disp(['Please note: ', NAME,': pressure offset in air : ',...
         num2str(ceil(max(data.PRES.values(1:5)))),...
         '-dbar and NO pressure offset was applied']);
+    end
+
+else
+disp(['Please note: ', NAME,' pressure sensor was not installed.']);
 end
 
 sample_data.toolbox_input_file              = filename;
@@ -138,7 +162,7 @@ sample_data.variables{end}.data             = sample_data.variables{end}.typeCas
 sample_data.variables{end}.dimensions       = [];
 
 % copy variable data over
-data = rmfield(data, {'TIME','REF'});		
+data = rmfield(data, 'TIME');		
 fields = fieldnames(data);
 
 for k = 1:length(fields)
@@ -181,7 +205,7 @@ function [header, iData] = readHeader(rawText)
 end % end of readHeader function
 
 
-function data = readData(filename, iData)
+function [data, iData] = readData(filename, iData)
 %READDATA Reads the sample data from the file.
 
   data = struct;
@@ -208,9 +232,9 @@ function data = readData(filename, iData)
 					data.TIME.comment = ['Date Time (mm.dd.yyyy hh:mm:ss)'];
 					
                   %Reference Parameter (unitless) - not used by Toolbox
-                  case 'Reference', 
-                    name = 'REF';
-                    data.REF.comment = ['calibration reference value from Aanderaa'];
+                  %case 'Reference', 
+                  %  name = 'REF';
+                  %  data.REF.comment = ['calibration reference value from Aanderaa'];
 				
 				  %Turbidity (Ftu) - NTU and FTU have similar values ,
 				  %though calibration method is different chemicals
@@ -228,7 +252,7 @@ function data = readData(filename, iData)
                   case 'Turbidity(NTU)', 
 				    name = 'TURB';
                     data.TURB.values = values{i};
-					data.TURBF.comment = ['Turbidity data '...
+					data.TURB.comment = ['Turbidity data '...
 					  'computed from bio-optical sensor raw counts measurements. The '...
 					  'turbidity sensor is equipped with a 880nm peak wavelength LED to irradiate and a '...
 					  'photodetector paired with an optical filter which measures everything '...
@@ -270,18 +294,27 @@ function data = readData(filename, iData)
                         					  
                   % it's better to let the toolbox calculate the Depth (gsw) 
                   %Depth (m)	Latitude corrected in Aanderaa software
-                  % case 'Depth(m)', 
-					% name = 'DEPTH';
+                   case 'Depth(m)', 
+					 name = 'DEPTH';
                     %data.DEPTH.values = values{i};
 					% data.DEPTH.comment = ['Derived SeaWater Depth Calculated by Aanderaa Seaguard Studio'...
-						%					' and latitude corrected'];
-						
+						%					' and not latitude corrected'];
+					
+                  %Salinity(ppt)	Latitude and Depth correctable in
+                  %Aanderaa software, though not always don. Therefore, not
+                  %used.
+                   case 'Salinity(ppt)', 
+					 name = 'PSAL';
+                    %data.PSAL.values = values{i};
+					% data.PSAL.comment = ['Derived SeaWater Salinity Calculated by Aanderaa 5059 software'...
+						%					' and not latitude corrected'];      
+                        
                   %Density(kg/m^3)	 -  its better to let the toolbox derive this
                    % case 'Density(kg/m^3)', 
 					%	name = 'DENS';
                     %   data.DENS.values = values{i};
 					%	data.DENS.comment = ['Derived SeaWater Depth Calculated by Aanderaa Seaguard Studio'...
-					%						' and latitude corrected'];  
+					%						' and not latitude corrected'];  
                   
                  %% Single-Point Current Meter - Very Basic current Measurements - assumed no mag. decl. applied
                  
