@@ -476,6 +476,7 @@ sample_data.variables{end}.typeCastFunc     = str2func(netcdf3ToMatlabType(imosP
 sample_data.variables{end}.data             = sample_data.variables{end}.typeCastFunc(NaN);
 sample_data.variables{end}.dimensions       = [];
 
+
 for k = 1:length(varNames)
   % dimensions definition must stay in this order : T, Z, Y, X, others;
   % to be CF compliant
@@ -493,5 +494,6 @@ for k = 1:length(varNames)
         % applied by SeaBird software on the absolute presure measurement
         sample_data.variables{end}.applied_offset = sample_data.variables{end}.typeCastFunc(-14.7*0.689476);
     case SALINITY_NAME,     sample_data.variables{end}.data = sample_data.variables{end}.typeCastFunc(salinity);
+    
   end
 end
