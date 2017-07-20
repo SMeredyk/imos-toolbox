@@ -143,7 +143,7 @@ sample_data.variables{end}.data             = sample_data.variables{end}.typeCas
 sample_data.variables{end}.dimensions       = [];
 
 % copy variable data over
-data = rmfield(data, {'TIME','REF'});			
+data = rmfield(data, 'TIME');			
 fields = fieldnames(data);
 
 for k = 1:length(fields)
@@ -153,7 +153,8 @@ for k = 1:length(fields)
     sample_data.variables{end+1}.dimensions = 1;
     sample_data.variables{end}.name         = name;
     sample_data.variables{end}.typeCastFunc = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
-    sample_data.variables{end}.data         = sample_data.variables{end}.typeCastFunc(data.(fields{k}).values);
+    sample_data.variables{end}.data         = sample_data.variables{end}.typeCastFunc(data.(fields{k}).values); 
+    %sample_data.variables{end}.data         = sample_data.variables{end}.typeCastFunc([data.(fields{k}).values{:}]);
     sample_data.variables{end}.coordinates  = 'TIME LATITUDE LONGITUDE NOMINAL_DEPTH';
     sample_data.variables{end}.comment      = data.(fields{k}).comment;
 end	
@@ -212,13 +213,15 @@ function data = readData(filename, iData)
                     data.TIME.comment = ['dd.mm.yyyy HH:MM'];		
                     
                  %Reference Parameter (unitless) - not used by Toolbox
-                  case 'Reference' 
-                    name = 'REF';
-                    data.REF.comment = ['calibration reference value from Aanderaa'];
+                  %case 'Reference' 
+                  %  name = 'REF';
+                  %  data.REF.values = values{i};
+                  %  data.REF.comment = ['calibration reference value from Aanderaa'];
                     
                   %Battery (Volts)
                   case 'BatteryVoltage' 
                     name = 'VOLT';
+                    data.VOLT.values = values{i};
 					data.VOLT.comment = ['Volts'];
 						
                   %Pressure (kPa) = 10-1*(dBarr)
@@ -228,7 +231,7 @@ function data = readData(filename, iData)
 				     data.PRES.comment = ['Pressure data in kPa converted to dBarr for toolbox'];	
                      
                   %Pressure (kPa) = 10-1*(dBarr)
-                  case 'PressureRel', 
+                  case 'PressureRel' 
                      name = 'PRES_REL';
                      data.PRES_REL.values = (values{i})/10;  
 			         data.PRES_REL.comment = ['Pressure data in kPa converted to dBarr for toolbox'];
@@ -236,7 +239,7 @@ function data = readData(filename, iData)
 				  %Temperature (Celsius degree)
                   case 'Temperature' 
                     name = 'TEMP';
-                    data.TEMP.values = values{1};
+                    data.TEMP.values = values{i};
 					data.TEMP.comment = ['Deg. Cel.'];
 									  			  				  
 				  %Conductivity (mS/cm) = 10-1*(S/m)
@@ -273,21 +276,25 @@ function data = readData(filename, iData)
  				%Heading (deg.)
                    case 'Heading' 
                      name = 'HEADING';
- 					data.HEADING.comment = ['Magnetic Compass Heading'];
+                     data.HEADING.values = values{i};
+ 					 data.HEADING.comment = ['Magnetic Compass Heading'];
 					
 				%Tilt X(Deg)
                   case 'Pitch' 
                     name = 'PITCH';
+                    data.PITCH.values = values{i};
 					data.PITCH.comment = ['Horizontal movement'];
 					
                  %Tilt Y(Deg)
                   case 'Roll' 
                     name = 'ROLL';
+                    data.ROLL.values = values{i};
 					data.ROLL.comment = ['Vertical movement'];
                  
                  %Signal Strength (backscatter - dB)
                   case 'PulseAttenuation' 
                     name = 'ABSI';
+                    data.ABSI.values = values{i};
 					data.ABSI.comment = ['Backscatter dB - Received Signal Strength'];
                     
                     %%%% ShawnM - Jun 9 - 2017
