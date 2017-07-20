@@ -194,7 +194,6 @@ function data = readData(filename, channel, nChannels)
     
 %Conductivity (mS/cm) = 10-1*(S/m)	
     data.CNDC.values = (channel.Ch2(1)+ (channel.Ch2(2).*(values{3})))./10;
-    %data.CNDC.values = (values{i})/10; 
     data.CNDC.comment = ['converted from mS/cm to S/m by Toolbox'];
 	 
 		  

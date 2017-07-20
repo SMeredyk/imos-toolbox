@@ -1,6 +1,6 @@
-function sample_data = readCompactAlw( filename, mode )
-% readCompactAlw reads a .RAW (CSV) data file retrieved from a JFE-ALEC Compact ACLW logger.
-% via Compact-CTW software (ver 1.0.2 - 2012) - Only first 2 channels (T,C) have usable data
+function sample_data = readCompactMkvL( filename, mode )
+% readCompactMkvL reads a .RAW (CSV) data file retrieved from a JFE-ALEC Compact ACLW logger.
+% via MDS software (ver 1.0.2 - 2002) - Only one channel of Light data.
 %
 % Inputs:
 %   filename    - Cell string array passed from AlecParse.m, containing the name of the file to parse.
@@ -13,7 +13,7 @@ function sample_data = readCompactAlw( filename, mode )
 % Contributors: Shawn.Meredyk@arcticNet.ulaval.ca (ArcticNet - ULaval - Canada)
 %               Pascal_Guillot@uqar.ca (UQAR - Canada)
 %
-% Copyright (c) 2010, eMarine Information Infrastructure (eMII) and Integrated 
+% Copyright (c) 2017, eMarine Information Infrastructure (eMII) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -175,7 +175,7 @@ function data = readData(filename, channel, nChannels)
     headerL{c} = fgetl(fid); 
     
     % Read file until [Item]   
-    while isempty( strfind( headerL{c}, 'Item'))
+    while isempty( strfind( headerL{c}, '[Item]'))
         c = c + 1; 
         headerL{c}= fgetl(fid);
     end
@@ -185,13 +185,10 @@ function data = readData(filename, channel, nChannels)
     fclose( fid );
 
     % convert the raw data into real values      
-    data.TIME.values = datenum(values{1});
-    data.TIME.comment = 'Time'; 
-     
-    data.PAR.values = channel.Ch1(1)+(channel.Ch1(2).*(values{2}));
+    data.TIME.values = datenum(values{1},'yyyy/mm/dd HH:MM:SS');
+    data.TIME.comment = ['Time format - yyyy/mm/dd HH:MM:SS'];
+    
+    data.PAR.values = channel.Ch1(2).*(values{2});
     data.PAR.comment = ['Light Quantum : [umol_phtn/m2/s]']; 
-               
-    data.VOLT.values = channel.Ch2(1)+ (channel.Ch2(2).*(values{3}));
-    data.VOLT.comment = '';
-			  
+    		  
 end % end of readData function
