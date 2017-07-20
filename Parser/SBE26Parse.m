@@ -2,10 +2,14 @@ function sample_data = SBE26Parse(filename, mode )
 %SBE26Parse.m Parses a .tid (tidal) data file retrieved from SBE26WAVE 
 % software, converted into a .CSV file.  
 %
-% Header Example:
+% Header Examples:
 % DATETIME,Date,Time,Pressure,Temp
 % 17.08.2005 03:19:13,8/17/2005,3:19:13,14.5358,9.171
 % 17.08.2005 03:49:13,8/17/2005,3:49:13,14.5308,7.63
+%
+% DATETIME,Pressure,Temp
+% 17.08.2005 03:19:13,14.5358,9.171
+% 17.08.2005 03:49:13,14.5308,7.63
 %
 %
 % Inputs:
@@ -130,10 +134,10 @@ function data = readData(filename)
   params = textscan(fid, '%s', 1, 'Delimiter', '');   
   params = params{1};
   iParams = strfind(params, ',');
-  nParams = length(iParams{1})+1; %
+  nParams = length(iParams{1})+1; 
   paramsFmt = repmat('%s', 1, nParams);
   params = textscan(params{1}, paramsFmt, 'Delimiter', dataDelim); 
-  dataFmt = ['%s %s %s', repmat('%f', 1, nParams-1)];  
+  dataFmt = ['%s', repmat('%f', 1, nParams-1)];  %s %s %s if necessary.
   values = textscan(fid, dataFmt, 'Delimiter', dataDelim); 
   fclose(fid);
   
@@ -148,7 +152,7 @@ function data = readData(filename)
 										  
 				  case 'Pressure' 
 				    name = 'PRES';
-                    data.PRES.values = values{i}*(0.6894757);
+                    data.PRES.values = (values{i})*(0.6894757);
 					data.PRES.comment = ['PSIa to dbar pressure conversion']';
 				
 				
