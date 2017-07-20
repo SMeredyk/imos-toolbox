@@ -40,7 +40,7 @@ autoQCManager.autoQCDefaultChain.timeSeries = imosImpossibleDateQC imosImpossibl
 autoQCManager.autoQCDefaultChain.profile = imosImpossibleDateQC imosImpossibleLocationSetQC imosInOutWaterQC imosGlobalRangeQC imosImpossibleDepthQC imosSalinityFromPTQC imosHistoricalManualSetQC
 
 % last selected set of auto QC routines
-autoQCManager.autoQCChain.timeSeries = imosImpossibleDateQC imosImpossibleLocationSetQC imosGlobalRangeQC imosInOutWaterQC imosImpossibleDepthQC imosSalinityFromPTQC imosSideLobeVelocitySetQC imosTiltVelocitySetQC imosHorizontalVelocitySetQC imosCorrMagVelocitySetQC imosVerticalVelocitySetQC imosPercentGoodVelocitySetQC imosErrorVelocitySetQC imosRateOfChangeQC imosVerticalSpikeQC imosBinDepthInterferenceSetQC imosEchoIntensityInAirManualSetQC imosHistoricalManualSetQC
+autoQCManager.autoQCChain.timeSeries = imosImpossibleDateQC imosGlobalRangeQC imosImpossibleLocationSetQC imosInOutWaterQC imosImpossibleDepthQC imosSalinityFromPTQC imosSideLobeVelocitySetQC imosTiltVelocitySetQC imosHorizontalVelocitySetQC imosCorrMagVelocitySetQC imosVerticalVelocitySetQC imosPercentGoodVelocitySetQC imosErrorVelocitySetQC imosRateOfChangeQC imosVerticalSpikeQC imosBinDepthInterferenceSetQC imosEchoIntensityInAirManualSetQC imosHistoricalManualSetQC
 autoQCManager.autoQCChain.profile = imosImpossibleDateQC imosImpossibleLocationSetQC imosInOutWaterQC imosGlobalRangeQC imosImpossibleDepthQC imosSalinityFromPTQC imosHistoricalManualSetQC
 
 % prompt for preprocessing (if false, 
@@ -64,12 +64,12 @@ dataFileStatusDialog.multipleFileFormat    = italic
 
 % last selected values for start dialog
 <<<<<<< HEAD
-startDialog.dataDir.timeSeries = C:\Analysis\2005
+startDialog.dataDir.timeSeries = C:\Analysis\2003
 =======
-startDialog.dataDir.timeSeries = C:\Analysis\2005
+startDialog.dataDir.timeSeries = C:\Analysis\2003
 >>>>>>> Shawn_local_clean
 startDialog.dataDir.profile = 
-startDialog.fieldTrip.timeSeries = 2006_2
+startDialog.fieldTrip.timeSeries = 2004_IOS
 startDialog.fieldTrip.profile = 
 startDialog.lowDate.timeSeries = 730699
 startDialog.lowDate.profile = 
@@ -80,7 +80,7 @@ startDialog.highDate.profile =
 importManager.manualDir = 
 
 % last selected directory for file export
-exportDialog.defaultDir = C:\Analysis\2005\CA08-05\Quality_controlled_data\IMOS_QCdata\QcVer1_1
+exportDialog.defaultDir = C:\Analysis\2003\CA20-03\Quality_controlled_data\IMOS_QCdata\QcVer1_1
 
 % prompt user to select parser if an appropriate one 
 % cannot be found (if false, the data is not imported)
