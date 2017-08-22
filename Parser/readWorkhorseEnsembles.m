@@ -219,7 +219,7 @@ if any(idodgy)
         
         idx     = idx(igood);
     else
-        error('This file looks corrupted. Try open it with WinADCP and save it again.');
+        error('This file looks corrupted. Try open it with WinADCP and save it again. Alternatively, check the file for bad ensembles. A subselection may be needed.');
     end
 end
 
@@ -364,7 +364,8 @@ function [sect, len] = parseFixedLeader(data, idx, cpuEndianness)
   sect.cpuFirmwareRevision = double(data(idx+3));
   % system configuration
 % LSB
-% BITS 7 6 5 4 3 2 1 0
+% BITS 
+% 7 6 5 4 3 2 1 0
 % - - - - - 0 0 0 75-kHz SYSTEM
 % - - - - - 0 0 1 150-kHz SYSTEM
 % - - - - - 0 1 0 300-kHz SYSTEM
@@ -381,7 +382,8 @@ function [sect, len] = parseFixedLeader(data, idx, cpuEndianness)
 % 0 - - - - - - - DOWN FACING BEAM
 % 1 - - - - - - - UP-FACING BEAM
 % MSB
-% BITS 7 6 5 4 3 2 1 0
+% BITS 
+% 7 6 5 4 3 2 1 0
 % - - - - - - 0 0 15E BEAM ANGLE
 % - - - - - - 0 1 20E BEAM ANGLE
 % - - - - - - 1 0 30E BEAM ANGLE
