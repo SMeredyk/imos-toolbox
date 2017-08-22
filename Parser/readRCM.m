@@ -92,13 +92,7 @@ sample_data = struct;
   fclose(fid);
   % iData passed the header position to readData
   params = params{1};
-  %iParams = strfind(params, ',');
-  %nParams = length(iParams{1})+1; % needs to see one other field?
-  %paramsFmt = repmat('%s', 1, nParams);
-  %params = textscan(params{1}, paramsFmt, 'Delimiter', dataDelim);
-  
-%for i = 1:nParams
-%  pressureON{i} = strfind(params{1}{i}, 'Pressure(MPa)');
+
 A = count(params{1},"Pressure(MPa)");
 if A > 0
  
