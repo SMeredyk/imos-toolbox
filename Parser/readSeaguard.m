@@ -68,7 +68,8 @@ try
     fclose(fid);
     
     [header, iData] = readHeader(rawText{1});
-    data = readData(filename, iData);
+    [data, iData] = readData(filename, iData);
+	
 catch e
     if fid ~= -1, fclose(fid); end
     rethrow(e);
@@ -77,16 +78,30 @@ end % end of File read
 % copy all of the information over to the sample data struct
 sample_data = struct;
 
-% Correction for pressure offset in air - Added AForest 27-Jan-2017 with
-% comments for history on 30-Jan-2017
+% Correction for pressure offset in air - Originally added by AForest 27-Jan-2017 with
+% comments for history on 30-Jan-2017 to Nortek current profiler toolbox code.
+% code updated to first test if Pressure Sensor was ON / Installed. ShawnM
+% - July18 - 2017
 
-% based on first 5 measurements within 10 m range
+% based on first 5 measurements within 15 m range
 [~,NAME,~] = fileparts(filename);
-first_mes=data.PRES.values(1:5);
-first_mes=first_mes(first_mes<10);
 
-if  ~isnan(first_mes)
-    disp(['Please note: ', NAME,': pressure offset in air : ',...
+ dataDelim = ',';	% comma delimited data
+  
+  fid = fopen(filename, 'rt');
+  params = textscan(fid, '%s', 1, 'HeaderLines', iData, 'Delimiter', '');
+  fclose(fid);
+  % iData passed the header position to readData
+  params = params{1};
+  
+A = count(params{1},"Pressure(kPa)");
+if A > 0
+ 
+    first_mes=data.PRES.values(1:5);
+    first_mes=first_mes(first_mes<15);
+
+    if  ~isnan(first_mes)
+        disp(['Please note: ', NAME,': pressure offset in air : ',...
         num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
     
 	%pressure=pressure-mean(first_mes);
@@ -100,10 +115,14 @@ if  ~isnan(first_mes)
     sample_data.history = sprintf('%s - %s', ...
             datestr(now_utc, readProperty('exportNetCDF.dateFormat')), ...
             PressureOffsetComment);
-else
-    disp(['Please note: ', NAME,': pressure offset in air : ',...
+    else
+        disp(['Please note: ', NAME,': pressure offset in air : ',...
         num2str(ceil(max(data.PRES.values(1:5)))),...
         '-dbar and NO pressure offset was applied']);
+    end
+
+else
+disp(['Please note: ', NAME,' pressure sensor was not installed.']);
 end
 
 sample_data.toolbox_input_file              = filename;
@@ -164,15 +183,16 @@ function [header, iData] = readHeader(rawText)
   header 	= struct;
   iData 	= [];
   
-  startHeader 	= 'Model:Seaguard';	
+  %startHeader 	= 'Model:Seaguard';	
   endHeader 	= '[Data]';    
   fmtHeader  	= '%s%s';
   delimHeader 	= ':';
   
   
-  iStartHeader 	= find(strcmp(startHeader, rawText));
+  %iStartHeader 	= find(strcmp(startHeader, rawText));
+  iStartHeader 	= 1;
   iEndHeader 	= find(strcmp(endHeader, rawText))-1;
-  iData 		= iEndHeader + 2;   %data headers-2 lines after [Data]
+  iData 		= iEndHeader + 1;   %data headers-2 lines after [Data]
   
   headerCell 	= rawText(iStartHeader:iEndHeader);
   nFields 		= length(headerCell);
@@ -184,7 +204,7 @@ function [header, iData] = readHeader(rawText)
 end % end of readHeader function
 
 
-function data = readData(filename, iData)
+function [data, iData] = readData(filename, iData)
 %READDATA Reads the sample data from the file.
 
 data = struct;
@@ -210,16 +230,16 @@ data = struct;
                     data.TIME.comment = ['dd.mm.yyyy HH:MM:SS'];		
               
                   %Battery (Volts)
-                  case 'Battery Voltage (V)', 
+                  case 'Battery Voltage(V)', 
                     name = 'VOLT';
                     data.VOLT.values = values{i};
 					data.VOLT.comment = [''];
 				
-				  %Turbidity (Ftu) - NTU and FTU have similar values ,
+				  %Turbidity (FTU) - NTU and FTU have similar values ,
 				  %though calibration method is different chemicals
 				  %(Forazine , Nephelometric)
 				  
-				  case 'Turbidity(Ftu)', 
+				  case 'Turbidity(FTU)', 
 				    name = 'TURBF';
                     data.TURBF.values = values{i};
 					data.TURBF.comment = ['Turbidity data '...
@@ -259,7 +279,7 @@ data = struct;
 					 data.PRES.comment = ['Pressure data converted from kPa to dBarr for toolbox'];	
 
 				  %Temperature (Celsius degree)
-                  case 'Temperature(DegC)', 
+                  case 'Temperature(Deg.C)', 
                     name = 'TEMP';
                     data.TEMP.values = values{i};
 					data.TEMP.comment = ['Each sensor on the data logger comes with its own temperature ref,'....
