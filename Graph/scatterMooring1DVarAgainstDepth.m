@@ -156,7 +156,7 @@ for i=1:lenSampleData
     end
 end
 
-backgroundColor = [0.75 0.75 0.75];
+backgroundColor = [0.85 0.85 0.85];
 
 if any(isPlottable)
     % collect visualQC config
@@ -190,16 +190,15 @@ if any(isPlottable)
         if isPlottable(i)
             if initiateFigure
                 fileName = genIMOSFileName(sample_data{iSort(i)}, 'png');
+                visible = 'on';
+                if saveToFile, visible = 'off'; end
                 hFigMooringVar = figure(...
-                    'Name', title, ...
-                    'NumberTitle','off', ...
-                    'OuterPosition', monitorRect(iBigMonitor, :));
+                    'Name',             title, ...
+                    'NumberTitle',      'off', ...
+                    'Visible',          visible, ...
+                    'OuterPosition',    monitorRect(iBigMonitor, :));
                 
-                % create uipanel within figure so that screencapture can be
-                % used on the plot only and without capturing all of the figure
-                % (including buttons, menus...)
-                hPanelMooringVar = uipanel('Parent', hFigMooringVar);
-                hAxMooringVar = axes('Parent', hPanelMooringVar);
+                hAxMooringVar = axes('Parent',   hFigMooringVar);
             
                 set(hAxMooringVar, 'YDir', 'reverse');
                 set(get(hAxMooringVar, 'XLabel'), 'String', 'Time');
@@ -266,7 +265,13 @@ if any(isPlottable)
                     depth = sample_data{iSort(i)}.variables{iDepth}.data;
                 else
                     if isfield(sample_data{iSort(i)}, 'instrument_nominal_depth')
-                        depth = sample_data{iSort(i)}.instrument_nominal_depth*ones(size(iGood));
+                        if ~isempty(sample_data{iSort(i)}.instrument_nominal_depth)
+                            depth = sample_data{iSort(i)}.instrument_nominal_depth*ones(size(iGood));
+                        else
+                            fprintf('%s\n', ['Error : in ' sample_data{iSort(i)}.toolbox_input_file ...
+                                ', global attribute instrument_nominal_depth is not documented.']);
+                            continue;
+                        end
                     else
                         fprintf('%s\n', ['Error : in ' sample_data{iSort(i)}.toolbox_input_file ...
                             ', global attribute instrument_nominal_depth is not documented.']);
@@ -383,8 +388,7 @@ if ~initiateFigure
             'buffer', [0 -hYBuffer], ...
             'ncol', nCols,...
             'FontSize', fontSizeAx, ...
-            'xscale', xscale, ...
-            'parent', hPanelMooringVar);
+            'xscale', xscale);
         entries = get(hLegend,'children');
         % if used mesh for scatter plot then have to clean up legend
         % entries
@@ -421,7 +425,7 @@ if ~initiateFigure
         fileName = strrep(fileName, '_PARAM_', ['_', varName, '_']); % IMOS_[sub-facility_code]_[site_code]_FV01_[deployment_code]_[PLOT-TYPE]_[PARAM]_C-[creation_date].png
         fileName = strrep(fileName, '_PLOT-TYPE_', '_SCATTER_');
         
-        fastSaveas(hFigMooringVar, hPanelMooringVar, fullfile(exportDir, fileName));
+        fastSaveas(hFigMooringVar, fullfile(exportDir, fileName));
         
         close(hFigMooringVar);
     end
