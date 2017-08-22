@@ -251,7 +251,7 @@ function sample_data = readXR620( filename, mode )
                   case {'Temp', 'temp02', 'temp00'}, name = 'TEMP';
                       
                       %Pressure (dBar)
-                  case {'Pres', 'pres20'}, name = 'PRES';
+                  case {'Pres', 'pres20','pres19'}, name = 'PRES';
                       
                       %Relative Pressure (dBar)
                   case {'pres08'}, name = 'PRES_REL';
@@ -264,7 +264,8 @@ function sample_data = readXR620( filename, mode )
                           'expressed in ug/l, 1l = 0.001m3 was assumed.'];
                       
                       %Turbidity (NTU)
-                  case 'Turb', name = 'TURB';
+                  case {'Turb','turb00'}, name = 'TURB';
+                      comment.(vars{k}) = 'NTU - Auto Ranging Seapoint SCF';
                       
                       %Rinko temperature (Celsius degree)
                   case 'R_Temp'
@@ -287,7 +288,7 @@ function sample_data = readXR620( filename, mode )
                       data.(vars{k}) = data.(vars{k})/10000;
                       
                       %Density anomaly (n/a)
-                 % case {'DensAnom', 'density'}, name = '';
+                 % case {'DensAnom', 'density','dden00'}, name = '';
                       
 					  %commented out due to not importing salinity from Rusking software
                       %Speed of sound (m/s)
@@ -752,7 +753,7 @@ function header = readHeader(fid)
     ['^NumberOfChannels=+' '(\d+)']
     ['^CorrectionToConductivity=+' '(\d+)']
     ['^NumberOfSamples=+' '(\d+)']
-    ['^HostVersion=+' '(\S+\s?\S+\s?\S+\s?\S+\s?\S+)$'] % this is used to determine date formating of data
+    ['^HostVersion=+' '(\S+\s?\S+\s?\S+\s?\S+\s?\S+)$'] % this is used to determine date formating of data , 5 characters in string
   };
   
   startDate = '';
