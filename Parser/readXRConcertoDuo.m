@@ -749,7 +749,7 @@ function header = readHeader(fid)
     ['^NumberOfChannels=+' '(\d+)']
     ['^CorrectionToConductivity=+' '(\d+)'] % this variable doesn`t exist in RBRConcerto files
     ['^NumberOfSamples=+' '(\d+)']
-    ['^HostVersion=+' '(\S+\s?\S+\s?\S+)$'] % this is used to determine date formating of data
+    ['^HostVersion=+' '(\S+\s?\S+\s?\S+\s?\S+\s?\S+\s?)$'] % this is used to determine date formating of data 5 characters in 1.13.10 legacy export txt
   };
   
   startDate = '';
@@ -819,8 +819,13 @@ function header = readHeader(fid)
   end
   % section meant to remedy the changing versions of Ruskin and the
   % nomenclature surrounding start and end dates
-  ruskinVer = strfind(header.hostversion, '1.13.7');
+  ruskinVer = strfind(header.hostversion, '1.13.10');
   
+  if ruskinVer == 0
+      ruskinVer = strfind(header.hostversion, '1.13.7');
+  else
+  end
+      
    if ~isempty(startDate) && ~isempty(startTime) % ruskin v1.5
       if length(startDate) == 8 
           header.start    = datenum([startDate ' ' startTime],  'yy/mm/dd HH:MM:SS.FFF');
@@ -864,7 +869,12 @@ function data = readData(fid, header)
   %firmwareNum to be used to select for date- time formatting unique to
   %various versions of Ruskin and firmware
   firmwareNum = str2double(header.firmware);
-  ruskinVer = strfind(header.hostversion, '1.13.7');
+  ruskinVer = strfind(header.hostversion, '1.13.10');
+  
+   if ruskinVer == 0
+      ruskinVer = strfind(header.hostversion, '1.13.7');
+  else
+   end
   
   % get the column names
   header.variables = strrep(header.variables, ' & ', '|');
@@ -916,7 +926,7 @@ function data = readData(fid, header)
   % select date-time format by ruskin and firmware version
   elseif firmwareNum == 10.550
           data.time = datenum(data.Date, 'dd-mmm-yyyy') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); %ruskin v1.12.6
-  elseif firmwareNum < 7 && ruskinVer > 0
+  elseif firmwareNum < 7 & ruskinVer > 0
 		  data.time = datenum(data.Date, 'yyyy-mm-dd') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); % ruskin v1.13.7
   else 
 		  data.time = datenum(data.Date, 'dd-mmm-yyyy') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); %ruskin v1.11.1
