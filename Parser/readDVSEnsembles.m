@@ -530,7 +530,7 @@ function [sect len] = parseVariableLeader( data, idx, cpuEndianness )
 % 5 ATTITUDE TEMP
 % 6 ATTITUDE
 % 7 CONTAMINATION SENSOR
-% Note that the ADC values may be �noisy� from sample to sample,
+% Note that the ADC values may be noisy from sample to sample,
 % but are useful for detecting long-term trends.
   sect.adcChannel0            = double(data(idx+34));
   sect.adcChannel1            = double(data(idx+35));
@@ -559,7 +559,7 @@ function [sect len] = parseVariableLeader( data, idx, cpuEndianness )
   sect.y2kHundredth           = double(data(idx+64));
 end
 
-function [sect len] = parseVelocity( data, numCells, idx, cpuEndianness )
+function [sect, len] = parseVelocity( data, numCells, idx, cpuEndianness )
 %PARSEVELOCITY Parses a velocity section from an ADCP ensemble.
 %
 % Inputs:
@@ -592,7 +592,7 @@ function [sect len] = parseVelocity( data, numCells, idx, cpuEndianness )
   
 end
 
-function [sect len] = parseX( data, numCells, name, idx, cpuEndianness )
+function [sect, len] = parseX( data, numCells, name, idx, cpuEndianness )
 %PARSEX Parses one of the correlation magnitude, echo intensity or percent 
 % good sections from an ADCP ensemble. They all have the same format. 
 %
@@ -627,8 +627,10 @@ sect.field3 = fields(:, ibeam+2);
 sect.field4 = fields(:, ibeam+3);
     
 end
-% Don`t know if I can remove this function, as it`s not applicable to DVS units. Does the toolbox need it?
-function [sect length] = parseBottomTrack( data, idx, cpuEndianness )
+
+%% Don`t know if I can remove this function, as it`s not applicable to DVS units. Does the toolbox need it?
+
+function [sect, length] = parseBottomTrack( data, idx, cpuEndianness )
 %PARSEBOTTOMTRACK Parses a bottom track data section from an ADCP
 % ensemble.
 %

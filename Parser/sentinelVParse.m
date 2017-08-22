@@ -1,4 +1,5 @@
-function sample_data = sentinelVParse( filename, tMode )
+function sample_data = sentinelVParse( filename, tMode)
+%
 %SENTINELVPARSE Parses a raw (binary) data file from a Teledyne RDI Sentinel V 
 % ADCP.
 %
@@ -35,7 +36,7 @@ function sample_data = sentinelVParse( filename, tMode )
 %         		Paul McCarthy <paul.mccarthy@csiro.au>
 
 %
-% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
+% Copyright (c) 2017, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -80,7 +81,7 @@ narginchk(1, 2);
       isWaveData = true;
   end
   
-  ensembles = readWorkhorseEnsembles( filename );
+  ensembles = readSentinelVEnsembles( filename );
   
   if isempty(ensembles), error(['no ensembles found in file ' filename]); end
   
@@ -226,40 +227,28 @@ narginchk(1, 2);
   adcpFreqs = str2num(fixed.systemConfiguration(:, 6:8)); % str2num is actually more relevant than str2double here
   adcpFreq = mode(adcpFreqs); % hopefully the most frequent value reflects the frequency when deployed
   switch adcpFreq
-      case 0
-          adcpFreq = 75;
-          model = 'Long Ranger';
-          
-      case 1
-          adcpFreq = 150;
-          model = 'Quartermaster';
-          
       case 10
           adcpFreq = 300;
-          model = 'Sentinel or Monitor';
+          model = 'SentinelV100';
           
       case 11
-          adcpFreq = 600;
-          model = 'Sentinel or Monitor';
+          adcpFreq = 500;
+          model = 'SentinelV50';
           
       case 100
-          adcpFreq = 1200;
-          model = 'Sentinel or Monitor';
-          
-      otherwise
-          adcpFreq = 2400;
-          model = 'Unknown';
-          
+          adcpFreq = 1000;
+          model = 'SentinelV20';
+                   
   end
   
-  sample_data.meta.instrument_model     = [model ' Workhorse ADCP'];
+  sample_data.meta.instrument_model     = [model ' Sentinel-V ADCP'];
   sample_data.meta.instrument_serial_no =  serial;
   sample_data.meta.instrument_sample_interval = median(diff(time*24*3600));
   sample_data.meta.instrument_average_interval = mode(timePerEnsemble);
   sample_data.meta.instrument_firmware  = ...
     strcat(num2str(fixed.cpuFirmwareVersion(1)), '.', num2str(fixed.cpuFirmwareRevision(1))); % we assume the first value is correct for the rest of the dataset
   if all(isnan(fixed.beamAngle))
-      sample_data.meta.beam_angle       =  20;  % http://www.hydro-international.com/files/productsurvey_v_pdfdocument_19.pdf
+      sample_data.meta.beam_angle       =  25;  % SV_ODF_Jan17.pdf
   else
       sample_data.meta.beam_angle       =  mode(fixed.beamAngle); % we set a static value for this variable to the most frequent value found
   end
@@ -404,7 +393,8 @@ narginchk(1, 2);
       %
       filename = waveFile;
       
-      waveData = readWorkhorseWaveAscii(filename);
+      waveData = readSentinelVWaveAscii(filename); 
+      % I havent made this parser yet. ShawnM - July 20 - 2017
       
       % turn sample data into a cell array
       temp{1} = sample_data;
