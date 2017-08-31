@@ -85,10 +85,15 @@ for k = 1:length(sample_data)
     % is no velocity data in beam coordinates (useless)
     ucurIdx  = getVar(sample_data{k}.variables, 'UCUR');
     if ~ucurIdx, ucurIdx  = getVar(sample_data{k}.variables, 'UCUR_MAG'); end
-    %vel1Idx  = getVar(sample_data{k}.variables, 'VEL1'); commented out due
-    %to Nortek Continental units not getting binMapped
-    vcurIdx  = getVar(sample_data{k}.variables, 'VCUR');
-    if any(sample_data{k}.variables{ucurIdx}.dimensions == distAlongBeamsIdx) && ~vcurIdx, continue; end
+        vel1Idx  = getVar(sample_data{k}.variables, 'VEL1'); 
+
+    if any(sample_data{k}.variables{ucurIdx}.dimensions == distAlongBeamsIdx) && ~vel1Idx, continue; end
+
+    
+    %I was getting a warning message that the Nortek Continental units not
+    %getting binMapped, so I made the below changes. - ShawnM , Aug 2017
+    %vcurIdx  = getVar(sample_data{k}.variables, 'VCUR');
+    %if any(sample_data{k}.variables{ucurIdx}.dimensions == distAlongBeamsIdx) && ~vcurIdx, continue; end
     
     % We apply tilt corrections to project DIST_ALONG_BEAMS onto the vertical
     % axis HEIGHT_ABOVE_SENSOR.
