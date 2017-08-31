@@ -1,14 +1,13 @@
-function ensembles = readWorkhorseEnsembles( filename )
-%READWORKHORSEENSEMBLES Reads in and returns all of the ensembles contained
-% in the given binary file retrieved from a Workhorse ADCP.
+function ensembles = readSentinelVEnsembles( filename )
+%READSENTTINELVENSEMBLES Reads in and returns all of the ensembles contained
+% in the given binary file retrieved from a Sentinel V ADCP.
 %
-% This function parses a binary file retrieved from a Teledyne RD Workhorse
-% ADCP instrument. This function is only able to interpret raw files in the
-% PD0 format (as it stands at December 2008). See  WorkHorse Commands and
-% Ouput Data Format Document (P/N 957-6156-00)
+% This function uses the readSentinelVEnsembles function to read in a set
+% of ensembles from an averaged (performed by Velocity software) binary PD0 
+% SentinelV ADCP file. 
 %
 %
-% A raw Workhorse data file consists of a set of 'ensembles'. Each ensemble
+% A raw SentinelV data file consists of a set of 'ensembles'. Each ensemble
 % contains data for one sample period. An ensemble is made up of a number
 % of sections, the last five of which may or may not be present:
 %   - Header:                Ensemble information (size/contents). Always
@@ -25,24 +24,32 @@ function ensembles = readWorkhorseEnsembles( filename )
 %                            the Doppler phase change'. 
 %   - Echo Intensity:        Echo intensity data. 
 %   - Percent Good:          Percentage of good data for each depth cell.
-%   - Bottom Track Data:     Bottom track data.  (not really necessary for
+%   - Vertical Beam Data:    The 5th beam 
+%   - Bottom Track Data:     Bottom track data (not necessarily installed).
+%							(not really necessary for
 %                            bottom moored upward looking ADCP)
 %
 % This function parses the ensembles, and returns all of them in a cell
 % array.
 %
 % Inputs:
-%   filename  - Raw binary data file retrieved from a Workhorse.
+%   filename  - Raw binary data file retrieved from a Sentinel V,
+%				averaged by RDI's Velocity software.
 %
 % Outputs:
 %   ensembles - Scalar structure of ensembles.
 %
-% Author:       Paul McCarthy <paul.mccarthy@csiro.au>
+% Author:       Shawn Meredyk <shawn.meredyk@as.ulaval.ca>
 % Contributor:  Charles James <charles.james@sa.gov.au>
 %               Guillaume Galibert <guillaume.galibert@utas.edu.au>
-
+%				Paul McCarthy <paul.mccarthy@csiro.au>
 %
-% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated
+% Copyright (c) 2017, Amundsen Science & ArcticNet
+% http://www.amundsen.ulaval.ca/
+% http://www.arcticnet.ulaval.ca/
+% All rights reserved.
+%
+% Copyright (c) 2017, Australian Ocean Data Network (AODN) and Integrated
 % Marine Observing System (IMOS).
 % All rights reserved.
 %
@@ -249,14 +256,16 @@ iVel            = IDX(sType == 256);
 iCorr           = IDX(sType == 512);
 iEcho           = IDX(sType == 768);
 iPCgood         = IDX(sType == 1024);
-%iStatProf      = IDX(sType == 1280);
-iBTrack         = IDX(sType == 1536); % Sentinel V has a 5th beam which replaces the bottom track, so this variable will need to be either removed or renamed
-%iMicroCat      = IDX(sType == 2048);
+%iStatProf      = IDX(sType == 1280); % used in the Sentinel V units - system and features info
+iVertLeader     = IDX(sType == 3841);
+%iBTrack        = IDX(sType == 4097); % Sentinel V Bottom Track is only available for the 
+% 										Real-Time units.
 clear IDX sType;
 
 % major change to PM code - ensembles is a scalar structure not cell array
 ensembles.fixedLeader       = parseFixedLeader(data, iFixedLeader, cpuEndianness);
 ensembles.variableLeader    = parseVariableLeader(data, iVarLeader, cpuEndianness);
+ensembles.verticalLeader    = parseVerticalLeader(data, iVertLeader, cpuEndianness);
 
 % adc channels sequentially sampled per ping, nan channels not sampled
 % in that ensemble
@@ -342,6 +351,7 @@ ibad = reshape(ibad, j, i) ~= 0;
 dsub(ibad) = nan;
 
 end
+% end of read ensembles function - main 
 
 function [sect, len] = parseFixedLeader(data, idx, cpuEndianness)
 %PARSEFIXEDLEADER Parses a fixed leader section from an ADCP ensemble.
@@ -362,35 +372,7 @@ function [sect, len] = parseFixedLeader(data, idx, cpuEndianness)
   sect.fixedLeaderId       = indexData(data, idx, idx+1, 'uint16', cpuEndianness)';
   sect.cpuFirmwareVersion  = double(data(idx+2));
   sect.cpuFirmwareRevision = double(data(idx+3));
-  % system configuration for a Workhorse Series Unit
-% LSB
-% BITS 
-% 7 6 5 4 3 2 1 0
-% - - - - - 0 0 0 75-kHz SYSTEM
-% - - - - - 0 0 1 150-kHz SYSTEM
-% - - - - - 0 1 0 300-kHz SYSTEM
-% - - - - - 0 1 1 600-kHz SYSTEM
-% - - - - - 1 0 0 1200-kHz SYSTEM
-% - - - - - 1 0 1 2400-kHz SYSTEM
-% - - - - 0 - - - CONCAVE BEAM PAT.
-% - - - - 1 - - - CONVEX BEAM PAT.
-% - - 0 0 - - - - SENSOR CONFIG #1
-% - - 0 1 - - - - SENSOR CONFIG #2
-% - - 1 0 - - - - SENSOR CONFIG #3
-% - 0 - - - - - - XDCR HD NOT ATT.
-% - 1 - - - - - - XDCR HD ATTACHED
-% 0 - - - - - - - DOWN FACING BEAM
-% 1 - - - - - - - UP-FACING BEAM
-% MSB
-% BITS 
-% 7 6 5 4 3 2 1 0
-% - - - - - - 0 0 15E BEAM ANGLE
-% - - - - - - 0 1 20E BEAM ANGLE
-% - - - - - - 1 0 30E BEAM ANGLE
-% - - - - - - 1 1 OTHER BEAM ANGLE
-% 0 1 0 0 - - - - 4-BEAM JANUS CONFIG
-% 0 1 0 1 - - - - 5-BM JANUS CFIG DEMOD)
-% 1 1 1 1 - - - - 5-BM JANUS CFIG.(2 DEMD)
+ 
 %% Fixed Leader Header setup for the Sentinel V series
 %LSB
 %BITS 
@@ -398,8 +380,8 @@ function [sect, len] = parseFixedLeader(data, idx, cpuEndianness)
 %- - - - - 0 0 0 Not used
 %- - - - - 0 0 1 Not used
 %- - - - - 0 1 0 V Series100 (300kHz)
-%- - - - - 0 1 1 V Series50 (500kHz)
-%- - - - - 1 0 0 V Series20 (1000kHz)
+%- - - - - 0 1 1 V Series50 (500kHz) - not sure if this will be problematic as this is normally 600 kHz
+%- - - - - 1 0 0 V Series20 (1000kHz) - not sure if this will be problematic as this is normally 1200 kHz
 %- - - - - 1 0 1 Not used
 %- - - - 0 - - - Not used
 %- - - - 1 - - - Not used
@@ -425,28 +407,27 @@ function [sect, len] = parseFixedLeader(data, idx, cpuEndianness)
 %0 1 0 1 - - - - 5-BEAM JANUS CONFIG
 %1 1 1 1 - - - - Not used
 
-
-  LSB = dec2bin(double(data(idx+5)));
-  MSB = dec2bin(double(data(idx+6)));
+  LSB = dec2bin(double(data(idx+4)));
+  MSB = dec2bin(double(data(idx+5)));
   while(size(LSB, 2) < 8), LSB = [repmat('0', size(LSB, 1), 1) LSB]; end
   while(size(MSB, 2) < 8), MSB = [repmat('0', size(MSB, 1), 1) MSB]; end
   sect.systemConfiguration = [LSB MSB];
-  sect.realSimFlag         = double(data(idx+7));
-  sect.lagLength           = double(data(idx+8));
-  sect.numBeams            = double(data(idx+9));
-  sect.numCells            = double(data(idx+10));
-  block                    = indexData(data, idx+11, idx+16, 'uint16', cpuEndianness)';
+  sect.realSimFlag         = double(data(idx+6));
+  sect.lagLength           = double(data(idx+7));
+  sect.numBeams            = double(data(idx+8));
+  sect.numCells            = double(data(idx+9));
+  block                    = indexData(data, idx+10, idx+15, 'uint16', cpuEndianness)';
   sect.pingsPerEnsemble    = block(:,1);
   sect.depthCellLength     = block(:,2);
   sect.blankAfterTransmit  = block(:,3);
-  sect.profilingMode       = double(data(idx+17));
-  sect.lowCorrThresh       = double(data(idx+18));
-  sect.numCodeReps         = double(data(idx+19));
-  sect.gdMinimum           = double(data(idx+20));
-  sect.errVelocityMax      = indexData(data, idx+21, idx+22, 'uint16', cpuEndianness)';
-  sect.tppMinutes          = double(data(idx+23));
-  sect.tppSeconds          = double(data(idx+24));
-  sect.tppHundredths       = double(data(idx+25));
+  sect.profilingMode       = double(data(idx+16));
+  sect.lowCorrThresh       = double(data(idx+17));
+  sect.numCodeReps         = double(data(idx+18));
+  sect.gdMinimum           = double(data(idx+19));
+  sect.errVelocityMax      = indexData(data, idx+20, idx+21, 'uint16', cpuEndianness)';
+  sect.tppMinutes          = double(data(idx+22));
+  sect.tppSeconds          = double(data(idx+23));
+  sect.tppHundredths       = double(data(idx+24));
   % EX/coordinate transform
   % xxx00xxx = NO TRANSFORMATION (BEAM COORDINATES)
   % xxx01xxx = INSTRUMENT COORDINATES
@@ -455,29 +436,29 @@ function [sect, len] = parseFixedLeader(data, idx, cpuEndianness)
   % xxxxx1xx = TILTS (PITCH AND ROLL) USED IN SHIP OR EARTH TRANSFORMATION
   % xxxxxx1x = 3-BEAM SOLUTION USED IF ONE BEAM IS BELOW THE CORRELATION THRESHOLD SET BY THE WC command
   % xxxxxxx1 = BIN MAPPING USED
-  sect.coordinateTransform = double(data(idx+26));
-  block                    = indexData(data, idx+27, idx+30, 'int16', cpuEndianness)';
+  sect.coordinateTransform = double(data(idx+25));
+  block                    = indexData(data, idx+26, idx+29, 'int16', cpuEndianness)';
   sect.headingAlignment    = block(:,1);
   sect.headingBias         = block(:,2);
-  sect.sensorSource        = dec2bin(double(data(idx+31)));
+  sect.sensorSource        = dec2bin(double(data(idx+30)));
   while(size(sect.sensorSource, 2) < 8), sect.sensorSource = [repmat('0', size(sect.sensorSource, 1), 1) sect.sensorSource]; end
-  sect.sensorsAvailable    = dec2bin(double(data(idx+32)));
+  sect.sensorsAvailable    = dec2bin(double(data(idx+31)));
   while(size(sect.sensorsAvailable, 2) < 8), sect.sensorsAvailable = [repmat('0', size(sect.sensorsAvailable, 1), 1) sect.sensorsAvailable]; end
-  block                    = indexData(data, idx+33, idx+36, 'uint16', cpuEndianness)';
+  block                    = indexData(data, idx+32, idx+35, 'uint16', cpuEndianness)';
   sect.bin1Distance        = block(:,1);
   sect.xmitPulseLength     = block(:,2);
-  sect.wpRefLayerAvgStart  = double(data(idx+37));
-  sect.wpRefLayerAvgEnd    = double(data(idx+38));
-  sect.falseTargetThresh   = double(data(idx+39));
+  sect.wpRefLayerAvgStart  = double(data(idx+36));
+  sect.wpRefLayerAvgEnd    = double(data(idx+37));
+  sect.falseTargetThresh   = double(data(idx+38));
   % byte 40 is spare
-  sect.transmitLagDistance = indexData(data, idx+41, idx+42, 'uint16', cpuEndianness)';
-  sect.cpuBoardSerialNo    = indexData(data, idx+43, idx+50, 'uint64', cpuEndianness)';
-  sect.systemBandwidth     = indexData(data, idx+51, idx+52, 'uint16', cpuEndianness)';
-  sect.systemPower         = double(data(idx+53));
+  sect.transmitLagDistance = indexData(data, idx+40, idx+41, 'uint16', cpuEndianness)';
+  %sect.cpuBoardSerialNo    = indexData(data, idx+42, idx+49, 'uint64', cpuEndianness)'; not an option in SentinelV firmware
+  sect.systemBandwidth     = indexData(data, idx+50, idx+51, 'uint16', cpuEndianness)';
+  sect.systemPower         = double(data(idx+52));
   % byte 54 is spare
-  sect.instSerialNumber    = indexData(data, idx+55, idx+58, 'uint32', cpuEndianness)';
-  sect.beamAngle           = double(data(idx+59));
-  % byte 60 is spare
+  sect.instSerialNumber    = indexData(data, idx+54, idx+57, 'uint32', cpuEndianness)';
+  sect.beamAngle           = double(data(idx+58));
+  % byte 60 is spare - new change for SentinelV series
   end
 
 
@@ -494,7 +475,7 @@ function [sect, len] = parseVariableLeader( data, idx, cpuEndianness )
 %   len  - number of bytes that were parsed.
 %
   sect = struct;
-  len = 65;
+  len = 66; % one byte extra in the SentinelV firmware
   
   block                       = indexData(data,idx,idx+3, 'uint16', cpuEndianness)';
   sect.variableLeaderId       = block(:,1);
@@ -566,15 +547,20 @@ function [sect, len] = parseVariableLeader( data, idx, cpuEndianness )
   sect.adcChannel5            = double(data(idx+39));
   sect.adcChannel6            = double(data(idx+40));
   sect.adcChannel7            = double(data(idx+41));
-  sect.errorStatusWord        = indexData(data,idx+42,idx+45, 'uint32', cpuEndianness)';
-  % bytes 47-48 are spare
+  
+  
+%%%  This section will need to reference the new V Series Specific Outputs section %%%
+  % sect.errorStatusWord        = indexData(data,idx+42,idx+45, 'uint32', cpuEndianness)'; not an option in the SentinelV firmware
+  % bytes 43-57 are spare
   % note pressure is technically supposed to be an unsigned integer so when
   % at surface negative values appear huge ~4 million dbar we'll read it in
   % as signed integer to avoid this but need to be careful if deploying
   % ADCP near centre of earth!
-  sect.pressure               = indexData(data,idx+48,idx+51, 'int32', cpuEndianness)';
-  sect.pressureSensorVariance = indexData(data,idx+52,idx+55, 'int32', cpuEndianness)';
-  % byte 57 is spare
+  % sect.pressure               = indexData(data,idx+48,idx+51, 'int32', cpuEndianness)'; not an option in the SentinelV firmware
+  % sect.pressureSensorVariance = indexData(data,idx+52,idx+55, 'int32', cpuEndianness)'; not an option in the SentinelV firmware
+  
+  
+  
   sect.y2kCentury             = double(data(idx+57));
   sect.y2kYear                = double(data(idx+58));
   sect.y2kMonth               = double(data(idx+59));
@@ -583,6 +569,117 @@ function [sect, len] = parseVariableLeader( data, idx, cpuEndianness )
   sect.y2kMinute              = double(data(idx+62));
   sect.y2kSecond              = double(data(idx+63));
   sect.y2kHundredth           = double(data(idx+64));
+  % byte 66 is spare
+end
+
+function [sect, len] = parseVerticalLeader( data, idx, cpuEndianness )
+%PARSEVARIABLELEADER Parses a variable leader section from an ADCP ensemble.
+%
+% Inputs:
+%   data - vector of raw bytes.
+%   idx  - index that the section starts at.
+%
+% Outputs:
+%   sect - struct containing the fields that were parsed from the 
+%          variable leader section.
+%   len  - number of bytes that were parsed.
+%
+  sect = struct;
+  len = 40; 
+  
+  block                       = indexData(data,idx,idx+3, 'uint16', cpuEndianness)';
+  sect.variableLeaderId       = block(:,1);
+  sect.ensembleNumber16bit    = block(:,2);
+  sect.rtcYear                = double(data(idx+4));
+  sect.rtcMonth               = double(data(idx+5));
+  sect.rtcDay                 = double(data(idx+6));
+  sect.rtcHour                = double(data(idx+7));
+  sect.rtcMinute              = double(data(idx+8));
+  sect.rtcSecond              = double(data(idx+9));
+  sect.rtcHundredths          = double(data(idx+10));
+  sect.ensembleMsb            = double(data(idx+11));
+  %
+  sect.ensembleNumber         = sect.ensembleMsb*65536 + sect.ensembleNumber16bit;
+  block                       = indexData(data,idx+12,idx+19, 'uint16', cpuEndianness)';
+  sect.bitResult              = block(:,1);
+  sect.speedOfSound           = block(:,2);
+  sect.depthOfTransducer      = block(:,3);
+  sect.heading                = block(:,4);
+  block                       = indexData(data,idx+20,idx+23, 'int16', cpuEndianness)';
+  sect.pitch                  = block(:,1);
+  sect.roll                   = block(:,2);
+  sect.salinity               = indexData(data,idx+24,idx+25, 'uint16', cpuEndianness)';
+  sect.temperature            = indexData(data,idx+26,idx+27, 'int16', cpuEndianness)';
+  sect.mptMinutes             = double(data(idx+28));
+  sect.mptSeconds             = double(data(idx+29));
+  sect.mptHundredths          = double(data(idx+30));
+  sect.hdgStdDev              = double(data(idx+31));
+  sect.pitchStdDev            = double(data(idx+32));
+  sect.rollStdDev             = double(data(idx+33));
+% The next fields contain the outputs of the Analog-to-Digital Converter
+% (ADC) located on the DSP board. The ADC sequentially samples one of the 
+% eight channels per ping group (the number of ping groups per ensemble is
+% the maximum of the WP). These fields are zeroed at the beginning of the
+% deployment and updated each ensemble at the rate of one channel per ping
+% group. For example, if the ping group size is 5, then:
+% END OF ENSEMBLE No.   CHANNELS UPDATED
+% Start                 All channels = 0
+%
+% 1                     0, 1, 2, 3, 4
+% 2                     5, 6, 7, 0, 1
+% 3                     2, 3, 4, 5, 6
+% 4                     7, 0, 1, 2, 3
+% 5                     4, 5, 6, 7, 0
+% 6                     1, 2, 3, 4, 5
+% 7                     6, 7, 0, 1, 2
+% 8                     3, 4, 5, 6, 7
+% 9                     0, 1, 2, 3, 4
+% 10                    5, 6, 7, 0, 1
+% 11                    2, 3, 4, 5, 6
+% 12                    7, 0, 1, 2, 3
+% Here is the description for each channel:
+% CHANNEL DESCRIPTION
+% 0 XMIT CURRENT
+% 1 XMIT VOLTAGE
+% 2 AMBIENT TEMP
+% 3 PRESSURE (+)
+% 4 PRESSURE (-)
+% 5 ATTITUDE TEMP
+% 6 ATTITUDE
+% 7 CONTAMINATION SENSOR
+% Note that the ADC values may be noisy from sample to sample,
+% but are useful for detecting long-term trends.
+  sect.adcChannel0            = double(data(idx+34));
+  sect.adcChannel1            = double(data(idx+35));
+  sect.adcChannel2            = double(data(idx+36));
+  sect.adcChannel3            = double(data(idx+37));
+  sect.adcChannel4            = double(data(idx+38));
+  sect.adcChannel5            = double(data(idx+39));
+  sect.adcChannel6            = double(data(idx+40));
+  sect.adcChannel7            = double(data(idx+41));
+  
+  
+%%%  This section will need to reference the new V Series Specific Outputs section %%%
+  % sect.errorStatusWord        = indexData(data,idx+42,idx+45, 'uint32', cpuEndianness)'; not an option in the SentinelV firmware
+  % bytes 43-57 are spare
+  % note pressure is technically supposed to be an unsigned integer so when
+  % at surface negative values appear huge ~4 million dbar we'll read it in
+  % as signed integer to avoid this but need to be careful if deploying
+  % ADCP near centre of earth!
+  % sect.pressure               = indexData(data,idx+48,idx+51, 'int32', cpuEndianness)'; not an option in the SentinelV firmware
+  % sect.pressureSensorVariance = indexData(data,idx+52,idx+55, 'int32', cpuEndianness)'; not an option in the SentinelV firmware
+  
+  
+  
+  sect.y2kCentury             = double(data(idx+57));
+  sect.y2kYear                = double(data(idx+58));
+  sect.y2kMonth               = double(data(idx+59));
+  sect.y2kDay                 = double(data(idx+60));
+  sect.y2kHour                = double(data(idx+61));
+  sect.y2kMinute              = double(data(idx+62));
+  sect.y2kSecond              = double(data(idx+63));
+  sect.y2kHundredth           = double(data(idx+64));
+  % byte 66 is spare
 end
 
 function [sect, len] = parseVelocity( data, numCells, idx, cpuEndianness )
@@ -599,7 +696,7 @@ function [sect, len] = parseVelocity( data, numCells, idx, cpuEndianness )
 %   len      - number of bytes that were parsed.
 %
   sect = struct;
-  nBeams = 4; %% should this be 5 - or is the 5th beam only for the waves and BT?
+  nBeams = 4; %%% should this be 5 - or is the 5th beam only for the waves and BT?
   len = 2 + numCells * nBeams * 2; % 2 bytes per beam
   
   sect.velocityId = indexData(data,idx,idx+1, 'uint16', cpuEndianness)';

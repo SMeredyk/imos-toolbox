@@ -3,9 +3,10 @@ function sample_data = sentinelVParse( filename, tMode)
 %SENTINELVPARSE Parses a raw (binary) data file from a Teledyne RDI Sentinel V 
 % ADCP.
 %
-% This function uses the readWorkhorseEnsembles function to read in a set
-% of ensembles from a raw binary PD0 Workhorse ADCP file. It parses the 
-% ensembles, and extracts and returns the following:
+% This function uses the readSentinelVEnsembles function to read in a set
+% of ensembles from an averaged (performed by Velocity software) binary PD0 
+% SentinelV ADCP file. It parses the ensembles, and extracts and returns the 
+% following:
 %
 %   - time
 %   - temperature (at each time)
@@ -34,7 +35,12 @@ function sample_data = sentinelVParse( filename, tMode)
 %               Charles James May 2010 <charles.james@sa.gov.au>
 %               Guillaume Galibert <guillaume.galibert@utas.edu.au>
 %         		Paul McCarthy <paul.mccarthy@csiro.au>
-
+%				Alexandre Forest <alexandre.forest@arcticnet.ulaval.ca>
+%
+% Copyright (c) 2017, Amundsen Science & ArcticNet
+% http://www.amundsen.ulaval.ca/
+% http://www.arcticnet.ulaval.ca/
+% All rights reserved.
 %
 % Copyright (c) 2017, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
@@ -69,17 +75,19 @@ narginchk(1, 2);
   filename = filename{1};
 
   % we first look if the file has been processed to extract current and
-  % wave data separately (.PD0 and .WVS)
+  % wave data separately (.PD0 and  possibly a .WVS)... TBD
   [filePath, fileRadName, ~] = fileparts(filename);
   
   currentFile   = fullfile(filePath, [fileRadName '.PD0']);
-  waveFile      = fullfile(filePath, [fileRadName '.WVS']);
   
-  isWaveData = false;
-  if exist(currentFile, 'file') && exist(waveFile, 'file')
+  %waveFile      = fullfile(filePath, [fileRadName '.WVS']); 
+  %not sure if the wavesMon software would create this file type
+  
+  %isWaveData = false;
+  %if exist(currentFile, 'file') && exist(waveFile, 'file')
       % we process current and wave files
-      isWaveData = true;
-  end
+  %    isWaveData = true;
+  %end
   
   ensembles = readSentinelVEnsembles( filename );
   
@@ -143,16 +151,34 @@ narginchk(1, 2);
   timePerEnsemble = fixed.pingsPerEnsemble .* timePerPing;
 %   % shift the timestamp to the middle of the burst
 %   time = time + (timePerEnsemble / (3600 * 24))/2;
-  
+%
+  % try to guess model information
+  adcpFreqs = str2num(fixed.systemConfiguration(:, 6:8)); % str2num is actually more relevant than str2double here
+  adcpFreq = mode(adcpFreqs); % hopefully the most frequent value reflects the frequency when deployed
+  switch adcpFreq
+      case 10
+          adcpFreq = 300;
+          model = 'SV100'; % represents the max profiling range i.e. 100m
+          
+      case 11
+          adcpFreq = 500;
+          model = 'SV50';	% represents the max profiling range i.e. 50m
+          
+      case 100
+          adcpFreq = 1000;
+          model = 'SV20';	% represents the max profiling range i.e. 20m
+                   
+  end
   %
   % auxillary data
   %
   temperature = variable.temperature;
   pressure    = variable.pressure;
-  salinity    = variable.salinity;
+  salinity    = variable.salinity; %manually entered, thus don't include in the final netCDF
   pitch       = variable.pitch;
   roll        = variable.roll;
   heading     = variable.heading;
+  voltage     = variable.adcChannel1;
   clear variable;
   
   %
@@ -182,6 +208,7 @@ narginchk(1, 2);
   % pitch       / 100.0  (0.01 deg   -> deg)
   % roll        / 100.0  (0.01 deg   -> deg)
   % heading     / 100.0  (0.01 deg   -> deg)
+  % voltage     / 10.0  (0.1 volt   -> volt)
   % no conversion for salinity - i'm treating
   % ppt and PSU as interchangeable
   %
@@ -194,6 +221,8 @@ narginchk(1, 2);
   pitch        = pitch        / 100.0;
   roll         = roll         / 100.0;
   heading      = heading      / 100.0;
+  voltage	   = voltage      / 10.0; %  xmt voltage conversion  
+	%from p.62 of V Series Commands and Output Data Format PDF (RDI website - January 2017)
   
   % check for electrical/magnetic heading bias (usually magnetic declination)
   isMagBias = false;
@@ -222,25 +251,7 @@ narginchk(1, 2);
   sample_data.meta.fixedLeader          = fixed;
   sample_data.meta.binSize              = mode(fixed.depthCellLength)/100; % we set a static value for this variable to the most frequent value found
   sample_data.meta.instrument_make      = 'Teledyne RDI';
-  
-  % try to guess model information
-  adcpFreqs = str2num(fixed.systemConfiguration(:, 6:8)); % str2num is actually more relevant than str2double here
-  adcpFreq = mode(adcpFreqs); % hopefully the most frequent value reflects the frequency when deployed
-  switch adcpFreq
-      case 10
-          adcpFreq = 300;
-          model = 'SentinelV100';
-          
-      case 11
-          adcpFreq = 500;
-          model = 'SentinelV50';
-          
-      case 100
-          adcpFreq = 1000;
-          model = 'SentinelV20';
-                   
-  end
-  
+  % 
   sample_data.meta.instrument_model     = [model ' Sentinel-V ADCP'];
   sample_data.meta.instrument_serial_no =  serial;
   sample_data.meta.instrument_sample_interval = median(diff(time*24*3600));
@@ -248,11 +259,35 @@ narginchk(1, 2);
   sample_data.meta.instrument_firmware  = ...
     strcat(num2str(fixed.cpuFirmwareVersion(1)), '.', num2str(fixed.cpuFirmwareRevision(1))); % we assume the first value is correct for the rest of the dataset
   if all(isnan(fixed.beamAngle))
-      sample_data.meta.beam_angle       =  25;  % SV_ODF_Jan17.pdf
+      sample_data.meta.beam_angle       =  25;  % SV_ODF_Jan17.pdf from RDI support website.
   else
       sample_data.meta.beam_angle       =  mode(fixed.beamAngle); % we set a static value for this variable to the most frequent value found
   end
-  
+ 
+% Correction for pressure offset in air 
+% based on first 5 measurements within 15 m range
+[~,NAME,~] = fileparts(filename);
+first_mes=pressure(1:5);
+first_mes=first_mes(first_mes<15);
+if  ~isnan(first_mes)
+    disp(['Please note: ', NAME,': pressure offset in air : ',...
+        num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
+    pressure=pressure-mean(first_mes);
+    
+    % Commenting the Metadata history
+    PressureOffsetComment=[mfilename,'.m: Raw pressure data from ', NAME,...
+        ' was corrected for a pressure offset in air of ',...
+        num2str(round(mean(first_mes),1)),'dbar'];
+    
+    sample_data.history = sprintf('%s - %s', ...
+            datestr(now_utc, readProperty('exportNetCDF.dateFormat')), ...
+            PressureOffsetComment);
+else
+    disp(['Please note: ', NAME,': pressure offset in air : ',...
+        num2str(ceil(max(pressure(1:5)))),...
+        '-dbar and NO pressure offset was applied']);
+end
+ 
   % add dimensions with their data mapped
   adcpOrientations = str2num(fixed.systemConfiguration(:, 1)); % str2num is actually more relevant than str2double here
   adcpOrientation = mode(adcpOrientations); % hopefully the most frequent value reflects the orientation when deployed
@@ -305,9 +340,6 @@ narginchk(1, 2);
       'ABSIC2',              [1 3],  backscatter2(iWellOriented, :); ...
       'ABSIC3',              [1 3],  backscatter3(iWellOriented, :); ...
       'ABSIC4',              [1 3],  backscatter4(iWellOriented, :); ...
-      'TEMP',               1,      temperature(iWellOriented); ...
-      'PRES_REL',           1,      pressure(iWellOriented); ...
-      'PSAL',               1,      salinity(iWellOriented); ...
       'CMAG1',              [1 3],  correlation1(iWellOriented, :); ...
       'CMAG2',              [1 3],  correlation2(iWellOriented, :); ...
       'CMAG3',              [1 3],  correlation3(iWellOriented, :); ...
@@ -318,6 +350,10 @@ narginchk(1, 2);
       'PERG4',              [1 2],  percentGood4(iWellOriented, :); ...
       'PITCH',              1,      pitch(iWellOriented); ...
       'ROLL',               1,      roll(iWellOriented); ...
+      'TEMP',               1,      temperature(iWellOriented); ...
+      'PRES_REL',           1,      pressure(iWellOriented); ...
+      'PSAL',               1,      salinity(iWellOriented); ...
+      'VOLT',               1,      voltage(iWellOriented);...
       ['HEADING' magExt],   1,      heading(iWellOriented)
       };
   
@@ -394,7 +430,8 @@ narginchk(1, 2);
       filename = waveFile;
       
       waveData = readSentinelVWaveAscii(filename); 
-      % I havent made this parser yet. ShawnM - July 20 - 2017
+      % I havent made this parser yet. ShawnM - July 20 - 2017, might be
+      % able to directly use the readWorkhorseWaveAscii script
       
       % turn sample data into a cell array
       temp{1} = sample_data;
