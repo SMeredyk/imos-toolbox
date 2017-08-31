@@ -29,3 +29,5 @@ quartermaster,      15,	50,	2, 3
 quarter master,     15,	50,	2, 3
 nortek,             20,	30,	2, 3
 Aanderaa Seaguard,  15, 25, 2, 3
+DVS,				15, 22, 2, 3
+Sentinel-V,			15, 22, 2, 3
