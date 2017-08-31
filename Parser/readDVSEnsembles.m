@@ -18,8 +18,7 @@ function ensembles = readDVSEnsembles( filename )
 %   - Variable Leader Data:  Time, temperature, salinity etc. Always
 %                            present.
 %   - Velocity:              Current velocities for each depth (a.k.a
-%                            'bins' or 'cells').  Technically optional but
-%                            we are wasting our time if it's not here!
+%                            'bins' or 'cells').  
 %   - Correlation Magnitude: 'Magnitude of the normalized echo
 %                            autocorrelation at the lag used for estimating
 %                            the Doppler phase change'. 
@@ -32,18 +31,23 @@ function ensembles = readDVSEnsembles( filename )
 % array.
 %
 % Inputs:
-%   filename  - Raw binary data file retrieved from a DVS.
+%   filename  - Raw binary data file retrieved from a DVS unit 
+%				transformed .PD2 into .PD0 via DVS software.
 %
 % Outputs:
 %   ensembles - Scalar structure of ensembles.
 %
-% Author:       Paul McCarthy <paul.mccarthy@csiro.au>
+% Author:       Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
 % Contributor:  Charles James <charles.james@sa.gov.au>
 %               Guillaume Galibert <guillaume.galibert@utas.edu.au>
-%				Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
-
+%				Paul McCarthy <paul.mccarthy@csiro.au>
 %
-% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated
+% Copyright (c) 2017, Amundsen Science & ArcticNet
+% http://www.amundsen.ulaval.ca/
+% http://www.arcticnet.ulaval.ca/
+% All rights reserved.
+%
+% Copyright (c) 2017, Australian Ocean Data Network (AODN) and Integrated
 % Marine Observing System (IMOS).
 % All rights reserved.
 %
@@ -72,11 +76,9 @@ function ensembles = readDVSEnsembles( filename )
 % POSSIBILITY OF SUCH DAMAGE.
 %
 
-% ensure that there is exactly one argument,
-% and that it is a string
+% ensure that there is exactly one argument,and that it is a string
 narginchk(1, 1);
-if ~ischar(filename), error('filename must be a string');
-end
+if ~ischar(filename), error('filename must be a string');end
 
 % check that file exists
 if isempty(dir(filename)), error([filename ' does not exist']); end
@@ -97,8 +99,6 @@ end
 headerID        = 127;      % hexadecimal '7F'
 dataSourceID    = 127;      % hexadecimal '7F'
 % DVS headerID=127, dataSourceID=127
-% note other IDs identified
-% dataSourceID=121 (hex '79') probably for waves burst samples (ignore here)
 
 % try and parse all ensembles at once
 % we will try this in a couple of steps
@@ -252,7 +252,7 @@ iCorr           = IDX(sType == 512);
 iEcho           = IDX(sType == 768);
 iPCgood         = IDX(sType == 1024);
 %iStatProf      = IDX(sType == 1280);
-iBTrack         = IDX(sType == 1536);
+%iBTrack         = IDX(sType == 1536);
 %iMicroCat      = IDX(sType == 2048);
 clear IDX sType;
 
@@ -288,23 +288,15 @@ nCells = mode(ensembles.fixedLeader.numCells);
 ensembles.velocity          = parseVelocity(data, nCells, iVel, cpuEndianness);
 
 if ~isempty(iCorr)
-    ensembles.corrMag       = parseX(data, nCells, 'corrMag', iCorr, cpuEndianness);
-end
+    ensembles.corrMag       = parseX(data, nCells, 'corrMag', iCorr, cpuEndianness);end
 
 if ~isempty(iEcho)
-    ensembles.echoIntensity = parseX(data, nCells, 'echoIntensity', iEcho, cpuEndianness);
-end
+    ensembles.echoIntensity = parseX(data, nCells, 'echoIntensity', iEcho, cpuEndianness);end
 
 if ~isempty(iPCgood)
-    ensembles.percentGood   = parseX(data, nCells, 'percentGood', iPCgood, cpuEndianness);
-end
+    ensembles.percentGood   = parseX(data, nCells, 'percentGood', iPCgood, cpuEndianness);end
 
-% this doesn`t apply to DVS units, but I`m not sure if it`s needed by the toolbox.
-if ~isempty(iBTrack)
-    ensembles.bottomTrack   = parseBottomTrack(data, iBTrack, cpuEndianness);
-end
-
-end
+end % of main function
 
 function dsub = indexData(data, istart, iend, dtype, cpuEndianness)
 % function dsub = indexData(data, istart, iend, dtype)
@@ -346,7 +338,7 @@ dsub(ibad) = nan;
 
 end
 
-function [sect len] = parseFixedLeader(data, idx, cpuEndianness)
+function [sect, len] = parseFixedLeader(data, idx, cpuEndianness)
 %PARSEFIXEDLEADER Parses a fixed leader section from an ADCP ensemble.
 %
 % Inputs:
@@ -439,23 +431,15 @@ function [sect len] = parseFixedLeader(data, idx, cpuEndianness)
   sect.falseTargetThresh   = double(data(idx+38));
   % byte 40 is spare
   sect.transmitLagDistance = indexData(data, idx+40, idx+41, 'uint16', cpuEndianness)';
-  sect.cpuBoardSerialNo    = indexData(data, idx+42, idx+49, 'uint64', cpuEndianness)';
+  sect.cpuBoardSerialNo    = indexData(data, idx+42, idx+49, 'uint64', cpuEndianness)'; 
   sect.systemBandwidth     = indexData(data, idx+50, idx+51, 'uint16', cpuEndianness)';
   sect.systemPower         = double(data(idx+52));
-  % byte 54 is spare
-  % following two fields are not used for Firmware before 16.30 of workhors or version 41.01 for DVS units
-  
-  if all(sect.cpuFirmwareVersion >= 41) && all(sect.cpuFirmwareRevision >= 1)
-      sect.instSerialNumber    = indexData(data, idx+54, idx+57, 'uint32', cpuEndianness)';
-      sect.beamAngle           = double(data(idx+58));
-  else
-      nEnsemble = length(idx);
-      sect.instSerialNumber    = NaN(nEnsemble, 1);
-      sect.beamAngle           = NaN(nEnsemble, 1);
+  % byte 54 - 59 are spare
+  % sect.instSerialNumber    = indexData(data, idx+54, idx+57, 'uint32', cpuEndianness)'; not an option in the DVS firmware
+  % sect.beamAngle           = double(data(idx+58)); not an option in the DVS firmware
   end
-end
 
-function [sect len] = parseVariableLeader( data, idx, cpuEndianness )
+function [sect, len] = parseVariableLeader( data, idx, cpuEndianness )
 %PARSEVARIABLELEADER Parses a variable leader section from an ADCP ensemble.
 %
 % Inputs:
@@ -491,7 +475,7 @@ function [sect len] = parseVariableLeader( data, idx, cpuEndianness )
   block                       = indexData(data,idx+20,idx+23, 'int16', cpuEndianness)';
   sect.pitch                  = block(:,1);
   sect.roll                   = block(:,2);
-  sect.salinity               = indexData(data,idx+24,idx+25, 'uint16', cpuEndianness)';
+  sect.salinity               = indexData(data,idx+24,idx+25, 'uint16', cpuEndianness)'; % read, but is not used in toolbox
   sect.temperature            = indexData(data,idx+26,idx+27, 'int16', cpuEndianness)';
   sect.mptMinutes             = double(data(idx+28));
   sect.mptSeconds             = double(data(idx+29));
@@ -541,13 +525,13 @@ function [sect len] = parseVariableLeader( data, idx, cpuEndianness )
   sect.adcChannel6            = double(data(idx+40));
   sect.adcChannel7            = double(data(idx+41));
   sect.errorStatusWord        = indexData(data,idx+42,idx+45, 'uint32', cpuEndianness)';
-  % bytes 47-48 are spare
+  % bytes 47-56 are spare
   % note pressure is technically supposed to be an unsigned integer so when
   % at surface negative values appear huge ~4 million dbar we'll read it in
   % as signed integer to avoid this but need to be careful if deploying
   % ADCP near centre of earth!
-  sect.pressure               = indexData(data,idx+48,idx+51, 'int32', cpuEndianness)';
-  sect.pressureSensorVariance = indexData(data,idx+52,idx+55, 'int32', cpuEndianness)';
+  % sect.pressure               = indexData(data,idx+48,idx+51, 'int32', cpuEndianness)'; not an option in the DVS firmware
+  % sect.pressureSensorVariance = indexData(data,idx+52,idx+55, 'int32', cpuEndianness)'; not an option in the DVS firmware
   % byte 57 is spare
   sect.y2kCentury             = double(data(idx+57));
   sect.y2kYear                = double(data(idx+58));
@@ -628,85 +612,3 @@ sect.field4 = fields(:, ibeam+3);
     
 end
 
-%% Don`t know if I can remove this function, as it`s not applicable to DVS units. Does the toolbox need it?
-
-function [sect, length] = parseBottomTrack( data, idx, cpuEndianness )
-%PARSEBOTTOMTRACK Parses a bottom track data section from an ADCP
-% ensemble.
-%
-% Inputs:
-%   data   - vector of raw bytes.
-%   idx    - index that the section starts at.
-%
-% Outputs:
-%   sect   - struct containing the fields that were parsed from trawhe bottom
-%            track section.
-%   length - number of bytes that were parsed.
-%
-  sect = struct;
-  length = 85;
-  
-  block                       = indexData(data, idx, idx+5, 'uint16', cpuEndianness)';
-  sect.bottomTrackId          = block(:,1);
-  sect.btPingsPerEnsemble     = block(:,2);
-  sect.btDelayBeforeReacquire = block(:,3);
-  sect.btCorrMagMin           = double(data(idx+6));
-  sect.btEvalAmpMin           = double(data(idx+7));
-  sect.btPercentGoodMin       = double(data(idx+8));
-  sect.btMode                 = double(data(idx+9));
-  sect.btErrVelMax            = indexData(data, idx+10, idx+11, 'uint16', cpuEndianness)';
-  % bytes 13-16 are spare
-  block                       = indexData(data, idx+16, idx+31, 'uint16', cpuEndianness)';
-  sect.btBeam1Range           = block(:,1);
-  sect.btBeam2Range           = block(:,2);
-  sect.btBeam3Range           = block(:,3);
-  sect.btBeam4Range           = block(:,4);
-  sect.btBeam1Vel             = block(:,5);
-  sect.btBeam2Vel             = block(:,6);
-  sect.btBeam3Vel             = block(:,7);
-  sect.btBeam4Vel             = block(:,8);
-  sect.btBeam1Corr            = double(data(idx+32));
-  sect.btBeam2Corr            = double(data(idx+33));
-  sect.btBeam3Corr            = double(data(idx+34));
-  sect.btBeam4Corr            = double(data(idx+35));
-  sect.btBeam1EvalAmp         = double(data(idx+36));
-  sect.btBeam2EvalAmp         = double(data(idx+37));
-  sect.btBeam3EvalAmp         = double(data(idx+38));
-  sect.btBeam4EvalAmp         = double(data(idx+39));
-  sect.btBeam1PercentGood     = double(data(idx+40));
-  sect.btBeam2PercentGood     = double(data(idx+41));
-  sect.btBeam3PercentGood     = double(data(idx+42));
-  sect.btBeam4PercentGood     = double(data(idx+43));
-  block                       = indexData(data, idx+44, idx+49, 'uint16', cpuEndianness)';
-  sect.btRefLayerMin          = block(:,1);
-  sect.btRefLayerNear         = block(:,2);
-  sect.btRefLayerFar          = block(:,3);
-  block                       = indexData(data, idx+50, idx+57, 'int16', cpuEndianness)';
-  sect.btBeam1RefLayerVel     = block(:,1);
-  sect.btBeam2RefLayerVel     = block(:,2);
-  sect.btBeam3RefLayerVel     = block(:,3);
-  sect.btBeam4RefLayerVel     = block(:,4);
-  sect.btBeam1RefCorr         = double(data(idx+58));
-  sect.btBeam2RefCorr         = double(data(idx+59));
-  sect.btBeam3RefCorr         = double(data(idx+60));
-  sect.btBeam4RefCorr         = double(data(idx+61));
-  sect.btBeam1RefInt          = double(data(idx+62));
-  sect.btBeam2RefInt          = double(data(idx+63));
-  sect.btBeam3RefInt          = double(data(idx+64));
-  sect.btBeam4RefInt          = double(data(idx+65));
-  sect.btBeam1RefGood         = double(data(idx+66));
-  sect.btBeam2RefGood         = double(data(idx+67));
-  sect.btBeam3RefGood         = double(data(idx+68));
-  sect.btBeam4RefGood         = double(data(idx+69));
-  sect.btMaxDepth             = indexData(data, idx+70, idx+71, 'uint16', cpuEndianness)';
-  sect.btBeam1RssiAmp         = double(data(idx+72));
-  sect.btBeam2RssiAmp         = double(data(idx+73));
-  sect.btBeam3RssiAmp         = double(data(idx+74));
-  sect.btBeam4RssiAmp         = double(data(idx+75));
-  sect.btGain                 = double(data(idx+76));
-  sect.btBeam1RangeMsb        = double(data(idx+77));
-  sect.btBeam2RangeMsb        = double(data(idx+78));
-  sect.btBeam3RangeMsb        = double(data(idx+79));
-  sect.btBeam4RangeMsb        = double(data(idx+80));
-  %bytes 82-85 are spare
-end
