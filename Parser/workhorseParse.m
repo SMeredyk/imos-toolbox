@@ -32,11 +32,15 @@ function sample_data = workhorseParse( filename, tMode )
 %               Bradley Morris <b.morris@unsw.edu.au>
 %               Charles James May 2010 <charles.james@sa.gov.au>
 %               Guillaume Galibert <guillaume.galibert@utas.edu.au>
-%               Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
+%               Shawn Meredyk <shawn.meredyk@as.ulaval.ca>
 %         
-
 %
-% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated 
+% Copyright (c) 2017, Amundsen Science & ArcticNet
+% http://www.amundsen.ulaval.ca/
+% http://www.arcticnet.ulaval.ca/
+% All rights reserved.
+%
+% Copyright (c) 2017, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 % All rights reserved.
 % 
@@ -169,7 +173,41 @@ narginchk(1, 2);
   timePerEnsemble = fixed.pingsPerEnsemble .* timePerPing;
 %   % shift the timestamp to the middle of the burst
 %   time = time + (timePerEnsemble / (3600 * 24))/2;
-  
+%
+% try to guess model information
+  adcpFreqs = str2num(fixed.systemConfiguration(:, 6:8)); % str2num is actually more relevant than str2double here
+  adcpFreq = mode(adcpFreqs); % hopefully the most frequent value reflects the frequency when deployed
+  switch adcpFreq
+      case 0
+          adcpFreq = 75;
+          model = 'LongRanger';
+		  xmtVolt = 2092719;
+          
+      case 1
+          adcpFreq = 150;
+          model = 'QuarterMaster';
+          xmtVolt = 592157;
+		  
+      case 10
+          adcpFreq = 300;
+          model = 'Sentinel or Monitor';
+          xmtVolt = 591257;
+		  
+      case 11
+          adcpFreq = 600;
+          model = 'Sentinel or Monitor';
+          xmtVolt = 380667;
+		  
+      case 100
+          adcpFreq = 1200;
+          model = 'Sentinel or Monitor';
+          xmtVolt = 253765;
+		  
+      otherwise
+          adcpFreq = 2400;
+          model = 'DVS';
+          xmtVolt = 253765;
+  end  
   %
   % auxillary data
   %
@@ -179,6 +217,7 @@ narginchk(1, 2);
   pitch       = variable.pitch;
   roll        = variable.roll;
   heading     = variable.heading;
+  voltageCnts = variable.adcChannel1;
   clear variable;
   
   %
@@ -220,7 +259,24 @@ narginchk(1, 2);
   pitch        = pitch        / 100.0;
   roll         = roll         / 100.0;
   heading      = heading      / 100.0;
+ % 
+  %xmt voltage conversion for diagnostics
+  % converting xmt voltage counts to volts , these are rough values
   
+   % set all NaN to the value before it. 
+    idx = find(isnan(voltageCnts));
+    voltageCnts(idx) = voltageCnts(idx-1);
+    
+  %Long Ranger output is 10x larger than the DVS and QM output....not sure
+  %why, really makes no sense for this difference.
+  if strcmp(model, 'LongRanger') == 1
+    voltage	    = (voltageCnts*xmtVolt) /10000000; %  xmt voltage conversion , 
+	%from p.136 of Workhorse Commands and Output Data Format PDF (RDI website - March 2016)
+  else
+      voltage	    = (voltageCnts*xmtVolt) /1000000; %  xmt voltage DVS and QM 
+  end 
+      clear idx voltageCnts;
+
   % check for electrical/magnetic heading bias (usually magnetic declination)
   isMagBias = false;
   % we set a static value for this variable to the most frequent value found
@@ -248,37 +304,7 @@ narginchk(1, 2);
   sample_data.meta.fixedLeader          = fixed;
   sample_data.meta.binSize              = mode(fixed.depthCellLength)/100; % we set a static value for this variable to the most frequent value found
   sample_data.meta.instrument_make      = 'Teledyne RDI';
-  
-  % try to guess model information
-  adcpFreqs = str2num(fixed.systemConfiguration(:, 6:8)); % str2num is actually more relevant than str2double here
-  adcpFreq = mode(adcpFreqs); % hopefully the most frequent value reflects the frequency when deployed
-  switch adcpFreq
-      case 0
-          adcpFreq = 75;
-          model = 'Long Ranger';
-          
-      case 1
-          adcpFreq = 150;
-          model = 'Quartermaster';
-          
-      case 10
-          adcpFreq = 300;
-          model = 'Sentinel or Monitor';
-          
-      case 11
-          adcpFreq = 600;
-          model = 'Sentinel or Monitor';
-          
-      case 100
-          adcpFreq = 1200;
-          model = 'Sentinel or Monitor';
-          
-      otherwise
-          adcpFreq = 2400;
-          model = 'Unknown';
-          
-  end
-  
+  % 
   sample_data.meta.instrument_model             = [model ' Workhorse ADCP'];
   sample_data.meta.instrument_serial_no         =  serial;
   sample_data.meta.instrument_sample_interval   = median(diff(time*24*3600));
@@ -293,10 +319,11 @@ narginchk(1, 2);
 % Correction for pressure offset in air - Added by Shawn Meredyk. 
 % Original code from AForest 27-Jan-2017 with
 % comments for history on 30-Jan-2017
-% based on first 5 measurements within 10 m range
+% based on first 5 measurements within 15 m range
+
 [~,NAME,~] = fileparts(filename);
 first_mes=pressure(1:5);
-first_mes=first_mes(first_mes<10);
+first_mes=first_mes(first_mes<15);
 if  ~isnan(first_mes)
     disp(['Please note: ', NAME,': pressure offset in air : ',...
         num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
@@ -387,9 +414,6 @@ end
       'ABSIC2',              [1 3],  backscatter2; ...
       'ABSIC3',              [1 3],  backscatter3; ...
       'ABSIC4',              [1 3],  backscatter4; ...
-      'TEMP',               1,      temperature; ...
-      'PRES_REL',           1,      pressure; ...
-      'PSAL',               1,      salinity; ...
       'CMAG1',              [1 3],  correlation1; ...
       'CMAG2',              [1 3],  correlation2; ...
       'CMAG3',              [1 3],  correlation3; ...
@@ -399,7 +423,11 @@ end
       'PERG3',              [1 2],  percentGood3; ...
       'PERG4',              [1 2],  percentGood4; ...
       'PITCH',              1,      pitch; ...
-      'ROLL',               1,      roll; ...
+      'PRES_REL',           1,      pressure; ...
+      'PSAL',               1,      salinity; ... % caution, when exporting as netCDF
+	  'ROLL',               1,      roll; ...
+	  'TEMP',               1,      temperature; ...
+      'VOLT',				1,		voltage; ... % added for equipment diagnostics
       ['HEADING' magExt],   1,      heading
       };
   
@@ -407,7 +435,7 @@ end
       backscatter2 backscatter3 backscatter4 temperature pressure ...
       salinity correlation1 correlation2 correlation3 correlation4 ...
       percentGood1 percentGood2 percentGood3 percentGood4 pitch roll ...
-      heading;
+      heading voltage;
   
   nVars = size(vars, 1);
   sample_data.variables = cell(nVars, 1);
