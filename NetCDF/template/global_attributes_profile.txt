@@ -1,7 +1,7 @@
 % what
 S, project                      = [ddb Site Sites ResearchActivity]
 S, conventions                  = CF-1.6,IMOS-1.4
-S, standard_name_vocabulary     = NetCDF Climate and Forecast (CF) Metadata Convention Standard Name Table 27
+S, standard_name_vocabulary     = NetCDF Climate and Forecast (CF) Metadata Convention Standard Name Table 45
 S, title                        = [ddb Site]: [ddb Site Sites ResearchActivity]
 S, institution                  = ArcticNet
 D, date_created                 = [mat now_utc]
