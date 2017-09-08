@@ -24,10 +24,9 @@ function ensembles = readSentinelVEnsembles( filename )
 %                            the Doppler phase change'. 
 %   - Echo Intensity:        Echo intensity data. 
 %   - Percent Good:          Percentage of good data for each depth cell.
-%   - Vertical Beam Data:    The 5th beam 
+%   - Vertical Beam Data:    The 5th beam, just like any other single beam,
+%                            just with a 0 beam angle.
 %   - Bottom Track Data:     Bottom track data (not necessarily installed).
-%							(not really necessary for
-%                            bottom moored upward looking ADCP)
 %
 % This function parses the ensembles, and returns all of them in a cell
 % array.
@@ -102,9 +101,6 @@ end
 % get ensemble start key
 headerID        = 127;      % hexadecimal '7F'
 dataSourceID    = 127;      % hexadecimal '7F'
-% WH headerID=127, dataSourceID=127
-% note other IDs identified
-% dataSourceID=121 (hex '79') probably for waves burst samples (ignore here)
 
 % try and parse all ensembles at once
 % we will try this in a couple of steps
@@ -207,6 +203,7 @@ nBytes  = nBytes(good);
 %
 % Difference in index should be equal to nBytes or
 % we have a problem.
+clear iend; %similar variable name in the indexData function.
 
 % calculate difference in index-2 from start to end of data
 didx = [diff(idx); lenData - idx(end) + 1] - 2;
@@ -226,16 +223,18 @@ if any(idodgy)
         
         idx     = idx(igood);
     else
-        error('This file looks corrupted. Try open it with WinADCP and save it again. Alternatively, check the file for bad ensembles. A subselection may be needed.');
+        error('This file looks corrupted. Try open it with WinADCP and save it again, Alternatively, check the file for bad ensembles. A subselection may be needed.');
     end
 end
 
 % in principle each ensemble could have a different number of data
-% types
-nDataTypes = double(data(idx+5));
+% types, but if there are different data types from ensemble to ensemble,
+% the indexData function will cause an RHS error if the width is set to 'max'.
+nDataTypes = double(data(idx+5)); % Sentinel V series have the first ensemble equal to 15 or larger, 
+%depending on how many features (BT, waves) are installed. See iVfeature for more information on which features are installed.
 
 % in each ensemble bytes 6:2*nDataTypes give offsets to data
-dataOffsets = indexData(data, idx+6, idx+6+2*nDataTypes-1, 'uint16', cpuEndianness);
+dataOffsets = indexData(data, idx+6, idx+6+2*nDataTypes-1, 'uint16', cpuEndianness); 
 i = size(dataOffsets, 1);
 
 % create a big index matrix!
@@ -256,16 +255,28 @@ iVel            = IDX(sType == 256);
 iCorr           = IDX(sType == 512);
 iEcho           = IDX(sType == 768);
 iPCgood         = IDX(sType == 1024);
-%iStatProf      = IDX(sType == 1280); % used in the Sentinel V units - system and features info
-iVertLeader     = IDX(sType == 3841);
-%iBTrack        = IDX(sType == 4097); % Sentinel V Bottom Track is only available for the 
-% 										Real-Time units.
+%iStatProf      = IDX(sType == 1280);  % used in the Sentinel V units - system and features info
+iVertLeader     = IDX(sType == 3841);  % to be uncommented once the regular
+%                                       velocity information can be extracted (0f01h)
+iBTrack         = IDX(sType == 4097);  % Sentinel V Bottom Track is only available for the 
+% 										Real-Time units....at the moment. (xxxxh?)
+%iFeatureLeader	= IDX(sType == 28675); % V Series Feature Header (7003h), this might need for a separate script
+%iWaves			= IDX(sType == 11);    % apparently (000Bh) is where the waves data is located, 
+%										processed by WavesMon. 
+%
 clear IDX sType;
 
 % major change to PM code - ensembles is a scalar structure not cell array
 ensembles.fixedLeader       = parseFixedLeader(data, iFixedLeader, cpuEndianness);
 ensembles.variableLeader    = parseVariableLeader(data, iVarLeader, cpuEndianness);
-ensembles.verticalLeader    = parseVerticalLeader(data, iVertLeader, cpuEndianness);
+% 5th beam information 
+ensembles.verticalLeader    = parseVerticalLeader(data, iVertLeader,cpuEndianness); 
+
+% to be used once waves and bottom track features are activated
+%ensembles.featuresLeader	 = parseFeaturesLeader(data, iFeatureLeader, cpuEndianness);
+
+% extracting waves data - processed by WavesMon
+%ensembles.wavesLeader	 	 = parseWavesLeader(data, iWaves, cpuEndianness);
 
 % adc channels sequentially sampled per ping, nan channels not sampled
 % in that ensemble
@@ -319,22 +330,22 @@ function dsub = indexData(data, istart, iend, dtype, cpuEndianness)
 % Charles James
 
 % create matrix of indicies
-width = max(iend-istart+1);
+e = istart+1;
+width = min(iend-istart+1); % 	changed from max to min to account for added 
+%								feature types, which increase the dataTypes by each feature added.
 
 [I, J]  = meshgrid(istart, 0:width-1);
-K       = meshgrid(iend,   0:width-1);
+[K, ~]  = meshgrid(iend,   0:width-1);
 
 IND = I + J;
-clear I J;
-
 ibad = IND > K;
-clear K;
 
 if any(any(ibad))
     % We assume that if an ensemble contain one bad data, all data are bad
     % in this ensemble
     ibad(:,any(ibad)) = ones(size(ibad,1), 1);
 end
+clear I J K;
 
 datatst = data(IND(:));
 datatst(ibad) = 0;
@@ -380,8 +391,8 @@ function [sect, len] = parseFixedLeader(data, idx, cpuEndianness)
 %- - - - - 0 0 0 Not used
 %- - - - - 0 0 1 Not used
 %- - - - - 0 1 0 V Series100 (300kHz)
-%- - - - - 0 1 1 V Series50 (500kHz) - not sure if this will be problematic as this is normally 600 kHz
-%- - - - - 1 0 0 V Series20 (1000kHz) - not sure if this will be problematic as this is normally 1200 kHz
+%- - - - - 0 1 1 V Series50 (500kHz)
+%- - - - - 1 0 0 V Series20 (1000kHz)
 %- - - - - 1 0 1 Not used
 %- - - - 0 - - - Not used
 %- - - - 1 - - - Not used
@@ -540,27 +551,24 @@ function [sect, len] = parseVariableLeader( data, idx, cpuEndianness )
 % Note that the ADC values may be noisy from sample to sample,
 % but are useful for detecting long-term trends.
   sect.adcChannel0            = double(data(idx+34));
-  sect.adcChannel1            = double(data(idx+35));
+  sect.adcChannel1            = double(data(idx+35)); % Battery voltage 0.1 Volts
   sect.adcChannel2            = double(data(idx+36));
   sect.adcChannel3            = double(data(idx+37));
   sect.adcChannel4            = double(data(idx+38));
   sect.adcChannel5            = double(data(idx+39));
   sect.adcChannel6            = double(data(idx+40));
   sect.adcChannel7            = double(data(idx+41));
-  
-  
-%%%  This section will need to reference the new V Series Specific Outputs section %%%
+
   % sect.errorStatusWord        = indexData(data,idx+42,idx+45, 'uint32', cpuEndianness)'; not an option in the SentinelV firmware
   % bytes 43-57 are spare
   % note pressure is technically supposed to be an unsigned integer so when
   % at surface negative values appear huge ~4 million dbar we'll read it in
   % as signed integer to avoid this but need to be careful if deploying
   % ADCP near centre of earth!
-  % sect.pressure               = indexData(data,idx+48,idx+51, 'int32', cpuEndianness)'; not an option in the SentinelV firmware
-  % sect.pressureSensorVariance = indexData(data,idx+52,idx+55, 'int32', cpuEndianness)'; not an option in the SentinelV firmware
+  sect.pressure               = indexData(data,idx+48,idx+51, 'int32', cpuEndianness)'; 
+  sect.pressureSensorVariance = indexData(data,idx+52,idx+55, 'int32', cpuEndianness)'; 
   
-  
-  
+  % 2YK time 
   sect.y2kCentury             = double(data(idx+57));
   sect.y2kYear                = double(data(idx+58));
   sect.y2kMonth               = double(data(idx+59));
@@ -572,115 +580,6 @@ function [sect, len] = parseVariableLeader( data, idx, cpuEndianness )
   % byte 66 is spare
 end
 
-function [sect, len] = parseVerticalLeader( data, idx, cpuEndianness )
-%PARSEVARIABLELEADER Parses a variable leader section from an ADCP ensemble.
-%
-% Inputs:
-%   data - vector of raw bytes.
-%   idx  - index that the section starts at.
-%
-% Outputs:
-%   sect - struct containing the fields that were parsed from the 
-%          variable leader section.
-%   len  - number of bytes that were parsed.
-%
-  sect = struct;
-  len = 40; 
-  
-  block                       = indexData(data,idx,idx+3, 'uint16', cpuEndianness)';
-  sect.variableLeaderId       = block(:,1);
-  sect.ensembleNumber16bit    = block(:,2);
-  sect.rtcYear                = double(data(idx+4));
-  sect.rtcMonth               = double(data(idx+5));
-  sect.rtcDay                 = double(data(idx+6));
-  sect.rtcHour                = double(data(idx+7));
-  sect.rtcMinute              = double(data(idx+8));
-  sect.rtcSecond              = double(data(idx+9));
-  sect.rtcHundredths          = double(data(idx+10));
-  sect.ensembleMsb            = double(data(idx+11));
-  %
-  sect.ensembleNumber         = sect.ensembleMsb*65536 + sect.ensembleNumber16bit;
-  block                       = indexData(data,idx+12,idx+19, 'uint16', cpuEndianness)';
-  sect.bitResult              = block(:,1);
-  sect.speedOfSound           = block(:,2);
-  sect.depthOfTransducer      = block(:,3);
-  sect.heading                = block(:,4);
-  block                       = indexData(data,idx+20,idx+23, 'int16', cpuEndianness)';
-  sect.pitch                  = block(:,1);
-  sect.roll                   = block(:,2);
-  sect.salinity               = indexData(data,idx+24,idx+25, 'uint16', cpuEndianness)';
-  sect.temperature            = indexData(data,idx+26,idx+27, 'int16', cpuEndianness)';
-  sect.mptMinutes             = double(data(idx+28));
-  sect.mptSeconds             = double(data(idx+29));
-  sect.mptHundredths          = double(data(idx+30));
-  sect.hdgStdDev              = double(data(idx+31));
-  sect.pitchStdDev            = double(data(idx+32));
-  sect.rollStdDev             = double(data(idx+33));
-% The next fields contain the outputs of the Analog-to-Digital Converter
-% (ADC) located on the DSP board. The ADC sequentially samples one of the 
-% eight channels per ping group (the number of ping groups per ensemble is
-% the maximum of the WP). These fields are zeroed at the beginning of the
-% deployment and updated each ensemble at the rate of one channel per ping
-% group. For example, if the ping group size is 5, then:
-% END OF ENSEMBLE No.   CHANNELS UPDATED
-% Start                 All channels = 0
-%
-% 1                     0, 1, 2, 3, 4
-% 2                     5, 6, 7, 0, 1
-% 3                     2, 3, 4, 5, 6
-% 4                     7, 0, 1, 2, 3
-% 5                     4, 5, 6, 7, 0
-% 6                     1, 2, 3, 4, 5
-% 7                     6, 7, 0, 1, 2
-% 8                     3, 4, 5, 6, 7
-% 9                     0, 1, 2, 3, 4
-% 10                    5, 6, 7, 0, 1
-% 11                    2, 3, 4, 5, 6
-% 12                    7, 0, 1, 2, 3
-% Here is the description for each channel:
-% CHANNEL DESCRIPTION
-% 0 XMIT CURRENT
-% 1 XMIT VOLTAGE
-% 2 AMBIENT TEMP
-% 3 PRESSURE (+)
-% 4 PRESSURE (-)
-% 5 ATTITUDE TEMP
-% 6 ATTITUDE
-% 7 CONTAMINATION SENSOR
-% Note that the ADC values may be noisy from sample to sample,
-% but are useful for detecting long-term trends.
-  sect.adcChannel0            = double(data(idx+34));
-  sect.adcChannel1            = double(data(idx+35));
-  sect.adcChannel2            = double(data(idx+36));
-  sect.adcChannel3            = double(data(idx+37));
-  sect.adcChannel4            = double(data(idx+38));
-  sect.adcChannel5            = double(data(idx+39));
-  sect.adcChannel6            = double(data(idx+40));
-  sect.adcChannel7            = double(data(idx+41));
-  
-  
-%%%  This section will need to reference the new V Series Specific Outputs section %%%
-  % sect.errorStatusWord        = indexData(data,idx+42,idx+45, 'uint32', cpuEndianness)'; not an option in the SentinelV firmware
-  % bytes 43-57 are spare
-  % note pressure is technically supposed to be an unsigned integer so when
-  % at surface negative values appear huge ~4 million dbar we'll read it in
-  % as signed integer to avoid this but need to be careful if deploying
-  % ADCP near centre of earth!
-  % sect.pressure               = indexData(data,idx+48,idx+51, 'int32', cpuEndianness)'; not an option in the SentinelV firmware
-  % sect.pressureSensorVariance = indexData(data,idx+52,idx+55, 'int32', cpuEndianness)'; not an option in the SentinelV firmware
-  
-  
-  
-  sect.y2kCentury             = double(data(idx+57));
-  sect.y2kYear                = double(data(idx+58));
-  sect.y2kMonth               = double(data(idx+59));
-  sect.y2kDay                 = double(data(idx+60));
-  sect.y2kHour                = double(data(idx+61));
-  sect.y2kMinute              = double(data(idx+62));
-  sect.y2kSecond              = double(data(idx+63));
-  sect.y2kHundredth           = double(data(idx+64));
-  % byte 66 is spare
-end
 
 function [sect, len] = parseVelocity( data, numCells, idx, cpuEndianness )
 %PARSEVELOCITY Parses a velocity section from an ADCP ensemble.
@@ -696,7 +595,7 @@ function [sect, len] = parseVelocity( data, numCells, idx, cpuEndianness )
 %   len      - number of bytes that were parsed.
 %
   sect = struct;
-  nBeams = 4; %%% should this be 5 - or is the 5th beam only for the waves and BT?
+  nBeams = 4; 
   len = 2 + numCells * nBeams * 2; % 2 bytes per beam
   
   sect.velocityId = indexData(data,idx,idx+1, 'uint16', cpuEndianness)';
@@ -751,7 +650,144 @@ sect.field4 = fields(:, ibeam+3);
     
 end
 
-function [sect, length] = parseBottomTrack( data, idx, cpuEndianness )
+%%%%%%%% V Series applicable Functions (Vertical beam, Waves, Bottom Track) %%%%%%%
+
+function [sect, len] = parseVerticalLeader( data, idx, cpuEndianness )
+%PARSEVERTICALLEADER Parses a vertical leader section from an V Series ADCP ensemble.
+%
+% Inputs:
+%   data - vector of raw bytes.
+%   idx  - index that the section starts at.
+%
+% Outputs:
+%   sect - struct containing the fields that were parsed from the 
+%          variable leader section.
+%   len  - number of bytes that were parsed.
+%
+  sect = struct;
+  len = 40; 
+  
+  block                       = indexData(data,idx,idx+3, 'uint16', cpuEndianness)';
+  sect.eventLogId	          = block(:,1);
+  sect.ensembleNumber16bit    = block(:,2); % not sure if this is correct
+  %
+  sect.depthCells             = indexData(data,idx+2,idx+3, 'uint16', cpuEndianness)'; % number of cells
+  sect.vertPings              = indexData(data,idx+4,idx+5, 'uint16', cpuEndianness)'; % usually 1
+  sect.cellSize               = indexData(data,idx+6,idx+7, 'uint16', cpuEndianness)'; % [cm]
+  sect.firstCellRange         = indexData(data,idx+8,idx+9, 'uint16', cpuEndianness)'; % [cm]
+  sect.vertMode		          = indexData(data,idx+10,idx+11, 'uint16', cpuEndianness)'; % 1 == low res, 2 == high res (4:1 tx/rx ratio)
+  sect.vertXmt                = indexData(data,idx+12,idx+13, 'uint16', cpuEndianness)'; % length of tx pulse in [cm]
+  sect.vertLagLength		  = indexData(data,idx+14,idx+15, 'uint16', cpuEndianness)'; % [cm] : Scaling LSD = 1 cm, range 0 to 65535 cm
+  %
+  sect.vertRssiThreshold      = indexData(data,idx+18,idx+19, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated
+  sect.vertShallowBin         = indexData(data,idx+20,idx+21, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated
+  sect.vertStartBin           = indexData(data,idx+22,idx+23, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated
+  sect.vertShallowRssiBin     = indexData(data,idx+24,idx+25, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated
+  sect.maxCoreThreshold       = indexData(data,idx+26,idx+27, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated
+  sect.minCoreThreshold       = indexData(data,idx+28,idx+29, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated
+  sect.vertPingOffsetTime     = indexData(data,idx+30,idx+31, 'int16', cpuEndianness)';  % milliseconds (usually 0, unless in combined ping mode)
+  sect.surfSpare 			  = indexData(data,idx+32,idx+33, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated
+  sect.depthScreen			  = indexData(data,idx+34,idx+35, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated (depth masking?)
+  sect.percentGoodThreshold   = indexData(data,idx+36,idx+37, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated
+  sect.vertDOProof		      = indexData(data,idx+38,idx+39, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated
+%
+end
+
+function [sect, len] = parseFeaturesLeader( data, idx, cpuEndianness )
+%PARSEFEATURESLEADER Parses a vertical leader section from an V Series ADCP ensemble.
+%
+% Inputs:
+%   data - vector of raw bytes.
+%   idx  - index that the section starts at.
+%
+% Outputs:
+%   sect - struct containing the fields that were parsed from the 
+%          variable leader section.
+%   len  - number of bytes that were parsed.
+%
+  sect = struct;
+  len = 38; % with the waves / bottom track - (1 feature) installed
+  
+  block                       = indexData(data,idx,idx+3, 'uint16', cpuEndianness)';
+  sect.featuresLeaderId       = block(:,1); % not sure if this is correct
+  sect.ensembleNumber16bit    = block(:,2); % not sure if this is correct
+  %
+  sect.featureTypes           = double(data(idx+2)); % number of feature data types
+  % the rest are either spare or Feature ID, Status and Magic Codes, not sure what they are used for.
+%
+end
+
+%%%% Work in Progress - Waves and Bottom Track to be completed %%%%% ShawnM - Sept 7 , 2017
+
+function [sect, len] = parseWavesLeader( data, idx, cpuEndianness )
+%PARSEWAVESLEADER Parses a vertical leader section from an V Series ADCP ensemble.
+%
+% Inputs:
+%   data - vector of raw bytes.
+%   idx  - index that the section starts at.
+%
+% Outputs:
+%   sect - struct containing the fields that were parsed from the 
+%          variable leader section.
+%   len  - number of bytes that were parsed.
+% Assumed column layout for processed wave data file (.wvs):
+%
+% From the AWAC imos toolbox scripts - to help decode the meaning of some V series 
+%      7   Spectrum type                    (0-Pressure, 1-Velocity, 3-AST?)
+%      8   Significant height (Hm0)         (m)
+%      9   Mean 1/3 height (H3)             (m)
+%     10   Mean 1/10 height (H10)           (m) 
+%     11   Maximum height (Hmax)            (m)
+%     12   Mean Height (Hmean)              (m)
+%     13   Mean  period (Tm02)              (s)
+%     14   Peak period (Tp)                 (s)
+%     15   Mean zerocrossing period (Tz)    (s)
+%     16   Mean 1/3 Period (T3)             (s)
+%     17   Mean 1/10 Period (T10)           (s)
+%     18   Maximum Period (Tmax)            (s)
+%     19   Peak direction (DirTp)           (deg)
+%     20   Directional spread (SprTp)       (deg)
+%     21   Mean direction (Mdir)            (deg)
+%     22   Unidirectivity index
+%     23   Mean Pressure                    (dbar)
+%     24   Mean AST distance                (m)
+%     25   Mean AST distance (Ice)          (m)
+%     26   No Detects
+%     27   Bad Detects
+%     28   Number of Zero-Crossings
+%     29   Current speed (wave cell)        (m/s)
+%     30   Current direction (wave cell)    (degrees)
+%
+  sect = struct;
+  len = 53; 
+  
+  block                       = indexData(data,idx,idx+3, 'uint16', cpuEndianness)';
+  sect.eventLogId	          = block(:,1);
+  sect.ensembleNumber16bit    = block(:,2); % not sure if this is correct
+  %
+  sect.depthCells             = indexData(data,idx+2,idx+3, 'uint16', cpuEndianness)'; % number of cells
+  sect.vertPings              = indexData(data,idx+4,idx+5, 'uint16', cpuEndianness)'; % usually 1
+  sect.cellSize               = indexData(data,idx+6,idx+7, 'uint16', cpuEndianness)'; % [cm]
+  sect.firstCellRange         = indexData(data,idx+8,idx+9, 'uint16', cpuEndianness)'; % [cm]
+  sect.vertMode		          = indexData(data,idx+10,idx+11, 'uint16', cpuEndianness)'; % 1 == low res, 2 == high res (4:1 tx/rx ratio)
+  sect.vertXmt                = indexData(data,idx+12,idx+13, 'uint16', cpuEndianness)'; % length of tx pulse in [cm]
+  sect.vertLagLength		  = indexData(data,idx+14,idx+15, 'uint16', cpuEndianness)'; % [cm] : Scaling LSD = 1 cm, range 0 to 65535 cm
+  %
+  sect.vertRssiThreshold      = indexData(data,idx+18,idx+19, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated
+  sect.vertShallowBin         = indexData(data,idx+20,idx+21, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated
+  sect.vertStartBin           = indexData(data,idx+22,idx+23, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated
+  sect.vertShallowRssiBin     = indexData(data,idx+24,idx+25, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated
+  sect.maxCoreThreshold       = indexData(data,idx+26,idx+27, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated
+  sect.minCoreThreshold       = indexData(data,idx+28,idx+29, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated
+  sect.vertPingOffsetTime     = indexData(data,idx+30,idx+31, 'int16', cpuEndianness)';  % milliseconds (usually 0, unless in combined ping mode)
+  sect.surfSpare 			  = indexData(data,idx+32,idx+33, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated
+  sect.depthScreen			  = indexData(data,idx+34,idx+35, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated (depth masking?)
+  sect.percentGoodThreshold   = indexData(data,idx+36,idx+37, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated
+  sect.vertDOProof		      = indexData(data,idx+38,idx+39, 'uint16', cpuEndianness)'; % possibly not actiavted if BT not activated
+%
+end
+
+function [sect, len] = parseBottomTrack( data, idx, cpuEndianness )
 %PARSEBOTTOMTRACK Parses a bottom track data section from an ADCP
 % ensemble.
 %
@@ -762,10 +798,10 @@ function [sect, length] = parseBottomTrack( data, idx, cpuEndianness )
 % Outputs:
 %   sect   - struct containing the fields that were parsed from trawhe bottom
 %            track section.
-%   length - number of bytes that were parsed.
+%   len    - number of bytes that were parsed.
 %
   sect = struct;
-  length = 85;
+  len = 85;
   
   block                       = indexData(data, idx, idx+5, 'uint16', cpuEndianness)';
   sect.bottomTrackId          = block(:,1);

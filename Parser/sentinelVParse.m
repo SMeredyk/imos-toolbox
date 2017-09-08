@@ -32,7 +32,7 @@ function sample_data = sentinelVParse( filename, tMode)
 % Author:       Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
 % Contributors: Leeying Wu <Wu.Leeying@saugov.sa.gov.au>
 %               Bradley Morris <b.morris@unsw.edu.au>
-%               Charles James May 2010 <charles.james@sa.gov.au>
+%               Charles James May <charles.james@sa.gov.au>
 %               Guillaume Galibert <guillaume.galibert@utas.edu.au>
 %         		Paul McCarthy <paul.mccarthy@csiro.au>
 %				Alexandre Forest <alexandre.forest@arcticnet.ulaval.ca>
@@ -75,19 +75,18 @@ narginchk(1, 2);
   filename = filename{1};
 
   % we first look if the file has been processed to extract current and
-  % wave data separately (.PD0 and  possibly a .WVS)... TBD
-  [filePath, fileRadName, ~] = fileparts(filename);
-  
+  % wave data separately (.PD0 and .WVS)
+  [filePath, fileRadName, ~] = fileparts(filename); 
   currentFile   = fullfile(filePath, [fileRadName '.PD0']);
   
-  %waveFile      = fullfile(filePath, [fileRadName '.WVS']); 
+  waveFile      = fullfile(filePath, [fileRadName '.WVS']); 
   %not sure if the wavesMon software would create this file type
   
-  %isWaveData = false;
-  %if exist(currentFile, 'file') && exist(waveFile, 'file')
+  isWaveData = false;
+  if exist(currentFile, 'file') && exist(waveFile, 'file')
       % we process current and wave files
-  %    isWaveData = true;
-  %end
+      isWaveData = true;
+  end
   
   ensembles = readSentinelVEnsembles( filename );
   
@@ -101,6 +100,9 @@ narginchk(1, 2);
   
   % metadata for this ensemble
   variable = ensembles.variableLeader;
+  
+  % metadata for the 5th beam - currently not used
+  vertical = ensembles.verticalLeader;
   
   velocity = ensembles.velocity;
   
@@ -147,12 +149,22 @@ narginchk(1, 2);
       variable.y2kMinute,...
       variable.y2kSecond + variable.y2kHundredth/100.0]);
   
+  % in-case the V Series Y2K compliant RTC time was not implemented
+  %    century = 2000; 
+  %    time = datenum(...
+  %        century + variable.rtcYear,...
+  %        variable.rtcMonth,...
+  %        variable.rtcDay,...
+  %        variable.rtcHour,...
+  %        variable.rtcMinute,...
+  %        variable.rtcSecond + variable.rtcHundredths/100.0);
+      
   timePerPing = fixed.tppMinutes*60 + fixed.tppSeconds + fixed.tppHundredths/100;
   timePerEnsemble = fixed.pingsPerEnsemble .* timePerPing;
 %   % shift the timestamp to the middle of the burst
 %   time = time + (timePerEnsemble / (3600 * 24))/2;
 %
-  % try to guess model information
+  % model information
   adcpFreqs = str2num(fixed.systemConfiguration(:, 6:8)); % str2num is actually more relevant than str2double here
   adcpFreq = mode(adcpFreqs); % hopefully the most frequent value reflects the frequency when deployed
   switch adcpFreq
@@ -178,7 +190,7 @@ narginchk(1, 2);
   pitch       = variable.pitch;
   roll        = variable.roll;
   heading     = variable.heading;
-  voltage     = variable.adcChannel1;
+  voltageCnts = variable.adcChannel1;
   clear variable;
   
   %
@@ -221,9 +233,35 @@ narginchk(1, 2);
   pitch        = pitch        / 100.0;
   roll         = roll         / 100.0;
   heading      = heading      / 100.0;
-  voltage	   = voltage      / 10.0; %  xmt voltage conversion  
-	%from p.62 of V Series Commands and Output Data Format PDF (RDI website - January 2017)
-  
+  %from p.62 of V Series Commands and Output Data Format PDF (RDI website - January 2017
+    
+  % Voltage data tends to have many NaNs, therefore set all NaN to the previous value before it. 
+  % Dimensions
+[~,numCol] = size(voltageCnts);
+
+% First, datai is copy of voltage data
+datai = voltageCnts;
+
+% For each column
+for c = 1:numCol
+    % Find first non-NaN row
+    indxFirst = find(~isnan(voltageCnts(:,c)),1,'first');
+    %if whole column is NaN
+    if( ~isempty(indxFirst) )
+    % Find all NaN rows
+        indxNaN = find(isnan(voltageCnts(:,c)));
+    % Find NaN rows beyond first non-NaN
+        indx = indxNaN(indxNaN > indxFirst);
+    % For each of these, copy previous value
+        for r = (indx(:))'
+            datai(r,c) = datai(r-1,c);
+        end
+    end
+end
+
+    voltage = datai/10.0; %  xmt voltage conversion
+    clear datai voltageCnts numRow numCol indxFirst indxNaN indx r c;
+   
   % check for electrical/magnetic heading bias (usually magnetic declination)
   isMagBias = false;
   % we set a static value for this variable to the most frequent value found
@@ -352,16 +390,16 @@ end
       'ROLL',               1,      roll(iWellOriented); ...
       'TEMP',               1,      temperature(iWellOriented); ...
       'PRES_REL',           1,      pressure(iWellOriented); ...
-      'PSAL',               1,      salinity(iWellOriented); ...
+      'PSAL',               1,      salinity(iWellOriented); ... %toolbox
       'VOLT',               1,      voltage(iWellOriented);...
       ['HEADING' magExt],   1,      heading(iWellOriented)
       };
   
   clear vnrth veast wvel evel speed direction backscatter1 ...
       backscatter2 backscatter3 backscatter4 temperature pressure ...
-      salinity correlation1 correlation2 correlation3 correlation4 ...
+      correlation1 correlation2 correlation3 correlation4 ... 
       percentGood1 percentGood2 percentGood3 percentGood4 pitch roll ...
-      heading;
+      heading voltage salinty;
   
   nVars = size(vars, 1);
   sample_data.variables = cell(nVars, 1);
