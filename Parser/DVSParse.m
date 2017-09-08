@@ -197,8 +197,8 @@ narginchk(1, 2);
   % auxillary data
   %
   temperature = variable.temperature;
-%  pressure    = variable.pressure; no pressure sensor in a DVS unit
-%  salinity    = variable.salinity; should let Toolbox calculate this
+ % pressure    = variable.pressure; %no pressure sensor in a DVS unit
+%  salinity    = variable.salinity; %should let Toolbox calculate this
   pitch       = variable.pitch;
   roll        = variable.roll;
   heading     = variable.heading;
@@ -237,17 +237,36 @@ narginchk(1, 2);
   %xmt voltage conversion for diagnostics
   % converting xmt voltage counts to volts , these are rough values
   
-   % set all NaN to the value before it. 
-    idx = find(isnan(voltageCnts));
-    voltageCnts(idx) = voltageCnts(idx-1);
-    
-  %voltageCnts(isnan(voltageCnts)) = 0;
-    voltage	    = (voltageCnts*xmtVolt) /1000000; %  xmt voltage conversion , 
+  % Voltage data tends to have many NaNs, therefore set all NaN to the previous value before it. 
+  % Dimensions
+[~,numCol] = size(voltageCnts);
+
+% First, datai is copy of voltage data
+datai = voltageCnts;
+
+% For each column
+for c = 1:numCol
+    % Find first non-NaN row
+    indxFirst = find(~isnan(voltageCnts(:,c)),1,'first');
+    %if whole column is NaN
+    %if( ~isempty(indxFirst) )
+    % Find all NaN rows
+    indxNaN = find(isnan(voltageCnts(:,c)));
+    % Find NaN rows beyond first non-NaN
+    indx = indxNaN(indxNaN > indxFirst);
+    % For each of these, copy previous value
+    for r = (indx(:))'
+        datai(r,c) = datai(r-1,c);
+    end
+end    
+  
+    voltage	    = (datai*xmtVolt) /1000000; %  xmt voltage conversion , 
 	%from p.136 of Workhorse Commands and Output Data Format PDF (RDI website - March 2016)
-    clear idx voltageCnts;
+    
+    clear datai voltageCnts numRow numCol indxFirst indxNaN indx r c;
     
   temperature  = temperature  / 100.0; 
- % pressure     = pressure     / 1000.0; no pressure sensor in a DVS unit
+  %pressure     = pressure     / 1000.0; %no pressure sensor in a DVS unit
   vnrth        = vnrth        / 1000.0;
   veast        = veast        / 1000.0;
   wvel         = wvel         / 1000.0;
@@ -363,7 +382,7 @@ clear unitInfo serial;  % clear variables to avoid nomenclature conflicts, if an
       'ABSIC2',              [1 3],  backscatter2; ...
       'ABSIC3',              [1 3],  backscatter3; ...
       'ABSIC4',              [1 3],  backscatter4; ...
-      %'PRES_REL',           1,      pressure; ... %no pressure sensor for DVS units
+      %'PRES_REL',            1,      pressure; ... %no pressure sensor for DVS units
       %'PSAL',               1,      salinity; ... % manual entry, could be incorrect, thus not used.
       'CMAG1',              [1 3],  correlation1; ...
       'CMAG2',              [1 3],  correlation2; ...

@@ -305,16 +305,15 @@ function dsub = indexData(data, istart, iend, dtype, cpuEndianness)
 % Charles James
 
 % create matrix of indicies
-width = max(iend-istart+1);
+width = min(iend-istart+1);
 
 [I, J]  = meshgrid(istart, 0:width-1);
 K       = meshgrid(iend,   0:width-1);
 
 IND = I + J;
-clear I J;
 
 ibad = IND > K;
-clear K;
+clear I J K;
 
 if any(any(ibad))
     % We assume that if an ensemble contain one bad data, all data are bad
@@ -530,8 +529,8 @@ function [sect, len] = parseVariableLeader( data, idx, cpuEndianness )
   % at surface negative values appear huge ~4 million dbar we'll read it in
   % as signed integer to avoid this but need to be careful if deploying
   % ADCP near centre of earth!
-  % sect.pressure               = indexData(data,idx+48,idx+51, 'int32', cpuEndianness)'; not an option in the DVS firmware
-  % sect.pressureSensorVariance = indexData(data,idx+52,idx+55, 'int32', cpuEndianness)'; not an option in the DVS firmware
+  %sect.pressure               = indexData(data,idx+48,idx+51, 'int32', cpuEndianness)'; not an option in the DVS firmware
+  %sect.pressureSensorVariance = indexData(data,idx+52,idx+55, 'int32', cpuEndianness)'; not an option in the DVS firmware
   % byte 57 is spare
   sect.y2kCentury             = double(data(idx+57));
   sect.y2kYear                = double(data(idx+58));
