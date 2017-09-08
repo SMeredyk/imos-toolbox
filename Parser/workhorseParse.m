@@ -262,20 +262,39 @@ narginchk(1, 2);
  % 
   %xmt voltage conversion for diagnostics
   % converting xmt voltage counts to volts , these are rough values
-  
-   % set all NaN to the value before it. 
-    idx = find(isnan(voltageCnts));
-    voltageCnts(idx) = voltageCnts(idx-1);
-    
+   % Voltage data tends to have many NaNs, therefore set all NaN to the previous value before it. 
+  % Dimensions
+[~,numCol] = size(voltageCnts);
+
+% First, datai is copy of voltage data
+datai = voltageCnts;
+
+% For each column
+for c = 1:numCol
+    % Find first non-NaN row
+    indxFirst = find(~isnan(voltageCnts(:,c)),1,'first');
+    %if whole column is NaN
+    %if( ~isempty(indxFirst) )
+    % Find all NaN rows
+    indxNaN = find(isnan(voltageCnts(:,c)));
+    % Find NaN rows beyond first non-NaN
+    indx = indxNaN(indxNaN > indxFirst);
+    % For each of these, copy previous value
+    for r = (indx(:))'
+        datai(r,c) = datai(r-1,c);
+    end
+end    
+
   %Long Ranger output is 10x larger than the DVS and QM output....not sure
   %why, really makes no sense for this difference.
   if strcmp(model, 'LongRanger') == 1
-    voltage	    = (voltageCnts*xmtVolt) /10000000; %  xmt voltage conversion , 
+    voltage	    = (datai*xmtVolt) /10000000; %  xmt voltage conversion , 
 	%from p.136 of Workhorse Commands and Output Data Format PDF (RDI website - March 2016)
   else
-      voltage	    = (voltageCnts*xmtVolt) /1000000; %  xmt voltage DVS and QM 
+      voltage	    = (datai*xmtVolt) /1000000; %  xmt voltage DVS and QM 
   end 
-      clear idx voltageCnts;
+  
+  clear datai voltageCnts numRow numCol indxFirst indxNaN indx r c;
 
   % check for electrical/magnetic heading bias (usually magnetic declination)
   isMagBias = false;
