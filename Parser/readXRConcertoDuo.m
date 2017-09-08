@@ -265,6 +265,7 @@ function sample_data = readXRConcertoDuo( filename, mode )
                       
                       %Turbidity (NTU)
                   case {'Turb', 'Turb-a','turb00'}, name = 'TURB';
+                      comment.(fields{k}) = 'NTU - Auto Ranging Seapoint SCF';
                       
                       %Rinko temperature (Celsius degree)
                   case 'R_Temp',
@@ -533,6 +534,7 @@ function sample_data = readXRConcertoDuo( filename, mode )
                       
                       %Turbidity (NTU)
                   case {'Turb', 'Turb-a','turb00'}, name = 'TURB';
+                      comment.(fields{k}) = 'NTU - Auto Ranging Seapoint SCF';
                       
                       %Rinko temperature (Celsius degree)
                   case 'R_Temp',
@@ -728,7 +730,7 @@ function header = readHeader(fid)
   
   line = fgetl(fid);
   
-  while isempty(strfind(line, 'Date & Time'))
+  while ~contains(line, 'Date & Time')
     lines = [lines line];
     line  = fgetl(fid);
   end
@@ -821,7 +823,7 @@ function header = readHeader(fid)
   % nomenclature surrounding start and end dates
   ruskinVer = strfind(header.hostversion, '1.13.10');
   
-  if ruskinVer == 0
+  if isempty(ruskinVer)
       ruskinVer = strfind(header.hostversion, '1.13.7');
   else
   end
@@ -869,12 +871,7 @@ function data = readData(fid, header)
   %firmwareNum to be used to select for date- time formatting unique to
   %various versions of Ruskin and firmware
   firmwareNum = str2double(header.firmware);
-  ruskinVer = strfind(header.hostversion, '1.13.10');
-  
-   if ruskinVer == 0
-      ruskinVer = strfind(header.hostversion, '1.13.7');
-  else
-   end
+  ruskinVer = strfind(header.hostversion, '1.13.7');
   
   % get the column names
   header.variables = strrep(header.variables, ' & ', '|');
@@ -917,7 +914,7 @@ function data = readData(fid, header)
       data.(cols{k}) = samples{k}; 
   end
   
-  if length(data.Date{1}) == 8 
+   if length(data.Date{1}) == 8 
       data.time = datenum(data.Date, 'yy/mm/dd') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS');
   
   elseif isempty(strfind(data.Date{1}, '-'))
