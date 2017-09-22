@@ -923,6 +923,8 @@ function data = readData(fid, header)
   % select date-time format by ruskin and firmware version
   elseif firmwareNum == 10.550
           data.time = datenum(data.Date, 'dd-mmm-yyyy') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); %ruskin v1.12.6
+  elseif firmwareNum < 12 & firmwareNum > 11 
+		  data.time = datenum(data.Date, 'yyyy-mm-dd') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); % ruskin v1.8.10
   elseif firmwareNum < 7 & ruskinVer > 0
 		  data.time = datenum(data.Date, 'yyyy-mm-dd') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); % ruskin v1.13.7
   else 
