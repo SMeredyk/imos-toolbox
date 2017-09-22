@@ -33,40 +33,24 @@ function sample_data = workhorseParse( filename, tMode )
 %               Charles James May 2010 <charles.james@sa.gov.au>
 %               Guillaume Galibert <guillaume.galibert@utas.edu.au>
 %               Shawn Meredyk <shawn.meredyk@as.ulaval.ca>
-%         
 %
-% Copyright (c) 2017, Amundsen Science & ArcticNet
-% http://www.amundsen.ulaval.ca/
-% http://www.arcticnet.ulaval.ca/
-% All rights reserved.
+
 %
-% Copyright (c) 2017, Australian Ocean Data Network (AODN) and Integrated 
+% Copyright (C) 2017, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
-% All rights reserved.
-% 
-% Redistribution and use in source and binary forms, with or without 
-% modification, are permitted provided that the following conditions are met:
-% 
-%     * Redistributions of source code must retain the above copyright notice, 
-%       this list of conditions and the following disclaimer.
-%     * Redistributions in binary form must reproduce the above copyright 
-%       notice, this list of conditions and the following disclaimer in the 
-%       documentation and/or other materials provided with the distribution.
-%     * Neither the name of the AODN/IMOS nor the names of its contributors 
-%       may be used to endorse or promote products derived from this software 
-%       without specific prior written permission.
-% 
-% THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
-% AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE 
-% IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE 
-% ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE 
-% LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR 
-% CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF 
-% SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS 
-% INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN 
-% CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
-% ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
-% POSSIBILITY OF SUCH DAMAGE.
+%
+% This program is free software: you can redistribute it and/or modify
+% it under the terms of the GNU General Public License as published by
+% the Free Software Foundation version 3 of the License.
+%
+% This program is distributed in the hope that it will be useful,
+% but WITHOUT ANY WARRANTY; without even the implied warranty of
+% MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+% GNU General Public License for more details.
+
+% You should have received a copy of the GNU General Public License
+% along with this program.
+% If not, see <https://www.gnu.org/licenses/gpl-3.0.en.html>.
 %
 narginchk(1, 2);
 
@@ -84,12 +68,6 @@ narginchk(1, 2);
       % we process current and wave files
       isWaveData = true;
   end
-  
-%  filename=which(filename); %ADDED AForest 24-Jan-2017 to prevent error with RDI files not found
-%  if isempty(filename) %ADDED AForest 24-Jan-2017
-%      filename=uigetfile([filePath,'\*.*'],['Select the file: ', fileRadName,'.000']); %ADDED AForest 24-Jan-2017
-%      filename=[filePath,'\',filename]; %ADDED AForest 24-Jan-2017
-%  end %ADDED AForest 24-Jan-2017
   
   ensembles = readWorkhorseEnsembles( filename );
   
@@ -173,41 +151,7 @@ narginchk(1, 2);
   timePerEnsemble = fixed.pingsPerEnsemble .* timePerPing;
 %   % shift the timestamp to the middle of the burst
 %   time = time + (timePerEnsemble / (3600 * 24))/2;
-%
-% try to guess model information
-  adcpFreqs = str2num(fixed.systemConfiguration(:, 6:8)); % str2num is actually more relevant than str2double here
-  adcpFreq = mode(adcpFreqs); % hopefully the most frequent value reflects the frequency when deployed
-  switch adcpFreq
-      case 0
-          adcpFreq = 75;
-          model = 'LongRanger';
-		  xmtVolt = 2092719;
-          
-      case 1
-          adcpFreq = 150;
-          model = 'QuarterMaster';
-          xmtVolt = 592157;
-		  
-      case 10
-          adcpFreq = 300;
-          model = 'Sentinel or Monitor';
-          xmtVolt = 591257;
-		  
-      case 11
-          adcpFreq = 600;
-          model = 'Sentinel or Monitor';
-          xmtVolt = 380667;
-		  
-      case 100
-          adcpFreq = 1200;
-          model = 'Sentinel or Monitor';
-          xmtVolt = 253765;
-		  
-      otherwise
-          adcpFreq = 2400;
-          model = 'DVS';
-          xmtVolt = 253765;
-  end  
+
   %
   % auxillary data
   %
@@ -217,7 +161,7 @@ narginchk(1, 2);
   pitch       = variable.pitch;
   roll        = variable.roll;
   heading     = variable.heading;
-  voltageCnts = variable.adcChannel1;
+  voltage     = variable.adcChannel1;
   clear variable;
   
   %
@@ -259,54 +203,19 @@ narginchk(1, 2);
   pitch        = pitch        / 100.0;
   roll         = roll         / 100.0;
   heading      = heading      / 100.0;
- % 
-  %xmt voltage conversion for diagnostics
-  % converting xmt voltage counts to volts , these are rough values
-   % Voltage data tends to have many NaNs, therefore set all NaN to the previous value before it. 
-  % Dimensions
-[~,numCol] = size(voltageCnts);
-
-% First, datai is copy of voltage data
-datai = voltageCnts;
-
-% For each column
-for c = 1:numCol
-    % Find first non-NaN row
-    indxFirst = find(~isnan(voltageCnts(:,c)),1,'first');
-    %if whole column is NaN
-    %if( ~isempty(indxFirst) )
-    % Find all NaN rows
-    indxNaN = find(isnan(voltageCnts(:,c)));
-    % Find NaN rows beyond first non-NaN
-    indx = indxNaN(indxNaN > indxFirst);
-    % For each of these, copy previous value
-    for r = (indx(:))'
-        datai(r,c) = datai(r-1,c);
-    end
-end    
-
-  %Long Ranger output is 10x larger than the DVS and QM output....not sure
-  %why, really makes no sense for this difference.
-  if strcmp(model, 'LongRanger') == 1
-    voltage	    = (datai*xmtVolt) /10000000; %  xmt voltage conversion , 
-	%from p.136 of Workhorse Commands and Output Data Format PDF (RDI website - March 2016)
-  else
-      voltage	    = (datai*xmtVolt) /1000000; %  xmt voltage DVS and QM 
-  end 
   
-  clear datai voltageCnts numRow numCol indxFirst indxNaN indx r c;
-
   % check for electrical/magnetic heading bias (usually magnetic declination)
-  isMagBias = false;
+  magExt = '_MAG';
+  magBiasComment = '';
   % we set a static value for this variable to the most frequent value found
   magDec = mode(fixed.headingBias)*0.01; % Scaling: LSD = 0.01degree; Range = -179.99 to 180.00degrees
   if magDec ~= 0
-      isMagBias = true;
+      magExt = '';
       magBiasComment = ['A compass correction of ' num2str(magDec) ...
           'degrees has been applied to the data by a technician using RDI''s software ' ...
           '(usually to account for magnetic declination).'];
   end
-  
+
   speed = sqrt(vnrth.^2 + veast.^2);
   direction = getDirectionFromUV(veast, vnrth);
   
@@ -317,13 +226,65 @@ end
       serial = num2str(serial);
   end
   
+  % try to guess model information
+  adcpFreqs = str2num(fixed.systemConfiguration(:, 6:8)); % str2num is actually more relevant than str2double here
+  adcpFreq = mode(adcpFreqs); % hopefully the most frequent value reflects the frequency when deployed
+  switch adcpFreq
+      case 0
+          adcpFreq = 75;
+          model = 'Long Ranger';
+          xmitVoltScaleFactors = 2092719 / 10; % Long Ranger output is 10x larger, not sure why.
+          
+      case 1
+          adcpFreq = 150;
+          model = 'Quartermaster';
+          xmitVoltScaleFactors = 592157;
+		  
+      case 10
+          adcpFreq = 300;
+          model = 'Sentinel or Monitor';
+          xmitVoltScaleFactors = 592157;
+		  
+      case 11
+          adcpFreq = 600;
+          model = 'Sentinel or Monitor';
+          xmitVoltScaleFactors = 380667;
+		  
+      case 100
+          adcpFreq = 1200;
+          model = 'Sentinel or Monitor';
+          xmitVoltScaleFactors = 253765;
+		  
+      otherwise
+          adcpFreq = 2400;
+          model = 'DVS';
+          xmitVoltScaleFactors = 253765;
+  end
+  xmitVoltScaleFactors = xmitVoltScaleFactors / 1000000; %from p.136 of Workhorse Commands and Output Data Format PDF (RDI website - March 2016)
+  
+  % xmit voltage conversion for diagnostics
+  % converting xmit voltage counts to volts , these are rough values
+  voltage = voltage * xmitVoltScaleFactors;
+  
+  % set all NaN to the next available value after it (conservative approach)
+  iNaNVoltage = isnan(voltage);
+  if iNaNVoltage(end) % we need to deal separately with the last value in case it's NaN
+      iLastGoodValue = find(~iNaNVoltage, 'last');  % in this case we have no choice but to look for the previous available value before it
+      voltage(end) = voltage(iLastGoodValue);
+      iNaNVoltage(end) = false;
+  end
+  while any(iNaNVoltage)
+      iNextValue = [false; iNaNVoltage(1:end-1)];
+      voltage(iNaNVoltage) = voltage(iNextValue);
+      iNaNVoltage = isnan(voltage);
+  end
+  
   % fill in the sample_data struct
-  sample_data.toolbox_input_file        = filename;
-  sample_data.meta.featureType          = ''; % strictly this dataset cannot be described as timeSeriesProfile since it also includes timeSeries data like TEMP
-  sample_data.meta.fixedLeader          = fixed;
-  sample_data.meta.binSize              = mode(fixed.depthCellLength)/100; % we set a static value for this variable to the most frequent value found
-  sample_data.meta.instrument_make      = 'Teledyne RDI';
-  % 
+  sample_data.toolbox_input_file                = filename;
+  sample_data.meta.featureType                  = ''; % strictly this dataset cannot be described as timeSeriesProfile since it also includes timeSeries data like TEMP
+  sample_data.meta.fixedLeader                  = fixed;
+  sample_data.meta.binSize                      = mode(fixed.depthCellLength)/100; % we set a static value for this variable to the most frequent value found
+  sample_data.meta.instrument_make              = 'Teledyne RDI';
   sample_data.meta.instrument_model             = [model ' Workhorse ADCP'];
   sample_data.meta.instrument_serial_no         =  serial;
   sample_data.meta.instrument_sample_interval   = median(diff(time*24*3600));
@@ -334,34 +295,6 @@ end
   else
       sample_data.meta.beam_angle               =  mode(fixed.beamAngle); % we set a static value for this variable to the most frequent value found
   end
-  
-% Correction for pressure offset in air - Added by Shawn Meredyk. 
-% Original code from AForest 27-Jan-2017 with
-% comments for history on 30-Jan-2017
-% based on first 5 measurements within 15 m range
-
-[~,NAME,~] = fileparts(filename);
-first_mes=pressure(1:5);
-first_mes=first_mes(first_mes<15);
-if  ~isnan(first_mes)
-    disp(['Please note: ', NAME,': pressure offset in air : ',...
-        num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
-    pressure=pressure-mean(first_mes);
-    
-    % Commenting the Metadata history
-    PressureOffsetComment=[mfilename,'.m: Raw pressure data from ', NAME,...
-        ' was corrected for a pressure offset in air of ',...
-        num2str(round(mean(first_mes),1)),'dbar'];
-    
-    sample_data.history = sprintf('%s - %s', ...
-            datestr(now_utc, readProperty('exportNetCDF.dateFormat')), ...
-            PressureOffsetComment);
-else
-    disp(['Please note: ', NAME,': pressure offset in air : ',...
-        num2str(ceil(max(pressure(1:5)))),...
-        '-dbar and NO pressure offset was applied']);
-end
-  
   
   % add dimensions with their data mapped
   adcpOrientations = str2num(fixed.systemConfiguration(:, 1)); % str2num is actually more relevant than str2double here
@@ -412,12 +345,6 @@ end
   sample_data.dimensions{1}.seconds_to_middle_of_measurement = sample_data.meta.instrument_average_interval/2;
   
   % add variables with their dimensions and data mapped
-  if isMagBias
-      magExt = '';
-  else
-      magExt = '_MAG';
-  end
-  
   vars = {
       'TIMESERIES',         [],     1; ...
       'LATITUDE',           [],     NaN; ...
@@ -426,13 +353,13 @@ end
       ['VCUR' magExt],      [1 2],  vnrth; ...
       ['UCUR' magExt],      [1 2],  veast; ...
       'WCUR',               [1 2],  wvel; ...
-      'ECUR',               [1 2],  evel; ...
       'CSPD',               [1 2],  speed; ...
       ['CDIR' magExt],      [1 2],  direction; ...
-      'ABSIC1',              [1 3],  backscatter1; ...
-      'ABSIC2',              [1 3],  backscatter2; ...
-      'ABSIC3',              [1 3],  backscatter3; ...
-      'ABSIC4',              [1 3],  backscatter4; ...
+      'ECUR',               [1 2],  evel; ...
+      'ABSIC1',             [1 3],  backscatter1; ...
+      'ABSIC2',             [1 3],  backscatter2; ...
+      'ABSIC3',             [1 3],  backscatter3; ...
+      'ABSIC4',             [1 3],  backscatter4; ...
       'CMAG1',              [1 3],  correlation1; ...
       'CMAG2',              [1 3],  correlation2; ...
       'CMAG3',              [1 3],  correlation3; ...
@@ -441,13 +368,13 @@ end
       'PERG2',              [1 2],  percentGood2; ...
       'PERG3',              [1 2],  percentGood3; ...
       'PERG4',              [1 2],  percentGood4; ...
-      'PITCH',              1,      pitch; ...
+      'TEMP',               1,      temperature; ...
       'PRES_REL',           1,      pressure; ...
-      'PSAL',               1,      salinity; ... % caution, when exporting as netCDF
-	  'ROLL',               1,      roll; ...
-	  'TEMP',               1,      temperature; ...
-      'VOLT',				1,		voltage; ... % added for equipment diagnostics
-      ['HEADING' magExt],   1,      heading
+      'PSAL',               1,      salinity; ...
+      'PITCH',              1,      pitch; ...
+      'ROLL',               1,      roll; ...
+      ['HEADING' magExt],   1,      heading; ...
+      'VOLT',				1,		voltage
       };
   
   clear vnrth veast wvel evel speed direction backscatter1 ...
