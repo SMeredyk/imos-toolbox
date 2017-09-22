@@ -127,6 +127,10 @@ velocity1    = velocity1    / 1000.0;
 velocity2    = velocity2    / 1000.0;
 velocity3    = velocity3    / 1000.0;
 
+% Calculate CSPD and CDIR_MAG if velocityProcessed is false
+speed = sqrt(velocity2.^2 + velocity1.^2);
+direction = getDirectionFromUV(velocity1, velocity2);
+
 sample_data = struct;
     
 sample_data.toolbox_input_file              = filename;
@@ -194,9 +198,11 @@ vars = {
     'LATITUDE',         [], NaN; ...
     'LONGITUDE',        [], NaN; ...
     'NOMINAL_DEPTH',    [], NaN; ...
-    'VCUR_MAG',         1,  velocity2; ... % V
-    'UCUR_MAG',         1,  velocity1; ... % U
-    'WCUR',             1,  velocity3; ...
+    'VCUR_MAG',         1,  velocity2; ... % V, mag east
+    'UCUR_MAG',         1,  velocity1; ... % U, mag north
+    'WCUR',             1,  velocity3; ... % W 
+    'CSPD',             1,  speed; ... % taken from below code
+    'CDIR_MAG',         1,  direction; ...% taken from below code
     'ABSIC1',           1,  backscatter1; ...
     'ABSIC2',           1,  backscatter2; ...
     'ABSIC3',           1,  backscatter3; ...
@@ -208,8 +214,8 @@ vars = {
     'HEADING_MAG',      1,  heading
     };
 clear analn1 analn2 time distance velocity1 velocity2 velocity3 ...
-    backscatter1 backscatter2 backscatter3 ...
-    temperature pressure battery pitch roll heading;
+    backscatter1 backscatter2 backscatter3 speed direction ... % added speed and direction
+    temperature pressure battery pitch roll heading status;
 
 nVars = size(vars, 1);
 sample_data.variables = cell(nVars, 1);
@@ -223,3 +229,20 @@ for i=1:nVars
     sample_data.variables{i}.data         = sample_data.variables{i}.typeCastFunc(vars{i, 3});
 end
 clear vars;
+end
+
+function direction = getDirectionFromUV(uvel, vvel)
+    % direction is in degrees clockwise from north
+    direction = atan(abs(uvel ./ vvel)) .* (180 / pi);
+    
+    % !!! if vvel == 0 we get NaN !!!
+    direction(vvel == 0) = 90;
+    
+    se = vvel <  0 & uvel >= 0;
+    sw = vvel <  0 & uvel <  0;
+    nw = vvel >= 0 & uvel <  0;
+    
+    direction(se) = 180 - direction(se);
+    direction(sw) = 180 + direction(sw);
+    direction(nw) = 360 - direction(nw);
+end
