@@ -174,10 +174,10 @@ switch name
         name = 'DOXY_TEMP';
         comment = '';
       
-    % salinity (PSU)
-    case 'sal00'
-      name = 'PSAL';
-      comment = '';
+    % salinity (PSU) % commented - out to let toolbox calculate this
+    % case 'sal00'
+    %  name = 'PSAL';
+    %  comment = '';
     
     % PAR/Irradiance, Biospherical/Licor
     case 'par'
@@ -204,15 +204,15 @@ switch name
       name = 'DESC';
       comment = '';
           
-    % density (kg/m3)
-    case 'density00'
-      name = 'DENS';
-      comment = '';
+    % density (kg/m3) % commented - out to let toolbox calculate this
+    % case 'density00'
+    %  name = 'DENS';
+    %  comment = '';
     
-    % depth (m)
-    case {'depSM', 'depFM'}
-      name = 'DEPTH';
-      comment = '';
+    % depth (m) % commented - out to let toolbox calculate this
+    % case {'depSM', 'depFM'}
+    %  name = 'DEPTH';
+    %  comment = '';
     
     % A/D counts to volts (sensor_analog_output 0 to 7)
     case {'v0', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7'}
