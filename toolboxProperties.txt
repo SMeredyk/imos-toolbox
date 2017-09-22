@@ -64,12 +64,12 @@ dataFileStatusDialog.multipleFileFormat    = italic
 
 % last selected values for start dialog
 <<<<<<< HEAD
-startDialog.dataDir.timeSeries = C:\Analysis\2009\A1-09
+startDialog.dataDir.timeSeries = C:\Analysis\2014\BR2-14
 =======
-startDialog.dataDir.timeSeries = C:\Analysis\2009\A1-09
+startDialog.dataDir.timeSeries = C:\Analysis\2014\BR2-14
 >>>>>>> Shawn_local_clean
 startDialog.dataDir.profile = 
-startDialog.fieldTrip.timeSeries = 2010_2b
+startDialog.fieldTrip.timeSeries = 2015_3a
 startDialog.fieldTrip.profile = 
 startDialog.lowDate.timeSeries = 730699
 startDialog.lowDate.profile = 
@@ -80,7 +80,7 @@ startDialog.highDate.profile =
 importManager.manualDir = 
 
 % last selected directory for file export
-exportDialog.defaultDir = C:\Analysis\2009\G-09\Quality_controlled_data\IMOS_QCdata\QcVer1_1
+exportDialog.defaultDir = C:\Analysis\2014\BR2-14\QcVer1_1
 
 % prompt user to select parser if an appropriate one 
 % cannot be found (if false, the data is not imported)
