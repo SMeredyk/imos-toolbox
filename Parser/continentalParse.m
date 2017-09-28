@@ -13,9 +13,9 @@
 %   sample_data - Struct containing sample data.
 %
 % Author: 		Paul McCarthy <paul.mccarthy@csiro.au>
-% Contributor: 	Guillaume Galibert <guillaume.galibert@utas.edu.au>
+% Contributor: 	Guillaume Galibert <guillaume.galibert@utas.edu.au>,
+%               Shawn Meredyk <shawn.meredyk@as.ulaval.ca>
 %
-
 %
 % Copyright (C) 2017, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).

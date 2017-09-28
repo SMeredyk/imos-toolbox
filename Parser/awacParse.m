@@ -25,6 +25,7 @@ function sample_data = awacParse( filename, tMode )
 %
 % Author: 		Paul McCarthy <paul.mccarthy@csiro.au>
 % Contributor: 	Guillaume Galibert <guillaume.galibert@utas.edu.au>
+%               Shawn Meredyk <shawn.meredyk@as.ulaval.ca>
 %
 
 %

@@ -12,6 +12,7 @@ function sample_data = aquadoppVelocityParse( filename, mode )
 %   sample_data - Struct containing sample data.
 %
 % Contributor: 	Guillaume Galibert <guillaume.galibert@utas.edu.au>
+%               Shawn Meredyk <shawn.meredyk@as.ulaval.ca>
 %
 
 %
