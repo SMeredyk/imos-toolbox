@@ -260,16 +260,18 @@ narginchk(1, 2);
           model = 'DVS';
           xmitVoltScaleFactors = 253765;
   end
-  xmitVoltScaleFactors = xmitVoltScaleFactors / 1000000; %from p.136 of Workhorse Commands and Output Data Format PDF (RDI website - March 2016)
+  % xmitVoltScaleFactors = xmitVoltScaleFactors / 1000000; %from p.136 of Workhorse Commands and Output Data Format PDF (RDI website - March 2016)
   
   % xmit voltage conversion for diagnostics
   % converting xmit voltage counts to volts , these are rough values
-  voltage = voltage * xmitVoltScaleFactors;
+  voltage = (voltage * xmitVoltScaleFactors )/ 1000000;
   
   % set all NaN to the next available value after it (conservative approach)
   iNaNVoltage = isnan(voltage);
   if iNaNVoltage(end) % we need to deal separately with the last value in case it's NaN
-      iLastGoodValue = find(~iNaNVoltage, 'last');  % in this case we have no choice but to look for the previous available value before it
+      iLastGoodValue = find(~iNaNVoltage,1,'last');  % in this case we have no choice but to look for the previous available value before it
+      %added a 1 to the statement above due to matlab not liking no second
+      %argument. - ShawnM - sept 26-2017
       voltage(end) = voltage(iLastGoodValue);
       iNaNVoltage(end) = false;
   end
@@ -296,6 +298,34 @@ narginchk(1, 2);
       sample_data.meta.beam_angle               =  mode(fixed.beamAngle); % we set a static value for this variable to the most frequent value found
   end
   
+%%% Correction for pressure offset in air - Added by Shawn Meredyk. 
+% Original code from AForest 27-Jan-2017 with
+% comments for history on 30-Jan-2017
+% based on first 5 measurements within 15 m range
+
+[~,NAME,~] = fileparts(filename);
+first_mes=pressure(1:5);
+first_mes=first_mes(first_mes<15);
+if  ~isnan(first_mes)
+    disp(['Please note: ', NAME,': pressure offset in air : ',...
+        num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
+    pressure=pressure-mean(first_mes);
+    
+    % Commenting the Metadata history
+    PressureOffsetComment=[mfilename,'.m: Raw pressure data from ', NAME,...
+        ' was corrected for a pressure offset in air of ',...
+        num2str(round(mean(first_mes),1)),'dbar'];
+    
+    sample_data.history = sprintf('%s - %s', ...
+            datestr(now_utc, readProperty('exportNetCDF.dateFormat')), ...
+            PressureOffsetComment);
+else
+    disp(['Please note: ', NAME,': pressure offset in air : ',...
+        num2str(ceil(max(pressure(1:5)))),...
+        '-dbar and NO pressure offset was applied']);
+end
+%%% end of in-air corrections for pressure
+%
   % add dimensions with their data mapped
   adcpOrientations = str2num(fixed.systemConfiguration(:, 1)); % str2num is actually more relevant than str2double here
   adcpOrientation = mode(adcpOrientations); % hopefully the most frequent value reflects the orientation when deployed
