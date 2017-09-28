@@ -80,6 +80,8 @@ for k = 1:nSample
         if all(isfield(sample_data{k}.meta.deployment, {'TimeDriftInstrument', 'TimeDriftGPS'}))
             if ~isempty(sample_data{k}.meta.deployment.TimeDriftInstrument) && ~isempty(sample_data{k}.meta.deployment.TimeDriftGPS)
                 endOffsets(k) = (sample_data{k}.meta.deployment.TimeDriftInstrument - sample_data{k}.meta.deployment.TimeDriftGPS)*3600*24;
+			else
+				endOffsets(k) = sample_data{k}.meta.deployment.TimeDriftInstrument; % my clock drift is already in seconds from DDB
             end
         end
     end
