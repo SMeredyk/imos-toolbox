@@ -315,19 +315,6 @@ function flowManager(toolboxVersion)
     % run QC routines over raw data
     aqc = autoQCManager(sample_data(setIdx));
     
-  
-    % Add calculation of actual mean depth for MetaData AForest, 26-Jan-17
-    for kj=1:length(aqc) %% ADDED AFOREST
-        for kk=1:length(aqc{kj}.variables) %% ADDED AFOREST
-            if strcmp(aqc{kj}.variables{kk}.name,'DEPTH') %% ADDED AFOREST
-                adep=aqc{kj}.variables{kk}.data; %% ADDED AFOREST
-                fdep=aqc{kj}.variables{kk}.flags; %% ADDED AFOREST
-                aqc{kj}.instrument_actual_depth=round(nanmean(adep(fdep<2))); %% compute instrument depth (actual) for good data
-            end
-        end
-    end
-    
-    
     % if user interrupted process, return either pre-processed data (if no QC performed yet) or old QC data
     if isempty(aqc)
       aqc = autoQCData(setIdx);
