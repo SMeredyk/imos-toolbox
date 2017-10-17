@@ -95,6 +95,11 @@ for k = 1:length(sample_data)
     else
         if depthIdx > 0
             depth = sam.(depthType){depthIdx}.data;
+            
+            % any depth values <= -5 are discarded (reminder, depth is
+            % positive down), this allow use of gsw_p_from_z without error.
+            depth(depth <= -5) = NaN;
+    
             if ~isempty(sam.geospatial_lat_min) && ~isempty(sam.geospatial_lat_max)
                 % compute depth with Gibbs-SeaWater toolbox
                 % relative_pressure ~= gsw_p_from_z(-depth, latitude)
@@ -113,7 +118,24 @@ for k = 1:length(sample_data)
             end
             
         else
-            presRel = sam.instrument_nominal_depth*ones(size(temp));
+            % get the toolbox execution mode
+            mode = readProperty('toolbox.mode');
+            switch mode
+                case 'profile'
+                    dimIdx = getVar(sam.dimensions, 'DEPTH');
+                    if dimIdx == 0
+                        dimIdx = getVar(sam.dimensions, 'MAXZ');
+                    end
+                    
+                case 'timeSeries'
+                    dimIdx = getVar(sam.dimensions, 'TIME');
+                    
+                otherwise
+                    return;
+                    
+            end
+            
+            presRel = sam.instrument_nominal_depth * ones(size(sam.dimensions{dimIdx}.data));
             presName = 'instrument_nominal_depth (assuming 1 m ~ 1 dbar)';
         end
     end
