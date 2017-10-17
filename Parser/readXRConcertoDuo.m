@@ -1,4 +1,5 @@
 function sample_data = readXRConcertoDuo( filename, mode )
+%% Function Description
 %readXRConcertoDuo Parses a data file retrieved from an RBR ConcertoDuo 
 % logger.
 %
@@ -46,7 +47,8 @@ function sample_data = readXRConcertoDuo( filename, mode )
 % CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
 % POSSIBILITY OF SUCH DAMAGE.
-%
+% End of Function Description
+
   narginchk(2,2);
   
   if ~ischar(filename)  
@@ -80,8 +82,10 @@ function sample_data = readXRConcertoDuo( filename, mode )
   sample_data.dimensions = {};  
   sample_data.variables  = {};
   
+    %% Case Profile
   switch mode
       case 'profile'
+     
           % dimensions creation
           iVarPRES = NaN;
           iVarDEPTH = NaN;
@@ -476,9 +480,9 @@ function sample_data = readXRConcertoDuo( filename, mode )
                   sample_data.variables{end}.coordinates = 'TIME LATITUDE LONGITUDE DEPTH';
               end
           end
-          
+      % End Case Profile    
       otherwise
-          
+      %% Case TimeSeries    
           sample_data.dimensions{1}.name            = 'TIME';
           sample_data.dimensions{1}.typeCastFunc    = str2func(netcdf3ToMatlabType(imosParameters(sample_data.dimensions{1}.name, 'type')));
           sample_data.dimensions{1}.data            = sample_data.dimensions{1}.typeCastFunc(data.time);
@@ -721,6 +725,7 @@ function sample_data = readXRConcertoDuo( filename, mode )
           end
   end
 end
+% End Case TimeSeries
   
 function header = readHeader(fid)
 %READHEADER Reads the header section from the top of the file.
@@ -821,12 +826,10 @@ function header = readHeader(fid)
   end
   % section meant to remedy the changing versions of Ruskin and the
   % nomenclature surrounding start and end dates
-  ruskinVer = strfind(header.hostversion, '1.13.10');
+  ruskinVer = contains(header.hostversion, {'1.13.7', '1.13.10', '1.13.13'});
   
   if isempty(ruskinVer)
-      ruskinVer = strfind(header.hostversion, '1.13.7');
-  else
-  end
+      ruskinVer = contains(header.hostversion, '1.13.7'); end
       
    if ~isempty(startDate) && ~isempty(startTime) % ruskin v1.5
       if length(startDate) == 8 
@@ -836,7 +839,7 @@ function header = readHeader(fid)
       end
   end    
   
-  if isempty(startDate) && ~isempty(startTime) % ruskin v1.7+ % doesn`t work for V1.13.7
+  if isempty(startDate) && ~isempty(startTime) % ruskin v1.7+ % doesn`t work for V1.13.7 but it does for v1.13.10
      
       if length(startTime) == 11 && ruskinVer == 0
           header.start    = datenum([startDate ' ' startTime],  'dd-mmm-yyyy HH:MM:SS.FFF');
@@ -871,7 +874,13 @@ function data = readData(fid, header)
   %firmwareNum to be used to select for date- time formatting unique to
   %various versions of Ruskin and firmware
   firmwareNum = str2double(header.firmware);
-  ruskinVer = strfind(header.hostversion, '1.13.7');
+  
+  % section meant to remedy the changing versions of Ruskin and the
+  % nomenclature surrounding start and end dates
+  ruskinVer = contains(header.hostversion, {'1.13.10', '1.13.13'});
+  
+  if isempty(ruskinVer)
+      ruskinVer = strfind(header.hostversion, '1.13.7'); end
   
   % get the column names
   header.variables = strrep(header.variables, ' & ', '|');
@@ -923,10 +932,10 @@ function data = readData(fid, header)
   % select date-time format by ruskin and firmware version
   elseif firmwareNum == 10.550
           data.time = datenum(data.Date, 'dd-mmm-yyyy') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); %ruskin v1.12.6
-  elseif firmwareNum < 12 & firmwareNum > 11 
+  elseif firmwareNum < 12.1 & firmwareNum > 11 
 		  data.time = datenum(data.Date, 'yyyy-mm-dd') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); % ruskin v1.8.10
   elseif firmwareNum < 7 & ruskinVer > 0
-		  data.time = datenum(data.Date, 'yyyy-mm-dd') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); % ruskin v1.13.7
+		  data.time = datenum(data.Date, 'yyyy-mm-dd') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); % ruskin v1.13.7 and 1.13.10
   else 
 		  data.time = datenum(data.Date, 'dd-mmm-yyyy') + datenum(data.Time, 'HH:MM:SS.FFF') - datenum('00:00:00', 'HH:MM:SS'); %ruskin v1.11.1
  end
