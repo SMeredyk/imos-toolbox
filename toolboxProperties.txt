@@ -52,7 +52,7 @@ preprocessManager.preprocessDefaultChain.timeSeries = depthPP salinityPP magneti
 preprocessManager.preprocessDefaultChain.profile = depthPP salinityPP
 
 % last selected set of preprocessing routines
-preprocessManager.preprocessChain.timeSeries = timeDriftPP depthPP salinityPP magneticDeclinationPP absiDecibelBasicPP adcpNortekVelocityBeam2EnuPP adcpNortekVelocityEnu2BeamPP adcpBinMappingPP
+preprocessManager.preprocessChain.timeSeries = timeDriftPP variableOffsetPP depthPP salinityPP magneticDeclinationPP absiDecibelBasicPP adcpNortekVelocityBeam2EnuPP adcpNortekVelocityEnu2BeamPP adcpBinMappingPP
 preprocessManager.preprocessChain.profile = depthPP salinityPP
 
 % file status dialog formatting styles
@@ -64,12 +64,12 @@ dataFileStatusDialog.multipleFileFormat    = italic
 
 % last selected values for start dialog
 <<<<<<< HEAD
-startDialog.dataDir.timeSeries = C:\Analysis\2014\BR1-14
+startDialog.dataDir.timeSeries = C:\Analysis\2016
 =======
-startDialog.dataDir.timeSeries = C:\Analysis\2014\BR1-14
+startDialog.dataDir.timeSeries = C:\Analysis\2016
 >>>>>>> Shawn_local_clean
 startDialog.dataDir.profile = 
-startDialog.fieldTrip.timeSeries = 2015_3a
+startDialog.fieldTrip.timeSeries = 2017_IOS
 startDialog.fieldTrip.profile = 
 startDialog.lowDate.timeSeries = 730699
 startDialog.lowDate.profile = 
@@ -80,7 +80,7 @@ startDialog.highDate.profile =
 importManager.manualDir = 
 
 % last selected directory for file export
-exportDialog.defaultDir = C:\Analysis\2014\BR1-14\QcVer1_2
+exportDialog.defaultDir = C:\Analysis\2016\BRK-16\Quality_controlled_data\IMOS_QCdata\QcVer1_1
 
 % prompt user to select parser if an appropriate one 
 % cannot be found (if false, the data is not imported)
