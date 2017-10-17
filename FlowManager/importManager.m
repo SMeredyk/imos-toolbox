@@ -129,7 +129,7 @@ function [sample_data, rawFile]= manualImport(mode)
     % prompt the user to select a data file
     [rawFile, path] = uigetfile('*', 'Select Data File', manualDir);
 
-    if rawFile == 0, return; end;
+    if rawFile == 0, return; end
 
     writeProperty('importManager.manualDir', path);
 

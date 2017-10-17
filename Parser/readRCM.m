@@ -120,10 +120,13 @@ if A > 0
         '-dbar and NO pressure offset was applied']);
     end
 
+
 else
 disp(['Please note: ', NAME,' pressure sensor was not installed.']);
+
 end
 
+clear A;
 sample_data.toolbox_input_file              = filename;
 sample_data.meta.instrument_make            = 'Aanderaa';
 sample_data.meta.instrument_model           = header.Model;

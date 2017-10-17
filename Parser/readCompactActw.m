@@ -195,19 +195,19 @@ function data = readData(filename, channel, nChannels)
     
     %if g == 0
             data.TIME.values = datenum(values{1},'yyyy/mm/dd HH:MM:SS');
-            data.TIME.comment = ['Time format - yyyy/mm/dd HH:MM:SS']; 
+            data.TIME.comment = 'Time format - yyyy/mm/dd HH:MM:SS'; 
             
   % select date-time format with dashes
     %else    data.TIME.values = datenum(values{1},'yyyy-mm-dd HH:MM:SS');
-    %        data.TIME.comment = ['Time']; 
+    %        data.TIME.comment = 'Time'; 
     %end
     
     data.TEMP.values = channel.Ch1(1)+(channel.Ch1(2).*(values{2}))+ (channel.Ch1(3).*(values{2}.^2))+ (channel.Ch1(4).*(values{2}.^3));
-    data.TEMP.comment = ['Celcius']; 
+    data.TEMP.comment = 'Celcius'; 
                
     %Conductivity (mS/cm) = 10-1*(S/m)	
     data.CNDC.values = (channel.Ch2(1)+ (channel.Ch2(2).*(values{3})))./10;
     % data.CNDC.values = (values{i})/10;  
-    data.CNDC.comment = ['converted from mS/cm to S/m by Toolbox'];
+    data.CNDC.comment = 'converted from mS/cm to S/m by Toolbox';
 				  			  
 end % end of readData function

@@ -77,12 +77,7 @@ for k = 1:length(sample_data)
 
     if any(sample_data{k}.variables{ucurIdx}.dimensions == distAlongBeamsIdx) && ~vel1Idx, continue; end
 
-    
-    %I was getting a warning message that the Nortek Continental units not
-    %getting binMapped, so I made the below changes. - ShawnM , Aug 2017
-    %vcurIdx  = getVar(sample_data{k}.variables, 'VCUR');
-    %if any(sample_data{k}.variables{ucurIdx}.dimensions == distAlongBeamsIdx) && ~vcurIdx, continue; end
-    
+      
     % We apply tilt corrections to project DIST_ALONG_BEAMS onto the vertical
     % axis HEIGHT_ABOVE_SENSOR.
     %

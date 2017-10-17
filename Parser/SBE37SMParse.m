@@ -423,7 +423,7 @@ if isfield(data, 'TIME'), time = data.TIME; return; end
 %   - sample interval
 %   - number of samples
 %
-% The SBE19 header information does not necessarily provide all, or any
+% The SBE37 header information does not necessarily provide all, or any
 % of this information. .
 %
 start    = 0;

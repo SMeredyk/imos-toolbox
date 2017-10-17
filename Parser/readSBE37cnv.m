@@ -79,7 +79,7 @@ end
 function [name, data, comment] = convertData(name, data, instHeader, procHeader, mode)
 %CONVERTDATA The .cnv file provides data in a bunch of different units of
 % measurement. This function is just a big switch statement which takes
-% SBE17SM data as input, and attempts to convert it to IMOS compliant name and
+% SBE37SM data as input, and attempts to convert it to IMOS compliant name and
 % unit of measurement. Returns empty string/vector if the parameter is not
 % supported.
 %
