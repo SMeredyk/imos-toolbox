@@ -63,11 +63,7 @@ dataFileStatusDialog.noFileFormat          = bold
 dataFileStatusDialog.multipleFileFormat    = italic
 
 % last selected values for start dialog
-<<<<<<< HEAD
 startDialog.dataDir.timeSeries = C:\Analysis\2016
-=======
-startDialog.dataDir.timeSeries = C:\Analysis\2016
->>>>>>> Shawn_local_clean
 startDialog.dataDir.profile = 
 startDialog.fieldTrip.timeSeries = 2017_IOS
 startDialog.fieldTrip.profile = 
