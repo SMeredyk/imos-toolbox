@@ -82,7 +82,7 @@ sample_data = struct;
 % code updated to first test if Pressure Sensor was ON / Installed. ShawnM
 % - July18 - 2017
 
-% based on first 5 measurements within 15 m range
+%based on first 5 measurements within 15 m range
 [~,NAME,~] = fileparts(filename);
 
  dataDelim = ',';	% comma delimited data

@@ -12,6 +12,7 @@ function sample_data = readRDCP(filename, mode)
 % Outputs:
 %   sample_data - Struct containing imported sample data.
 %
+% Sample Header Format (below):
 % Model::RDCP
 % SerialNumber::270
 % RefReading::593
@@ -110,7 +111,7 @@ end
 
 sample_data.toolbox_input_file              = filename;
 sample_data.meta.instrument_make            = 'Aanderaa';
-sample_data.meta.instrument_model           = header.Model;
+sample_data.meta.instrument_model           = 'RDCP';
 sample_data.meta.instrument_serial_no       = header.SerialNumber;
 sample_data.meta.head                       = 600;
 sample_data.meta.instrument_sample_interval = median(diff(data.TIME.values*24*3600));
@@ -207,10 +208,10 @@ function data = readData(filename, iData)
   for i=1:nParams
       switch params{i}{1} 
                                   
-                 %Date Time (dd.mm.yy HH:MM)
+                 %Date Time (dd.mm.yy  HH:MM)
                   case 'Time Tag (Gmt)'
-                    data.TIME.values = datenum(values{i}, 'dd.mm.yyyy HH:MM');
-                    data.TIME.comment = ['dd.mm.yyyy HH:MM'];		
+                    data.TIME.values = datenum(values{i}, 'dd.mm.yyyy  HH:MM');
+                    data.TIME.comment = ['dd.mm.yyyy  HH:MM'];		
                     
                  %Reference Parameter (unitless) - not used by Toolbox
                   %case 'Reference' 

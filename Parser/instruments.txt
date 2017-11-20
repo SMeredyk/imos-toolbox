@@ -104,15 +104,15 @@ FSI, 					NXIC BIO-500, 													NXICBinary
 FSI, 					FSI, 															NXICBinary
 FSI, 					NXIC-CTD-BIO, 													NXICBinary
 
-JFE_ALEC,				Compact-LW,														Alec
-JFE_ALEC,				Compact-CLW,													Alec
-JFE_ALEC,				Compact-CTW,													Alec
-JFE_ALEC,				Compact-CT,														Alec
-JFE_ALEC,				Infinity-CTW-USB,												Alec
-JFE_ALEC,				Infinity-CLW2-USB,												Alec
-JFE_ALEC,				Compact-CTHR,													Alec
-JFE_ALEC, 				Infinity-CLW-USB, 												Alec
-JFE_ALEC,               MkV-L,                                                          Alec
+JFE-ALEC,				Compact-LW,														Alec
+JFE-ALEC,				Compact-CLW,													Alec
+JFE-ALEC,				Compact-CTW,													Alec
+JFE-ALEC,				Compact-CT,														Alec
+JFE-ALEC,				Infinity-CTW-USB,												Alec
+JFE-ALEC,				Infinity-CLW2-USB,												Alec
+JFE-ALEC,				Compact-CTHR,													Alec
+JFE-ALEC, 				Infinity-CLW-USB, 												Alec
+JFE-ALEC,               MkV-L,                                                          Alec
 
 Satlantic,				ISUS-V3,														satlantic
 
@@ -125,3 +125,4 @@ Aanderaa,				RCM7,															Aanderaa
 Aanderaa,				RCM11,															Aanderaa
 Aanderaa,				Seaguard,													    Aanderaa
 Aanderaa,               RDCP,                                                           Aanderaa
+JFE-ALEC, Compact-CTHR, Alec

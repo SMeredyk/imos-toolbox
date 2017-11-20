@@ -879,7 +879,7 @@ function data = readData(fid, header)
   % nomenclature surrounding start and end dates
   ruskinVer = contains(header.hostversion, {'1.13.10', '1.13.13'});
   
-  if isempty(ruskinVer)
+  if ~isempty(ruskinVer)
       ruskinVer = strfind(header.hostversion, '1.13.7'); end
   
   % get the column names

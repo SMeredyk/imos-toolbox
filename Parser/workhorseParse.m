@@ -232,12 +232,12 @@ narginchk(1, 2);
   switch adcpFreq
       case 0
           adcpFreq = 75;
-          model = 'Long Ranger';
+          model = 'LongRanger';
           xmitVoltScaleFactors = 2092719;
           
       case 1
           adcpFreq = 150;
-          model = 'Quartermaster';
+          model = 'QuarterMaster';
           xmitVoltScaleFactors = 592157;
 		  
       case 10
@@ -260,16 +260,22 @@ narginchk(1, 2);
           model = 'DVS';
           xmitVoltScaleFactors = 253765;
   end
-  xmitVoltScaleFactors = xmitVoltScaleFactors / 1000000; %from p.136 of Workhorse Commands and Output Data Format PDF (RDI website - March 2016)
-   
+  
   % converting xmit voltage counts to volts for diagnostics.
-  voltage = voltage * xmitVoltScaleFactors;
-  voltComment = ['This parameter is actually the transmit voltage (ADC channel 1), which is NOT the same as battery voltage. ' ...
+  xmitVoltScaleFactors = xmitVoltScaleFactors / 1000000; %from p.136 of Workhorse Commands and Output Data Format PDF (RDI website - March 2016)
+  %Long Ranger output is 10x larger than the DVS and QM output.
+  if strcmp(model, 'LongRanger') == 1
+    voltage	= voltage*(xmitVoltScaleFactors/10); %  xmt voltage conversion ,from p.136 of Workhorse Commands and Output Data Format PDF (RDI website - March 2016)
+  else
+    voltage = voltage * xmitVoltScaleFactors;
+  end
+  
+    voltComment = ['This parameter is actually the transmit voltage (ADC channel 1), which is NOT the same as battery voltage. ' ...
       'The transmit voltage is sampled after a DC/DC converter and as such does not represent the true battery voltage. ' ...
       'It does give a relative illustration of the battery voltage though which means that it will drop as the battery ' ...
       'voltage drops. In addition, The circuit is not calibrated which means that the measurement is noisy and the values ' ...
       'will vary between same frequency WH ADCPs.'];
-  
+
   % There are 8 ADC channels and this results in the following nuances: 
   %     a. Only one ADC channel is sampled at a time per ping.  This means it takes 8 pings in order to sample all 8 channels.
   %     b. Until 8 pings have happened the data in a given channel is not valid (NaN).
@@ -308,6 +314,31 @@ narginchk(1, 2);
   else
       sample_data.meta.beam_angle               =  mode(fixed.beamAngle); % we set a static value for this variable to the most frequent value found
   end
+  
+  % Correction for pressure offset in air 
+% based on first 5 measurements within 15 m range
+[~,NAME,~] = fileparts(filename);
+first_mes=pressure(1:5);
+first_mes=first_mes(first_mes<15);
+if  ~isnan(first_mes)
+    disp(['Please note: ', NAME,': pressure offset in air : ',...
+        num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
+    pressure=pressure-mean(first_mes);
+    
+    % Commenting the Metadata history
+    PressureOffsetComment=[mfilename,'.m: Raw pressure data from ', NAME,...
+        ' was corrected for a pressure offset in air of ',...
+        num2str(round(mean(first_mes),1)),'dbar'];
+    
+    sample_data.history = sprintf('%s - %s', ...
+            datestr(now_utc, readProperty('exportNetCDF.dateFormat')), ...
+            PressureOffsetComment);
+else
+    disp(['Please note: ', NAME,': pressure offset in air : ',...
+        num2str(ceil(max(pressure(1:5)))),...
+        '-dbar and NO pressure offset was applied']);
+end
+  
   
   % add dimensions with their data mapped
   adcpOrientations = str2num(fixed.systemConfiguration(:, 1)); % str2num is actually more relevant than str2double here

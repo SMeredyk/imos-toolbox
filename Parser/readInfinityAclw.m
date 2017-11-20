@@ -64,8 +64,8 @@ end
 sample_data = struct;
 
 sample_data.toolbox_input_file              = filename;
-sample_data.meta.instrument_make            = 'JFE_ALEC';
-sample_data.meta.instrument_model           = header.SondeName;
+sample_data.meta.instrument_make            = 'JFE-ALEC';
+sample_data.meta.instrument_model           = 'CLW-USB';
 sample_data.meta.instrument_serial_no       = header.SondeNo;
 sample_data.meta.instrument_sample_interval = median(diff(data.TIME.values*24*3600));
 sample_data.meta.instrument_burst_interval  = header.BurstTime*60; % seconds between bursts

@@ -78,7 +78,7 @@ end
 sample_data = struct;
 
 sample_data.toolbox_input_file              = filename;
-sample_data.meta.instrument_make            = 'JFE_ALEC';
+sample_data.meta.instrument_make            = 'JFE-ALEC';
 sample_data.meta.featureType                = mode;
 
 %%%% Trying to assign model and serial_no from header data from a variety of file possibilities
@@ -93,11 +93,11 @@ sample_data.meta.instrument_model           = header.SondeName;
 sample_data.meta.instrument_serial_no       = header.SondeNo;
   
 	% Infinity Model and Serial number
-	equipname = regexp(header.SensorType,'T0K0U3B0');
+	equipname = regexp(header.SondeName,'T0K0U3B0');
     if equipname == 1
-	    sample_data = readInfinityAclw(filename, mode); % This is an ACLW-USB model 
-	else
-	    sample_data = readInfinityActw(filename, mode); % This is an ACTW-USB model 'T1C1C2B0' 
+        sample_data = readInfinityAclw(filename, mode); % This is an ACLW-USB model
+    else    
+        sample_data = readInfinityActw(filename, mode); % This is an ACTW-USB model 'T1C1C2B0'
     end  
   
 elseif isfield(header, 'SensorType')== 1 % if the header scan filled-in variable SensorType, otherwise elseif
@@ -108,10 +108,10 @@ sample_data.meta.instrument_serial_no       = header.SerialNo;
 	% Compact Model and Serial number
 	equipname = regexp(header.SensorType,'TCWWWE');
 	if equipname ==1
-		sample_data = readCompactActw(filename, mode); % This is a Compact-CTW model
+        sample_data = readCompactActw(filename, mode); % This is a Compact-CTW model
 	else 
-		header.SensorType = 'TKURB';
-		sample_data = readCompactAclw(filename, mode); % This is a Compact-CLW model
+        sample_data = readCompactAclw(filename, mode); % This is a Compact-CLW model
+        % header.SensorType = 'TKURB';
 	end
 
 
@@ -128,10 +128,10 @@ elseif isfield(header,'InstType') == 1
             sample_data = readMkvL(filename, mode); % This is an MKV - L model
 		
 		case 'TC'
-			sample_data = readCompactActHr(filename, mode); % This is an ACT-HR model 
+            sample_data = readCompactActHr(filename, mode); % This is an ACT-HR model
 			
 		case 'TKURB'
-           	sample_data = readCompactAclw(filename, mode); % This is a Compact-CLW model
+            sample_data = readCompactAclw(filename, mode); % This is a Compact-CLW model
 
 	otherwise, error('unknown type'); 
 end 	% end of switch
