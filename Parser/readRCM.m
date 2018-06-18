@@ -93,6 +93,8 @@ sample_data = struct;
   % iData passed the header position to readData
   params = params{1};
 
+A=0;
+A = count(params{1},"Pressure(kPa)");
 A = count(params{1},"Pressure(MPa)");
 if A > 0
  
@@ -291,8 +293,8 @@ function [data, iData] = readData(filename, iData)
                         					  
                   % it's better to let the toolbox calculate the Depth (gsw) 
                   %Depth (m)	Latitude corrected in Aanderaa software
-                   case 'Depth(m)', 
-					 name = 'DEPTH';
+                   %case 'Depth(m)', 
+					% name = 'DEPTH';
                     %data.DEPTH.values = values{i};
 					% data.DEPTH.comment = ['Derived SeaWater Depth Calculated by Aanderaa Seaguard Studio'...
 						%					' and not latitude corrected'];
@@ -300,8 +302,8 @@ function [data, iData] = readData(filename, iData)
                   %Salinity(ppt)	Latitude and Depth correctable in
                   %Aanderaa software, though not always don. Therefore, not
                   %used.
-                   case 'Salinity(ppt)', 
-					 name = 'PSAL';
+                   %case 'Salinity(ppt)', 
+					% name = 'PSAL';
                     %data.PSAL.values = values{i};
 					% data.PSAL.comment = ['Derived SeaWater Salinity Calculated by Aanderaa 5059 software'...
 						%					' and not latitude corrected'];      

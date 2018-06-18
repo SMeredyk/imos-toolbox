@@ -319,7 +319,7 @@ narginchk(1, 2);
 % based on first 5 measurements within 15 m range
 [~,NAME,~] = fileparts(filename);
 first_mes=pressure(1:5);
-first_mes=first_mes(first_mes<15);
+first_mes=first_mes(first_mes<15); 
 if  ~isnan(first_mes)
     disp(['Please note: ', NAME,': pressure offset in air : ',...
         num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);

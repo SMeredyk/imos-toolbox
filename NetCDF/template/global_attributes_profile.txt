@@ -44,7 +44,7 @@ N, geospatial_lon_min       = [ddb Site Sites Longitude]
 N, geospatial_lon_max       = [ddb Site Sites Longitude]
 N, instrument_nominal_height= 
 N, instrument_nominal_depth = [ddb InstrumentDepth]
-N, instrument_actual_depth  = 
+N, instrument_actual_depth  = [mat sample_data.meta.median_depth]
 N, site_nominal_depth       = [ddb Site Sites Depth]
 N, site_depth_at_deployment = [ddb Site Sites Depth]
 

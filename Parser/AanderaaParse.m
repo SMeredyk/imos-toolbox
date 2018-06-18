@@ -14,8 +14,8 @@ function sample_data = AanderaaParse( filename, mode )
 % Outputs:
 %   sample_data - Struct containing imported sample data.
 %
-% Author :      Guillaume Galibert <guillaume.galibert@utas.edu.au>
-% Contributors: Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
+% Author :      Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
+% Contributors: Guillaume Galibert <guillaume.galibert@utas.edu.au>
 %               Pascal_Guillot@uqar.ca (UQAR - Canada)
 %
 % Copyright (c) 2010, eMarine Information Infrastructure (eMII) and Integrated 

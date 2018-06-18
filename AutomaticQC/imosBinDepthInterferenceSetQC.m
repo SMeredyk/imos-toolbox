@@ -190,7 +190,9 @@ else %Nortek 3 beams
     suptitle(['Visual inspection of ',sample_data.meta.instrument_model,' #',sample_data.meta.head.SerialNo,' on ',sample_data.deployment_code]);
 end
 
-% Make the flags
+%% Make the flags
+% Eventually, pre-fill the input box with the data from the OceansDB , if
+% not blank - shawn april 4, 2018
 xx = inputdlg(sprintf('\nLook at where both Speed decreases and Echo Intensity increases and identify suspicious bins.\n\nEnter space-separated numbers e.g: 7 8 9\n\nIf no suspicious bins, just click cancel\n'),'Visual inspection of suspicious bins affected by instrument interference',[2 100]);
 if ~isempty(xx)
     badbins = str2num(xx{:});

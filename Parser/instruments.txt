@@ -30,6 +30,7 @@ Seabird, 				SBE19plus, 														SBE19
 SEABIRD, 				SBE16 - CONDUCTIVITY TEMPERATURE LOGGER, 						SBE19
 SEABIRD, 				CTD - SBE19PLUS V2 SEACAT, 										SBE19
 Seabird,				SBE26,															SBE26
+SeaBird,                SBE25,                                                          SBE37
 
 RDI, 					ADCP300 Sentinel, 												workhorse
 RDI, 					ADCP - WORKHORSE, 												workhorse
@@ -108,6 +109,7 @@ JFE-ALEC,				Compact-LW,														Alec
 JFE-ALEC,				Compact-CLW,													Alec
 JFE-ALEC,				Compact-CTW,													Alec
 JFE-ALEC,				Compact-CT,														Alec
+JFE-ALEC,               Compact-CTHR,                                                   Alec
 JFE-ALEC,				Infinity-CTW-USB,												Alec
 JFE-ALEC,				Infinity-CLW2-USB,												Alec
 JFE-ALEC,				Compact-CTHR,													Alec
@@ -125,4 +127,4 @@ Aanderaa,				RCM7,															Aanderaa
 Aanderaa,				RCM11,															Aanderaa
 Aanderaa,				Seaguard,													    Aanderaa
 Aanderaa,               RDCP,                                                           Aanderaa
-JFE-ALEC, Compact-CTHR, Alec
+

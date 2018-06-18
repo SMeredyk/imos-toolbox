@@ -870,6 +870,8 @@ for iCurSam = 1:nDatasets
     % update vertical min/max from newly computed DEPTH variable
     sample_data{iCurSam}.geospatial_vertical_min = min(computedDepth);
     sample_data{iCurSam}.geospatial_vertical_max = max(computedDepth);
+    sample_data{iCurSam}.meta.median_depth = median(computedDepth); % added for metadata purposes - shawnM april 4, 2018
+  
     clear computedDepth;
     
     sample_data{iCurSam}.comment = strrep(sample_data{iCurSam}.comment, 'NOMINAL_DEPTH', 'DEPTH min and max');
