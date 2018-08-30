@@ -234,6 +234,31 @@ sample_data.meta.instrument_average_interval= user.AvgInterval;
 sample_data.meta.beam_angle                 = 25;   % http://www.hydro-international.com/files/productsurvey_v_pdfdocument_19.pdf
 sample_data.meta.beam_to_xyz_transform      = head.TransformationMatrix;
 
+% Correction for pressure offset in air - Added AForest 27-Jan-2017 with
+% comments for history on 30-Jan-2017
+% based on first 5 measurements within 10 m range
+[~,NAME,~] = fileparts(filename);
+first_mes=pressure(1:5);
+first_mes=first_mes(first_mes<10);
+if  ~isnan(first_mes)
+    disp(['Please note: ', NAME,': pressure offset in air : ',...
+        num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
+    pressure=pressure-mean(first_mes);
+    
+    % Commenting the Metadata history
+    PressureOffsetComment=[mfilename,'.m: Raw pressure data from ', NAME,...
+        ' was corrected for a pressure offset in air of ',...
+        num2str(round(mean(first_mes),1)),'dbar'];
+    
+    sample_data.history = sprintf('%s - %s', ...
+            datestr(now_utc, readProperty('exportNetCDF.dateFormat')), ...
+            PressureOffsetComment);
+else
+    disp(['Please note: ', NAME,': pressure offset in air : ',...
+        num2str(ceil(max(pressure(1:5)))),...
+        '-dbar and NO pressure offset was applied']);
+end
+
 % add dimensions with their data mapped
 adcpOrientations = single(bitget(status, 1, 'uint8'));
 adcpOrientation = mode(adcpOrientations); % hopefully the most frequent value reflects the orientation when deployed
