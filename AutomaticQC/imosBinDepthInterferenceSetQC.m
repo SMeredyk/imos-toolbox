@@ -152,7 +152,7 @@ speed=nanmean(speed,1);
 EAA=nanmean(EAA,3); 
 EAA=nanmean(EAA,1);
 binDepth=nanmean(binDepth,1);
-bin_nonan=~isnan(binDepth);
+bin_nonan=~isnan(binDepth); % linked to ytl error mesg. shawn aug 3, 2018
 binDepth_nonan=binDepth(bin_nonan);
 
 % Prep. figure
