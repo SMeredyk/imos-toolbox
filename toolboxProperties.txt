@@ -41,7 +41,7 @@ autoQCManager.autoQCDefaultChain.timeSeries = imosImpossibleDateQC imosImpossibl
 autoQCManager.autoQCDefaultChain.profile = imosImpossibleDateQC imosImpossibleLocationSetQC imosInOutWaterQC imosGlobalRangeQC imosImpossibleDepthQC imosSalinityFromPTQC imosHistoricalManualSetQC
 
 % last selected set of auto QC routines
-autoQCManager.autoQCChain.timeSeries = imosImpossibleDateQC imosInOutWaterQC imosGlobalRangeQC imosImpossibleLocationSetQC imosImpossibleDepthQC imosSalinityFromPTQC imosSideLobeVelocitySetQC imosTiltVelocitySetQC imosHorizontalVelocitySetQC imosCorrMagVelocitySetQC imosVerticalVelocitySetQC imosPercentGoodVelocitySetQC imosErrorVelocitySetQC imosRateOfChangeQC imosVerticalSpikeQC imosBinDepthInterferenceSetQC imosEchoIntensityInAirManualSetQC imosHistoricalManualSetQC
+autoQCManager.autoQCChain.timeSeries = imosImpossibleDateQC imosInOutWaterQC imosGlobalRangeQC imosImpossibleLocationSetQC imosImpossibleDepthQC imosSalinityFromPTQC imosTiltVelocitySetQC imosHorizontalVelocitySetQC imosCorrMagVelocitySetQC imosVerticalVelocitySetQC imosPercentGoodVelocitySetQC imosErrorVelocitySetQC imosRateOfChangeQC imosVerticalSpikeQC imosEchoIntensityInAirManualSetQC imosHistoricalManualSetQC
 autoQCManager.autoQCChain.profile = imosImpossibleDateQC imosImpossibleLocationSetQC imosInOutWaterQC imosGlobalRangeQC imosImpossibleDepthQC imosSalinityFromPTQC imosHistoricalManualSetQC
 
 % prompt for preprocessing (if false, 
@@ -64,20 +64,20 @@ dataFileStatusDialog.noFileFormat          = bold
 dataFileStatusDialog.multipleFileFormat    = italic
 
 % last selected values for start dialog
-startDialog.dataDir.timeSeries = E:\Analysis\2015\Re-Processed\CA05-15
+startDialog.dataDir.timeSeries = C:\Users\smeredyk\Desktop\Mooring 2018\Recovery\HiBioA-17\Recovery\Nortek_AquaPro_2786
 startDialog.dataDir.profile = 
-startDialog.fieldTrip.timeSeries = 2016_3a
+startDialog.fieldTrip.timeSeries = 2018_2c
 startDialog.fieldTrip.profile = 
 startDialog.lowDate.timeSeries = 730699
 startDialog.lowDate.profile = 
-startDialog.highDate.timeSeries = 736989
+startDialog.highDate.timeSeries = 737354
 startDialog.highDate.profile = 
 
 % last selected directory for manual data import
 importManager.manualDir = 
 
 % last selected directory for file export
-exportDialog.defaultDir = E:\Analysis\2015\Re-Processed\CA05-15\Quality_controlled_data\IMOS_QCData\QcVer1_2_2
+exportDialog.defaultDir = C:\Users\smeredyk\Desktop\Mooring 2018\Recovery\HiBioA-17\Quality_controlled_data\IMOS_QCdata\Nortek_AquaPro_2786
 
 % prompt user to select parser if an appropriate one 
 % cannot be found (if false, the data is not imported)
