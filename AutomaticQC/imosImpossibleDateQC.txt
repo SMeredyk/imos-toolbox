@@ -1,2 +1,2 @@
-dateMin = 01/01/2000
-dateMax = 
+dateMin = 01/01/2016
+dateMax = 01/01/2020

@@ -255,13 +255,13 @@ function sample_data = readXRConcertoDuo( filename, mode )
                   case {'Temp', 'temp00', 'temp09'}, name = 'TEMP';
                       
                       %Pressure (dBar)
-                  case {'Pres', 'pres19'}, name = 'PRES';
+                  case {'Pres', 'pres19', 'pres24'}, name = 'PRES';
                       
                       %Pressure_Relative (dBar)
                   case 'pres08', name = 'PRES_REL';
                       
                       %Fluorometry-chlorophyl (ug/l) = (mg.m-3)
-                  case 'FlC',
+                  case {'FlC', 'fluo01'},
                       name = 'CPHL';
                       comment.(fields{k}) = ['Artificial chlorophyll data computed from ' ...
                           'fluorometry sensor raw counts measurements. Originally ' ...
@@ -524,13 +524,13 @@ function sample_data = readXRConcertoDuo( filename, mode )
                   case {'Temp', 'temp00', 'temp09'}, name = 'TEMP';
                       
                       %Pressure (dBar)
-                  case {'Pres', 'pres19'}, name = 'PRES';
+                  case {'Pres', 'pres19', 'pres24'}, name = 'PRES';
                       
                       %Pressure_Relative (dBar)
                   case 'pres08', name = 'PRES_REL';
                       
                       %Fluorometry-chlorophyl (ug/l) = (mg.m-3)
-                  case 'FlC',
+                  case {'FlC', 'fluo01'},
                       name = 'CPHL';
                       comment.(fields{k}) = ['Artificial chlorophyll data computed from ' ...
                           'fluorometry sensor raw counts measurements. Originally ' ...
@@ -747,7 +747,7 @@ function header = readHeader(fid)
     ['^Model=+' '(\S+)$']
     ['^Firmware=+' '(\S+)$']
     ['^Serial=+' '(\S+)$']
-    ['^LoggingStartDate=+' '(\S+)$'] % this variable doesn`t exist in RBRConcerto files
+    ['^LoggingStartDate=+' '(\S+)$'] % this variable doesn`t exist in RBRConcerto files 
     ['^LoggingStartTime=+' '(\S+\s?\S+)$']
     ['^LoggingEndDate=+' '(\S+)$'] % this variable doesn`t exist in RBRConcerto files
     ['^LoggingEndTime=+' '(\S+\s?\S+)$']
@@ -826,7 +826,7 @@ function header = readHeader(fid)
   end
   % section meant to remedy the changing versions of Ruskin and the
   % nomenclature surrounding start and end dates
-  ruskinVer = contains(header.hostversion, {'1.13.7', '1.13.10', '1.13.13'});
+  ruskinVer = contains(header.hostversion, {'1.13.7', '1.13.10', '1.13.13', '2.3.0'});
   
   if isempty(ruskinVer)
       ruskinVer = contains(header.hostversion, '1.13.7'); end
@@ -877,9 +877,9 @@ function data = readData(fid, header)
   
   % section meant to remedy the changing versions of Ruskin and the
   % nomenclature surrounding start and end dates
-  ruskinVer = contains(header.hostversion, {'1.13.10', '1.13.13'});
+  ruskinVer = contains(header.hostversion, {'1.13.10', '1.13.13', '2.3.0'});
   
-  if ~isempty(ruskinVer)
+  if isempty(ruskinVer) % was ~ , shawn sept 18, 2018
       ruskinVer = strfind(header.hostversion, '1.13.7'); end
   
   % get the column names

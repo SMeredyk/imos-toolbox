@@ -86,6 +86,7 @@ RBR,            		Concerto-CT-Tu-DO,                                            
 RBR, 					Concerto-CTD-Tu-DO, 											XR
 RBR, 					Concerto-CTD-Tu, 												XR
 RBR, 					Concerto-CTD,	 												XR
+RBR, 					Concerto-CTD-FL,	 											XR
 RBR, 					DR1050P, 														DR1050
 
 Star Oddi, 				Starmon mini, 													StarmonMini
@@ -128,3 +129,4 @@ Aanderaa,				RCM11,															Aanderaa
 Aanderaa,				Seaguard,													    Aanderaa
 Aanderaa,               RDCP,                                                           Aanderaa
 
+RBR, Concerto-CTD-FL, XR
