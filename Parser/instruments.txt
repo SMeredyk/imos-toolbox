@@ -6,7 +6,7 @@
 % never contain a comma character.
 %
 % format: make, model, parser
-
+Seabird,				SBE9,															SBE9
 Sea-Bird Electronics, 	SBE19plusV2, 													SBE19
 Sea-Bird Electronics, 	SBE37SM, 														SBE37SM
 Sea-Bird Electronics, 	SBE39, 															SBE39
@@ -94,7 +94,7 @@ Star Oddi, 				Starmon mini, 													StarmonMini
 REEFNET, 				SENSUS ULTRA, 													sensusUltra
 
 WETLABS, 				WQM, 															WQM
-WET Labs, 				WQM, 															WQM
+WETLabs, 				WQM, 															WQM
 Weblabs, 				WQM, 															WQM
 
 Aquatec, 				Aqualogger 520T, 												aquatec
@@ -129,4 +129,4 @@ Aanderaa,				RCM11,															Aanderaa
 Aanderaa,				Seaguard,													    Aanderaa
 Aanderaa,               RDCP,                                                           Aanderaa
 
-RBR, Concerto-CTD-FL, XR
+
