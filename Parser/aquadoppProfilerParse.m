@@ -129,7 +129,7 @@ distance = distance + cellSize;
 time            = [structures.(profilerType)(:).Time]';
 analn1          = [structures.(profilerType)(:).Analn1]';
 battery         = [structures.(profilerType)(:).Battery]';
-analn2          = [structures.(profilerType)(:).Analn2]';
+soundSpeed      = [structures.(profilerType)(:).Analn2]'; % updated from 2017 code to 2020
 heading         = [structures.(profilerType)(:).Heading]';
 pitch           = [structures.(profilerType)(:).Pitch]';
 roll            = [structures.(profilerType)(:).Roll]';
@@ -169,6 +169,7 @@ end
 clear structures;
 
 % battery     / 10.0   (0.1 V    -> V)
+% soundSpeed  / 10.0   (0.1 m/s  -> m/s) % new in 2020, from 2017
 % heading     / 10.0   (0.1 deg  -> deg)
 % pitch       / 10.0   (0.1 deg  -> deg)
 % roll        / 10.0   (0.1 deg  -> deg)
@@ -176,6 +177,7 @@ clear structures;
 % temperature / 100.0  (0.01 deg -> deg)
 % velocities  / 1000.0 (mm/s     -> m/s) assuming earth coordinates
 battery      = battery      / 10.0;
+soundSpeed   = soundSpeed   / 10.0;  % new in 2020, from 2017                                 
 heading      = heading      / 10.0;
 pitch        = pitch        / 10.0;
 roll         = roll         / 10.0;
@@ -207,7 +209,7 @@ if velocityProcessed
     verticalDist  = verticalDist / 1000.0; % since verticalDist is uint16, max value gives 65m but distance along beams can go up to 170m...???
 end
 
-% Calculate CSPD and CDIR_MAG if velocityProcessed is false
+% Calculate CSPD and CDIR_MAG if velocityProcessed is false - this is useful for folks without Nortek Storm software
 speed = sqrt(velocity2.^2 + velocity1.^2);
 direction = getDirectionFromUV(velocity1, velocity2);
 
@@ -293,14 +295,14 @@ if velocityProcessed
 end
 dims = {
     'TIME',             time,    ['Time stamp corresponds to the start of the measurement which lasts ' num2str(user.AvgInterval) ' seconds.']; ...
-    'DIST_ALONG_BEAMS', distance, 'Nortek instrument data is not vertically bin-mapped (no tilt correction applied). Cells are lying parallel to the beams, at heights above sensor that vary with tilt.'
+    'DIST_ALONG_BEAMS', distance, 'Values correspond to the distance between the instrument''s transducers and the centre of each cells. Nortek instrument data is not vertically bin-mapped (no tilt correction applied). Cells are lying parallel to the beams, at heights above sensor that vary with tilt.'
     };
 clear time distance;
 
 if velocityProcessed
     % we re-arrange dimensions like for RDI ADCPs
     dims(end+1, :) = dims(end, :);
-    dims(end-1, :) = {'HEIGHT_ABOVE_SENSOR', height(:), 'Data has been vertically bin-mapped using Nortek Storm software ''Remove tilt effects'' procedure. Cells have consistant heights above sensor in time.'};
+    dims(end-1, :) = {'HEIGHT_ABOVE_SENSOR', height(:), 'Values correspond to the distance between the instrument''s transducers and the centre of each cells. Data has been vertically bin-mapped using Nortek Storm software ''Remove tilt effects'' procedure. Cells have consistant heights above sensor in time.'};
 end
 clear height;
 
@@ -327,14 +329,29 @@ else
     iDimVel = nDims;
     iDimDiag = nDims;
 end
+% newly added since 2017, to allow for BEAM datasets
+switch user.CoordSystem
+    case 0 % ENU
+        vel2Name = 'VCUR_MAG'; % we assume no correction for magnetic declination has been applied
+        vel1Name = 'UCUR_MAG';
+        vel3Name = 'WCUR';
+        
+    case 2 % Beam
+        vel2Name = 'VEL2';
+        vel1Name = 'VEL1';
+        vel3Name = 'VEL3';
+        
+    otherwise
+        error([mfilename ' only supports ENU and Beam coordinate systems']);
+end
 vars = {
     'TIMESERIES',       [],             1;...
     'LATITUDE',         [],             NaN; ...
     'LONGITUDE',        [],             NaN; ...
     'NOMINAL_DEPTH',    [],             NaN; ...
-    'VCUR_MAG',         [1 iDimVel],    velocity2; ... % V
-    'UCUR_MAG',         [1 iDimVel],    velocity1; ... % U
-    'WCUR',             [1 iDimVel],    velocity3; ... % W 
+    'vel2Name',         [1 iDimVel],    velocity2; ... % V - updated from 2017 to support BEAM datasets
+    'vel1Name',         [1 iDimVel],    velocity1; ... % U - updated from 2017 to support BEAM datasets
+    'vel3Name',         [1 iDimVel],    velocity3; ... % W  - updated from 2017 to support BEAM datasets
     'CSPD',             [1 iDimVel],    speed; ... % taken from below code
     'CDIR_MAG',         [1 iDimVel],    direction; ...% taken from below code
     'ABSIC1',           [1 iDimDiag],   backscatter1; ...
@@ -342,13 +359,14 @@ vars = {
     'ABSIC3',           [1 iDimDiag],   backscatter3; ...
     'TEMP',             1,              temperature; ...
     'PRES_REL',         1,              pressure; ...
-    'VOLT',             1,              battery; ...
+    'BAT_VOLT',         1,              battery; ...
+    'SSPD',             1,              soundSpeed; ...
     'PITCH',            1,              pitch; ...
     'ROLL',             1,              roll; ...
     'HEADING_MAG',      1,              heading
     };
 clear analn1 analn2 time distance velocity1 velocity2 velocity3 ...
-    backscatter1 backscatter2 backscatter3 speed direction ... % added speed and direction
+    backscatter1 backscatter2 backscatter3 speed direction soundSpeed ... % added speed and direction
     temperature pressure battery pitch roll heading status;
 
 if velocityProcessed

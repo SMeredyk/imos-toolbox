@@ -103,7 +103,7 @@ sample_data.meta.instrument_make = 'Aanderaa';
 if isfield(procHeader, 'instrument_model')
     sample_data.meta.instrument_model = procHeader.instrument_model;
 else
-    sample_data.meta.instrument_model = 'Sea Guard';
+    sample_data.meta.instrument_model = 'SeaGuard';
 end
 
 if isfield(procHeader, 'instrument_firmware')
@@ -247,8 +247,8 @@ function [name, data, comment] = convertData(name, data)
 
         %'Battery Voltage'
         case {'BatteryVoltage'};
-            name = 'VOLT';
-            comment = 'Battery Voltage';
+            name = 'BAT_VOLT';
+            comment = '';
 
          %'Absolute Current Speed'
         case {'AbsSpeed'};

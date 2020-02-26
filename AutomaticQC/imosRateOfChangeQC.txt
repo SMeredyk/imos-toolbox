@@ -3,6 +3,7 @@ PSAL = 3*stdDev
 PRES = 3*stdDev
 PRES_REL = 3*stdDev
 DEPTH = 3*stdDev
+DOX = 3*stdDev
 DOXY = 3*stdDev
 DOXS = 3*stdDev
 DOX1 = 3*stdDev
