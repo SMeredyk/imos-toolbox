@@ -10,6 +10,10 @@ UTC     = 0.0
 GMT     = 0.0
 UTC/GMT = 0.0
 
+% for North American datasets
+NACST	=-6.0
+NAEST	=-5.0
+
 WST     =-8.0
 AWST    =-8.0
 WDT     =-9.0

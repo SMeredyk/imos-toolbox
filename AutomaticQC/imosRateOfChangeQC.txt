@@ -19,3 +19,4 @@ WCUR = 3*stdDev
 NTRA = 3*stdDev
 PAR = 3*stdDev
 DENS = 3*stdDev
+ICE_DRAFT = 40*stdDev

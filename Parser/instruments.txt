@@ -6,57 +6,37 @@
 % never contain a comma character.
 %
 % format: make, model, parser
-Seabird,				SBE9,															SBE9
-Sea-Bird Electronics, 	SBE19plusV2, 													SBE19
-Sea-Bird Electronics, 	SBE37SM, 														SBE37SM
-Sea-Bird Electronics, 	SBE39, 															SBE39
-SEABIRD, 				SBE37 - CONDUCTIVITY TEMPERATURE AND PRESSURE RECORDER, 		SBE37
-SEABIRD, 				SBE37IM - CONDUCTIVITY TEMPERATURE AND PRESSURE RECORDER, 		SBE37
-SEABIRD, 				SBE39 - TEMPERATURE RECORDER, 									SBE39
-SEABIRD, 				SBE39P - TEMPERATURE AND PRESSURE RECORDER, 					SBE39
-SEABIRD, 				SBE37SM - MicroCAT C-T Recorder Serial Interface and Memory, 	SBE37SM
-SeaBird,       		 	SBE37,                                                          SBE37
-SeaBird,        		SBE37-SM,                                                       SBE37SM
-Seabird,        		SBE37-SM,                                                       SBE37SM
-SEABIRD, 				SBE19plus V2, 													SBE19
-SEABIRD, 				SBE39P - TEMPERATURE & PRESSURE RECORDER, 						SBE39
-SEABIRD, 				SBE39IM - TEMPERATURE RECORDER, 								SBE39
-SEABIRD, 				CTD - SBE19Plus, 												SBE19
-Seabird, 				SBE39 [600m] temp only, 										SBE39
-SEABIRD, 				CTD - SBE 9 Plus, 												SBE19
-SEABIRD,				SBE37SM - MicroCAT C-T Recorder with RS-232 Interface, 			NIWA
-Seabird, 				SBE39 [600m] temp & press., 									SBE39
-Seabird, 				SBE19plus, 														SBE19
-SEABIRD, 				SBE16 - CONDUCTIVITY TEMPERATURE LOGGER, 						SBE19
-SEABIRD, 				CTD - SBE19PLUS V2 SEACAT, 										SBE19
-Seabird,				SBE26,															SBE26
-SeaBird,                SBE25,                                                          SBE37
 
-RDI, 					ADCP300 Sentinel, 												workhorse
-RDI, 					ADCP - WORKHORSE, 												workhorse
-RDI, 					ADCP - QUARTERMASTER, 											workhorse
-RDI, 					ADCP - WORKHORSE QUARTERMASTER, 								workhorse
-RDI, 					ADCP - QuarterMaster,            								workhorse
-RDI, 					QM,                             								workhorse
-RDI, 					ADCP - LongRanger,                								workhorse
-RDI, 					LR,                             								workhorse
-RDI, 					WHS,                              								workhorse
-RDI,            		WH,                                                             workhorse
-RDI, 					ADCP - WH-Sentinel,             								workhorse
-RDI, 					ADCP - WORKHORSE SENTINEL, 										workhorse
-RDI,					SV100,															sentinelV
-RDI, 					ADCP-Workhorse, 												workhorse
-Teledyne-RDI, 			Workhorse ADCP, 												workhorse
-TRDI, 					Workhorse ADCP, 												workhorse
-RDI, 					WHS600, 														workhorse
-RDI, 					WHS300-I-UG306, 												workhorse
-RDI, 					WHLS150-I-2, 													workhorse
-RDI, 					ADCP - WORKHORSE SENTINEL NEMO, 								workhorse
-RDI, 					ADCP-WORKHORSE-SENTINEL, 										workhorse
-RDI,					DVS750,															DVS
-RDI,					DVS6000,														DVS
-RDI,                    Monitor,                                                        workhorse
+Aanderaa,				RCM4,															Aanderaa
+Aanderaa,				RCM7,															Aanderaa
+Aanderaa,				RCM11,															Aanderaa
+Aanderaa,				Seaguard,													    Aanderaa
+Aanderaa,               RDCP,                                                           Aanderaa
 
+Aquatec, 				Aqualogger 520T, 												aquatec
+Aquatec, 				Aqualogger 520PT, 												aquatec
+AQUATEC, 				AQUALOGGER, 													aquatec
+AQUATEC, 				AQUALOGGER MODEL 520, 											aquatec
+
+ASL,					IPS5,															ips
+ASL,					IPS4,															ips
+
+FSI, 					NXIC BIO-500, 													NXICBinary
+FSI, 					FSI, 															NXICBinary
+FSI, 					NXIC-CTD-BIO, 													NXICBinary
+
+JFE-ALEC,				Compact-LW,														Alec
+JFE-ALEC,				Compact-CLW,													Alec
+JFE-ALEC,				Compact-CTW,													Alec
+JFE-ALEC,				Compact-CT,														Alec
+JFE-ALEC,               Compact-CTHR,                                                   Alec
+JFE-ALEC,				Infinity-CTW-USB,												Alec
+JFE-ALEC,				Infinity-CLW2-USB,												Alec
+JFE-ALEC,				Compact-CTHR,													Alec
+JFE-ALEC, 				Infinity-CLW-USB, 												Alec
+JFE-ALEC,               MkV-L,                                                          Alec
+
+Mclane,					MMP,															mmp
 
 NORTEK, 				ADCP - AQUAPRO, 												aquadoppProfiler
 Nortek, 				AquaPro,         												aquadoppProfiler
@@ -89,44 +69,65 @@ RBR, 					Concerto-CTD,	 												XR
 RBR, 					Concerto-CTD-FL,	 											XR
 RBR, 					DR1050P, 														DR1050
 
-Star Oddi, 				Starmon mini, 													StarmonMini
+RDI, 					ADCP300 Sentinel, 												workhorse
+RDI, 					ADCP - WORKHORSE, 												workhorse
+RDI, 					ADCP - QUARTERMASTER, 											workhorse
+RDI, 					ADCP - WORKHORSE QUARTERMASTER, 								workhorse
+RDI, 					ADCP - QuarterMaster,            								workhorse
+RDI, 					QM,                             								workhorse
+RDI, 					ADCP - LongRanger,                								workhorse
+RDI, 					LR,                             								workhorse
+RDI, 					WHS,                              								workhorse
+RDI,            		WH,                                                             workhorse
+RDI, 					ADCP - WH-Sentinel,             								workhorse
+RDI, 					ADCP - WORKHORSE SENTINEL, 										workhorse
+RDI,					SV100,															sentinelV
+RDI, 					ADCP-Workhorse, 												workhorse
+Teledyne-RDI, 			Workhorse ADCP, 												workhorse
+TRDI, 					Workhorse ADCP, 												workhorse
+RDI, 					WHS600, 														workhorse
+RDI, 					WHS300-I-UG306, 												workhorse
+RDI, 					WHLS150-I-2, 													workhorse
+RDI, 					ADCP - WORKHORSE SENTINEL NEMO, 								workhorse
+RDI, 					ADCP-WORKHORSE-SENTINEL, 										workhorse
+RDI,					DVS750,															DVS
+RDI,					DVS6000,														DVS
+RDI,                    Monitor,                                                        workhorse
 
 REEFNET, 				SENSUS ULTRA, 													sensusUltra
+
+Satlantic,				ISUS-V3,														satlantic
+
+Seabird,				SBE9,															SBE9
+Sea-Bird Electronics, 	SBE19plusV2, 													SBE19
+Sea-Bird Electronics, 	SBE37SM, 														SBE37SM
+Sea-Bird Electronics, 	SBE39, 															SBE39
+SEABIRD, 				SBE37 - CONDUCTIVITY TEMPERATURE AND PRESSURE RECORDER, 		SBE37
+SEABIRD, 				SBE37IM - CONDUCTIVITY TEMPERATURE AND PRESSURE RECORDER, 		SBE37
+SEABIRD, 				SBE39 - TEMPERATURE RECORDER, 									SBE39
+SEABIRD, 				SBE39P - TEMPERATURE AND PRESSURE RECORDER, 					SBE39
+SEABIRD, 				SBE37SM - MicroCAT C-T Recorder Serial Interface and Memory, 	SBE37SM
+SeaBird,       		 	SBE37,                                                          SBE37
+SeaBird,        		SBE37-SM,                                                       SBE37SM
+Seabird,        		SBE37-SM,                                                       SBE37SM
+SEABIRD, 				SBE19plus V2, 													SBE19
+SEABIRD, 				SBE39P - TEMPERATURE & PRESSURE RECORDER, 						SBE39
+SEABIRD, 				SBE39IM - TEMPERATURE RECORDER, 								SBE39
+SEABIRD, 				CTD - SBE19Plus, 												SBE19
+Seabird, 				SBE39 [600m] temp only, 										SBE39
+SEABIRD, 				CTD - SBE 9 Plus, 												SBE19
+SEABIRD,				SBE37SM - MicroCAT C-T Recorder with RS-232 Interface, 			NIWA
+Seabird, 				SBE39 [600m] temp & press., 									SBE39
+Seabird, 				SBE19plus, 														SBE19
+SEABIRD, 				SBE16 - CONDUCTIVITY TEMPERATURE LOGGER, 						SBE19
+SEABIRD, 				CTD - SBE19PLUS V2 SEACAT, 										SBE19
+Seabird,				SBE26,															SBE26
+SeaBird,                SBE25,                                                          SBE37
+
+Sequoia,				LISST100X,														sequoia
+
+Star Oddi, 				Starmon mini, 													StarmonMini
 
 WETLABS, 				WQM, 															WQM
 WETLabs, 				WQM, 															WQM
 Weblabs, 				WQM, 															WQM
-
-Aquatec, 				Aqualogger 520T, 												aquatec
-Aquatec, 				Aqualogger 520PT, 												aquatec
-AQUATEC, 				AQUALOGGER, 													aquatec
-AQUATEC, 				AQUALOGGER MODEL 520, 											aquatec
-
-FSI, 					NXIC BIO-500, 													NXICBinary
-FSI, 					FSI, 															NXICBinary
-FSI, 					NXIC-CTD-BIO, 													NXICBinary
-
-JFE-ALEC,				Compact-LW,														Alec
-JFE-ALEC,				Compact-CLW,													Alec
-JFE-ALEC,				Compact-CTW,													Alec
-JFE-ALEC,				Compact-CT,														Alec
-JFE-ALEC,               Compact-CTHR,                                                   Alec
-JFE-ALEC,				Infinity-CTW-USB,												Alec
-JFE-ALEC,				Infinity-CLW2-USB,												Alec
-JFE-ALEC,				Compact-CTHR,													Alec
-JFE-ALEC, 				Infinity-CLW-USB, 												Alec
-JFE-ALEC,               MkV-L,                                                          Alec
-
-Satlantic,				ISUS-V3,														satlantic
-
-Sequoia,				LISST100X,														sequoia
-
-Mclane,					MMP,															mmp
-
-Aanderaa,				RCM4,															Aanderaa
-Aanderaa,				RCM7,															Aanderaa
-Aanderaa,				RCM11,															Aanderaa
-Aanderaa,				Seaguard,													    Aanderaa
-Aanderaa,               RDCP,                                                           Aanderaa
-
-

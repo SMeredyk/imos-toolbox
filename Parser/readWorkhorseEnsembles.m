@@ -25,8 +25,7 @@ function ensembles = readWorkhorseEnsembles( filename )
 %                            the Doppler phase change'. 
 %   - Echo Intensity:        Echo intensity data. 
 %   - Percent Good:          Percentage of good data for each depth cell.
-%   - Bottom Track Data:     Bottom track data.  (not really necessary for
-%                            bottom moored upward looking ADCP)
+%   - Bottom Track Data:     Bottom track data.  (not always installed)
 %
 % This function parses the ensembles, and returns all of them in a cell
 % array.
@@ -36,13 +35,14 @@ function ensembles = readWorkhorseEnsembles( filename )
 %
 % Outputs:
 %   ensembles - Scalar structure of ensembles.
+%   BT        - Bottom Track Data present
 %
 % Author:       Paul McCarthy <paul.mccarthy@csiro.au>
 % Contributor:  Charles James <charles.james@sa.gov.au>
 %               Guillaume Galibert <guillaume.galibert@utas.edu.au>
-
+%               Shawn Meredyk <shawn.meredyk@as.ulaval.ca>
 %
-% Copyright (C) 2017, Australian Ocean Data Network (AODN) and Integrated 
+% Copyright (C) 2019, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 %
 % This program is free software: you can redistribute it and/or modify
@@ -273,6 +273,9 @@ nCells = mode(ensembles.fixedLeader.numCells);
 
 ensembles.velocity          = parseVelocity(data, nCells, iVel, cpuEndianness);
 
+%No Bottom Track info to be passed
+ensembles.BT=0;
+
 if ~isempty(iCorr)
     ensembles.corrMag       = parseX(data, nCells, 'corrMag', iCorr, cpuEndianness);
 end
@@ -287,6 +290,7 @@ end
 
 if ~isempty(iBTrack)
     ensembles.bottomTrack   = parseBottomTrack(data, iBTrack, cpuEndianness);
+    ensembles.BT=1; % Btrack data to be passed
 end
 
 end
@@ -618,11 +622,11 @@ function [sect, length] = parseBottomTrack( data, idx, cpuEndianness )
 % ensemble.
 %
 % Inputs:
-%   data   - vector of raw bytes.
-%   idx    - index that the section starts at.
+%   data        - vector of raw bytes.
+%   idx         - index that the section starts at.
 %
 % Outputs:
-%   sect   - struct containing the fields that were parsed from trawhe bottom
+%   sect   - struct containing the fields that were parsed from the bottom
 %            track section.
 %   length - number of bytes that were parsed.
 %

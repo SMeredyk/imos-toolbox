@@ -1,7 +1,7 @@
 % filename or ODBC DSN of MS-ACCESS deployment database
 % ex. : /home/ggalibert/OceanDB.mdb or imos-ddb
 %toolbox.ddb = imos-ddb
-toolbox.ddb = C:\Users\smeredyk\Documents\Git\OceansDB_working\OceanDB2015.accdb
+toolbox.ddb = G:\Arcticnet\Git\OceansDB_working\OceanDB2015.accdb
 
 % or full connection details to other kind of deployment database :
 % class name of JDBC database driver
@@ -41,7 +41,7 @@ autoQCManager.autoQCDefaultChain.timeSeries = imosImpossibleDateQC imosImpossibl
 autoQCManager.autoQCDefaultChain.profile = imosImpossibleDateQC imosImpossibleLocationSetQC imosInOutWaterQC imosGlobalRangeQC imosImpossibleDepthQC imosSalinityFromPTQC imosHistoricalManualSetQC
 
 % last selected set of auto QC routines
-autoQCManager.autoQCChain.timeSeries = imosImpossibleDateQC imosInOutWaterQC imosGlobalRangeQC imosImpossibleLocationSetQC imosImpossibleDepthQC imosSalinityFromPTQC imosSideLobeVelocitySetQC imosTiltVelocitySetQC imosHorizontalVelocitySetQC imosVerticalVelocityQC imosCorrMagVelocitySetQC imosVerticalVelocitySetQC imosPercentGoodVelocitySetQC imosErrorVelocitySetQC imosRateOfChangeQC imosVerticalSpikeQC imosDensityInversionSetQC imosEchoIntensityInAirManualSetQC imosHistoricalManualSetQC
+autoQCManager.autoQCChain.timeSeries = imosImpossibleDateQC imosInOutWaterQC imosGlobalRangeQC imosImpossibleLocationSetQC imosImpossibleDepthQC imosSalinityFromPTQC imosSideLobeVelocitySetQC imosTiltVelocitySetQC imosHorizontalVelocitySetQC imosVerticalVelocityQC imosCorrMagVelocitySetQC imosVerticalVelocitySetQC imosPercentGoodVelocitySetQC imosErrorVelocitySetQC imosRateOfChangeQC imosVerticalSpikeQC imosDensityInversionSetQC imosEchoIntensityInAirManualSetQC imosBinDepthInterferenceSetQC imosHistoricalManualSetQC
 autoQCManager.autoQCChain.profile = imosImpossibleDateQC imosImpossibleLocationSetQC imosInOutWaterQC imosGlobalRangeQC imosImpossibleDepthQC imosSalinityFromPTQC imosHistoricalManualSetQC
 
 % prompt for preprocessing (if false, 
@@ -53,7 +53,7 @@ preprocessManager.preprocessDefaultChain.timeSeries = depthPP salinityPP magneti
 preprocessManager.preprocessDefaultChain.profile = depthPP salinityPP
 
 % last selected set of preprocessing routines
-preprocessManager.preprocessChain.timeSeries = timeDriftPP variableOffsetPP depthPP salinityPP magneticDeclinationPP absiDecibelBasicPP adcpNortekVelocityBeam2EnuPP adcpNortekVelocityEnu2BeamPP adcpBinMappingPP
+preprocessManager.preprocessChain.timeSeries = timeDriftPP variableOffsetPP depthPP salinityPP magneticDeclinationPP absiDecibelBasicPP adcpNortekVelocityBeam2EnuPP adcpNortekVelocityEnu2BeamPP velocityMagDirPP adcpBinMappingPP
 preprocessManager.preprocessChain.profile = depthPP salinityPP
 
 % file status dialog formatting styles
@@ -64,20 +64,20 @@ dataFileStatusDialog.noFileFormat          = bold
 dataFileStatusDialog.multipleFileFormat    = italic
 
 % last selected values for start dialog
-startDialog.dataDir.timeSeries = C:\Analysis\2017\BR1-17\Recovery
+startDialog.dataDir.timeSeries = D:\Analysis\High_Arctic\2016
 startDialog.dataDir.profile = 
-startDialog.fieldTrip.timeSeries = 2018_IOS
+startDialog.fieldTrip.timeSeries = 2017_IOS
 startDialog.fieldTrip.profile = 
 startDialog.lowDate.timeSeries = 730699
 startDialog.lowDate.profile = 
-startDialog.highDate.timeSeries = 737354
+startDialog.highDate.timeSeries = 737719
 startDialog.highDate.profile = 
 
 % last selected directory for manual data import
 importManager.manualDir = 
 
 % last selected directory for file export
-exportDialog.defaultDir = C:\Analysis\2017\BR1-17\Quality_controlled_data\IMOS_QC\QCVer1_1\LR_included
+exportDialog.defaultDir = D:\Analysis\High_Arctic\2016\BR3b-16\Quality_controlled_data\IMOS_QCdata\QcVer1_3
 
 % prompt user to select parser if an appropriate one 
 % cannot be found (if false, the data is not imported)

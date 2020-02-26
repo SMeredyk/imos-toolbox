@@ -826,7 +826,7 @@ function header = readHeader(fid)
   end
   % section meant to remedy the changing versions of Ruskin and the
   % nomenclature surrounding start and end dates
-  ruskinVer = contains(header.hostversion, {'1.13.7', '1.13.10', '1.13.13', '2.3.0'});
+  ruskinVer = contains(header.hostversion, {'1.13.7', '1.13.10', '1.13.13', '2.3.0', '2.9.2'}); % to accomodate the latest 2019 version of ruskin
   
   if isempty(ruskinVer)
       ruskinVer = contains(header.hostversion, '1.13.7'); end
@@ -877,7 +877,7 @@ function data = readData(fid, header)
   
   % section meant to remedy the changing versions of Ruskin and the
   % nomenclature surrounding start and end dates
-  ruskinVer = contains(header.hostversion, {'1.13.10', '1.13.13', '2.3.0'});
+  ruskinVer = contains(header.hostversion, {'1.13.10', '1.13.13', '2.3.0', '2.9.2'}); % updated to reflect the 2019 ruskin update
   
   if isempty(ruskinVer) % was ~ , shawn sept 18, 2018
       ruskinVer = strfind(header.hostversion, '1.13.7'); end

@@ -14,6 +14,7 @@ function sample_data = workhorseParse( filename, tMode )
 %   - water direction (at each time and distance)
 %   - Acoustic backscatter intensity (at each time and distance, a separate 
 %     variable for each beam)
+%   - bottom track (range to surface / bottom) % shawnM - Oct 25, 2019
 %
 % The conversion from the ADCP velocity values currently assumes that the 
 % ADCP is using earth coordinates (see section 13.4 'Velocity Data Format' 
@@ -98,6 +99,55 @@ narginchk(1, 2);
   percentGood2 = ensembles.percentGood.field2;
   percentGood3 = ensembles.percentGood.field3;
   percentGood4 = ensembles.percentGood.field4;
+  
+  % try to guess model information
+  adcpFreqs = str2num(fixed.systemConfiguration(:, 6:8)); % str2num is actually more relevant than str2double here
+  adcpFreq = mode(adcpFreqs); % hopefully the most frequent value reflects the frequency when deployed
+  switch adcpFreq
+      case 0
+          adcpFreq = 75;
+          model = 'LongRanger';
+          xmitVoltScaleFactors = 2092719;
+          
+      case 1
+          adcpFreq = 150;
+          model = 'QuarterMaster';
+          xmitVoltScaleFactors = 592157;
+		  
+      case 10
+          adcpFreq = 300;
+          model = 'Sentinel or Monitor';
+          xmitVoltScaleFactors = 592157;
+		  
+      case 11
+          adcpFreq = 600;
+          model = 'Sentinel or Monitor';
+          xmitVoltScaleFactors = 380667;
+		  
+      case 100
+          adcpFreq = 1200;
+          model = 'Sentinel or Monitor';
+          xmitVoltScaleFactors = 253765;
+		  
+      otherwise
+          adcpFreq = 2400;
+          model = 'DVS';
+          xmitVoltScaleFactors = 253765;
+  end
+ 
+  %% If Bottom Track data was passed-on
+BT=ensembles.BT;
+    
+  if BT == 1
+    bottomTrack = ensembles.bottomTrack; %In-order to have the BottomTrack data in NetCDF format
+  else  
+%   if ~strcmp(model, 'LongRanger') == 1
+%     bottomTrack = ensembles.bottomTrack; %In-order to have the BottomTrack data in NetCDF format
+%   % Only for non-Long Ranger models
+%   else
+%     
+  end
+    
   clear ensembles;
   
   % we use these to set up variables and dimensions
@@ -226,41 +276,6 @@ narginchk(1, 2);
       serial = num2str(serial);
   end
   
-  % try to guess model information
-  adcpFreqs = str2num(fixed.systemConfiguration(:, 6:8)); % str2num is actually more relevant than str2double here
-  adcpFreq = mode(adcpFreqs); % hopefully the most frequent value reflects the frequency when deployed
-  switch adcpFreq
-      case 0
-          adcpFreq = 75;
-          model = 'LongRanger';
-          xmitVoltScaleFactors = 2092719;
-          
-      case 1
-          adcpFreq = 150;
-          model = 'QuarterMaster';
-          xmitVoltScaleFactors = 592157;
-		  
-      case 10
-          adcpFreq = 300;
-          model = 'Sentinel or Monitor';
-          xmitVoltScaleFactors = 592157;
-		  
-      case 11
-          adcpFreq = 600;
-          model = 'Sentinel or Monitor';
-          xmitVoltScaleFactors = 380667;
-		  
-      case 100
-          adcpFreq = 1200;
-          model = 'Sentinel or Monitor';
-          xmitVoltScaleFactors = 253765;
-		  
-      otherwise
-          adcpFreq = 2400;
-          model = 'DVS';
-          xmitVoltScaleFactors = 253765;
-  end
-  
   % converting xmit voltage counts to volts for diagnostics.
   xmitVoltScaleFactors = xmitVoltScaleFactors / 1000000; %from p.136 of Workhorse Commands and Output Data Format PDF (RDI website - March 2016)
   %Long Ranger output is 10x larger than the DVS and QM output.
@@ -315,7 +330,7 @@ narginchk(1, 2);
       sample_data.meta.beam_angle               =  mode(fixed.beamAngle); % we set a static value for this variable to the most frequent value found
   end
   
-  % Correction for pressure offset in air 
+%% Correction for pressure offset in air 
 % based on first 5 measurements within 15 m range
 [~,NAME,~] = fileparts(filename);
 first_mes=pressure(1:5);
@@ -326,7 +341,7 @@ if  ~isnan(first_mes)
     pressure=pressure-mean(first_mes);
     
     % Commenting the Metadata history
-    PressureOffsetComment=[mfilename,'.m: Raw pressure data from ', NAME,...
+    PressureOffsetComment=[filename,'.m: Raw pressure data from ', NAME,...
         ' was corrected for a pressure offset in air of ',...
         num2str(round(mean(first_mes),1)),'dbar'];
     
@@ -338,7 +353,7 @@ else
         num2str(ceil(max(pressure(1:5)))),...
         '-dbar and NO pressure offset was applied']);
 end
-  
+
   
   % add dimensions with their data mapped
   adcpOrientations = str2num(fixed.systemConfiguration(:, 1)); % str2num is actually more relevant than str2double here
@@ -487,7 +502,8 @@ end
   end
   
   sample_data.variables(remove) = [];
-  
+ 
+%% WaveData is processed / extracted here and placed in a 2nd Dimension  
   if isWaveData
       %
       % if wave data files are present, read them in

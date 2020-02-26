@@ -22,12 +22,12 @@ function [sample_data, varChecked, paramsLog] = imosEchoIntensityInAirManualSetQ
 % Contributor:  Guillaume Galibert <guillaume.galibert@utas.edu.au>,
 %				Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
 %
-% Copyright (c) 2017, Amundsen Science & ArcticNet
+% Copyright (c) 2019, Amundsen Science & ArcticNet
 % http://www.amundsen.ulaval.ca/
 % http://www.arcticnet.ulaval.ca/
 % All rights reserved.
 %
-% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated
+% Copyright (c) 2019, Australian Ocean Data Network (AODN) and Integrated
 % Marine Observing System (IMOS).
 % All rights reserved.
 %
@@ -126,16 +126,45 @@ for j=1:beams
     ea(j, :, :) = sample_data.variables{idABSIC{j}}.data;
 end
 
-% read in filter parameters
-propFile  = fullfile('AutomaticQC', 'imosEchoIntensityInAirManualSetQC.txt');
-ea_thresh_in_air = str2double(readProperty('ea_thresh_in_air',   propFile));
+%% Get the pre-existing NoiseFloor data from the DDB
+noiseFloor      = 20; % assuming standard 20 counts , if no data in DB
+%nSample         = length(sample_data);
+
+% get badbins for each data set
+%for k = 1:nSample
+      
+    %check to see if noiseFloor data are available already from the ddb
+    %if isfield(sample_data{k}.meta, 'deployment')
+        if ~isempty(sample_data.meta.deployment.NoiseFloor)
+            noiseFloor = sample_data.meta.deployment.NoiseFloor;
+        end
+    %end
+%end
 
 % read dataset QC parameters if exist and override previous 
-% parameters file
-currentQCtest = mfilename;
-ea_thresh_in_air = readDatasetParameter(sample_data.toolbox_input_file, currentQCtest, 'ea_thresh_in_air', ea_thresh_in_air);
-if ea_thresh_in_air>20 % Reset value to default always
-    ea_thresh_in_air=20;
+    % parameters file
+    currentQCtest = mfilename;
+    %ea_thresh_in_air = readDatasetParameter(sample_data.toolbox_input_file, currentQCtest, 'ea_thresh_in_air', ea_thresh_in_air);
+    %if ea_thresh_in_air>20 % Reset value to default always to 20 counts
+    %    ea_thresh_in_air=20;
+    %end
+% %% Input from user if no info is in the DDB
+if ~isempty(noiseFloor)
+    %noiseFloor = str2double(noiseFloor);
+    ea_thresh_in_air = noiseFloor;
+    
+elseif isempty(noiseFloor)
+    % read in filter parameters
+    propFile  = fullfile('AutomaticQC', 'imosEchoIntensityInAirManualSetQC.txt');
+    ea_thresh_in_air = str2double(readProperty('ea_thresh_in_air',   propFile));
+
+    % read dataset QC parameters if exist and override previous 
+    % parameters file
+    %currentQCtest = mfilename;
+    ea_thresh_in_air = readDatasetParameter(sample_data.toolbox_input_file, currentQCtest, 'ea_thresh_in_air', ea_thresh_in_air);
+    if ea_thresh_in_air>20 % Reset value to default always to 20 counts
+        ea_thresh_in_air=20;
+    end
 end
 
 sizeCur = size(sample_data.variables{idUcur}.flags);
@@ -178,6 +207,7 @@ if sum(sum(outofwater))==0
     str3=sprintf(['\n\nIf yes, please enter a given value. If not, click cancel.\n']);
     str4=[str1,str2,str3];
     xx = inputdlg(str4,nam,[1 120]);
+    
     if ~isempty(xx)
     ea_thresh_in_air = str2num(xx{:}); % new ea_thresh_in_air 
     end
@@ -199,10 +229,11 @@ else
    %ea_p95=[sprintf('%.0f',ea_p(round(0.95*length(ea_p)))),' counts'];  %works only if there are no NANs, otherwise gives logical error
     
    str1=sprintf(['Info: imosEchoIntensityInAirManualSetQC requires your input\n\nThe following statistics for echo intensity in air have been found:\n\nMin: ' ea_min '\nMax: ' ea_max '\nMean: ' ea_mean '\nMedian: ' ea_median '\nStandard deviation: ' ea_std]);   
-   str2=sprintf(['\n\nDo you want to use the default echo intensity  of ',int2str(ea_thresh_in_air), ' counts as criterion to flag velocity data?\n\nIf not, please enter a new value. If yes, click cancel.\n']); 
+   str2=sprintf(['\n\nDo you want to use the database noted echo intensity  of ',int2str(ea_thresh_in_air), ' counts as criterion to flag velocity data?\n\nIf not, please enter a new value. If yes, click cancel.\n']); 
    str3=sprintf(['\nPlease note that using the mean echo in air is suggested, but using at least the minimum value is strongly advisable.\n']);
    str4=[str1,str2,str3];
-   xx = inputdlg(str4,nam,[1 120]);
+   xx = inputdlg(str4,nam,[1 120],{int2str(ea_thresh_in_air)});
+   
    if ~isempty(xx)
    ea_thresh_in_air = str2num(xx{:}); %ea_thresh_in_air  
    end
@@ -210,11 +241,11 @@ end
 
 paramsLog = ['ea_thresh_in_air=' num2str(ea_thresh_in_air)];
 
-% same flags are given to any variable
+%% same flags are given to any variable
 flags = ones(sizeCur, 'int8')*rawFlag;
 
-% Run QC
-% this test looks at each of the beam echio intensity and compares with
+%% Run QC
+% this test looks at each of the beam echo intensity and compares with
 % ea_thresh_in_air value. The test passes if at least 3 beams (RDI) or 2
 % beams (Nortek) provide echo intensity values above the ea_thresh_in_air
 % value. Default is only 20 counts.
@@ -224,7 +255,7 @@ mask=sum(mask,3);
 iFail=mask<beams-1;
 iPass = ~iFail;
 
-% Run QC filter (iFail) on velocity data
+%% Run QC filter (iFail) on velocity data
 flags(iFail) = badFlag;
 flags(iPass) = goodFlag;
 
@@ -246,7 +277,7 @@ if idCspd
     varChecked = [varChecked, {sample_data.variables{idCspd}.name}];
 end
 
-% write/update dataset QC parameters
+%% write/update dataset QC parameters
 writeDatasetParameter(sample_data.toolbox_input_file, currentQCtest, 'ea_thresh_in_air', ea_thresh_in_air);
 
 end

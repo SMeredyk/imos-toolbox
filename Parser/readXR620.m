@@ -257,14 +257,14 @@ function sample_data = readXR620( filename, mode )
                   case {'pres08'}, name = 'PRES_REL';
                       
                       %Fluorometry-chlorophyl (ug/l) = (mg.m-3)
-                  case 'FlC'
+                  case {'FlC', 'FlCa'}
                       name = 'CPHL';
                       comment.(vars{k}) = ['Artificial chlorophyll data computed from ' ...
                           'fluorometry sensor raw counts measurements. Originally ' ...
                           'expressed in ug/l, 1l = 0.001m3 was assumed.'];
                       
                       %Turbidity (NTU)
-                  case {'Turb','turb00'}, name = 'TURB';
+                  case {'Turb','turb00','Turba'}, name = 'TURB';
                       comment.(vars{k}) = 'NTU - Auto Ranging Seapoint SCF';
                       
                       %Rinko temperature (Celsius degree)
@@ -528,14 +528,14 @@ function sample_data = readXR620( filename, mode )
                   case 'pres08', name = 'PRES_REL';
                       
                       %Fluorometry-chlorophyl (ug/l) = (mg.m-3)
-                  case 'FlC'
+                  case {'FlC', 'FlCa'}
                       name = 'CPHL';
                       comment.(fields{k}) = ['Artificial chlorophyll data computed from ' ...
                           'fluorometry sensor raw counts measurements. Originally ' ...
                           'expressed in ug/l, 1l = 0.001m3 was assumed.'];
                       
                       %Turbidity (NTU)
-                  case {'Turb', 'Turb-a'}, name = 'TURB';
+                  case {'Turb', 'Turba'}, name = 'TURB';
                       
                       %Rinko temperature (Celsius degree)
                   case 'R_Temp'

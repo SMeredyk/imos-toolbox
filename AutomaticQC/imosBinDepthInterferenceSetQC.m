@@ -20,15 +20,16 @@ function [sample_data, varChecked, paramsLog] = imosBinDepthInterferenceSetQC( s
 %   varChecked  - cell array of variables' name which have been checked
 %   paramsLog   - string containing details about params' procedure to include in QC log
 %
-% Author:       Alexandre Forest <Alexandre.Forest@arcticnet.ulaval.ca>
+% Author:       Alexandre Forest <Alexandre.Forest@as.ulaval.ca>,
+%               Shawn Meredyk <Shawn.Meredyk@as.ulaval.ca>
 % Contributor:  Guillaume Galibert <guillaume.galibert@utas.edu.au>
 %
-% Copyright (c) 2017, Amundsen Science & ArcticNet
+% Copyright (c) 2019, Amundsen Science & ArcticNet
 % http://www.amundsen.ulaval.ca/
 % http://www.arcticnet.ulaval.ca/
 % All rights reserved.
 %
-% Copyright (c) 2016, Australian Ocean Data Network (AODN) and Integrated
+% Copyright (c) 2019, Australian Ocean Data Network (AODN) and Integrated
 % Marine Observing System (IMOS).
 % All rights reserved.
 %
@@ -112,7 +113,8 @@ end
 
 if ~idMandatory, return; end
 
- % Verify if we have current speed, if not calculate
+% Not necessary as CSPD is now common in IMOS processing chain
+%  % Verify if we have current speed, if not calculate
 if ~idCspd
     [~,speed] = cart2pol(sample_data.variables{idVcur}.data,sample_data.variables{idUcur}.data);
 else
@@ -190,22 +192,48 @@ else %Nortek 3 beams
     suptitle(['Visual inspection of ',sample_data.meta.instrument_model,' #',sample_data.meta.head.SerialNo,' on ',sample_data.deployment_code]);
 end
 
-%% Make the flags
-% Eventually, pre-fill the input box with the data from the OceansDB , if
-% not blank - shawn april 4, 2018
-xx = inputdlg(sprintf('\nLook at where both Speed decreases and Echo Intensity increases and identify suspicious bins.\n\nEnter space-separated numbers e.g: 7 8 9\n\nIf no suspicious bins, just click cancel\n'),'Visual inspection of suspicious bins affected by instrument interference',[2 100]);
-if ~isempty(xx)
-    badbins = str2num(xx{:});
-else
-    badbins=[];
+%% Get the pre-existing bad bin data from the DDB, in Comma separted values
+badbins         = [];
+if ~isempty(sample_data.meta.deployment.BinNumInterference)
+    badbins = sample_data.meta.deployment.BinNumInterference;
 end
+
+%% Input from user if no info is in the DDB
+if isempty(badbins)
+    str1=sprintf('Info: imosBinDepthInterferenceSetQC requires your input\n\n');
+    str2=sprintf(['\nLook at where both Speed decreases and Echo'...
+    'Intensity increases and identify suspicious bins.\n\n']);
+    str3=sprintf('Enter the bin numbers separated by commas or spaces\n\n'); 
+
+    str4=[str1,str2,str3];
+    xx = inputdlg(str4,'Visual inspection of suspicious bins affected by instrument interference',[1 120]);
+
+    if ~isempty(xx)
+       badbins = str2num(xx{:}); %user inputed bad bins in CSV  
+    end
+else
+    str1=sprintf(['Info: imosBinDepthInterferenceSetQC requires your input\n\n']);
+    str2=sprintf(['\nLook at where both Speed decreases and Echo'...
+    'Intensity increases and identify suspicious bins.\n\n']);
+    str3=sprintf(['\n\nDo you want to continue to use the database noted bad bins of'...
+       '' badbins ' from previous QC analysis?\n\nIf not, please enter new'...
+       'values separated by a comma.']); 
+
+    str4=[str1,str2,str3];
+    xx = inputdlg(str4,'Visual inspection of suspicious bins affected by instrument interference',[1 120],{badbins});
+
+    if ~isempty(xx)
+       badbins = str2num(xx{:}); %user inputed bad bins in CSV  
+    end
+end    
+% Close figure
+close(fig);
+
+%% Make the flags
 % same flags are given to any variable
 flags = ones(sizeCur, 'int8')*rawFlag;
 flags(:,badbins) = badFlag;
 flags(flags == rawFlag) = goodFlag;
-
-% Close figure
-close(fig);
 
 if idWcur
     sample_data.variables{idWcur}.flags = flags;
@@ -538,7 +566,7 @@ ff = (fs-4)*1.27*5/pos(4)*fudge;
 % findobj is a 4.2 thing.. if you don't have 4.2 comment out
 % the next line and uncomment the following block.
 
-h = findobj(gcf,'Type','axes');  % Change suggested by Stacy J. Hills
+h = findobj(gcf,'Type','axes');  
 
 % If you don't have 4.2, use this code instead
 %ch = get(gcf,'children');
