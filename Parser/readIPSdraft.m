@@ -315,7 +315,8 @@ TT1 = timetable(T1, data.ICE_DRAFT.values, data.ICE_DRAFT_ERR.values );
 %
 % Union join based-on times of the 2 timetables binned by minute using mean
 % while applying a linear interpolation between times.
-TT3 = synchronize(TT1,TT2,'union','mean');
+%TT3 = synchronize(TT1,TT2,'union','mean');
+TT3 = synchronize(TT1,TT2,'union');
 TT4 = retime(TT3,'minutely','linear');
 % 
 % re-creating the final table for passing up for final IMOS/CF formating

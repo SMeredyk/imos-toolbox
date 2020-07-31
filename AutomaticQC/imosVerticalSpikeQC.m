@@ -61,7 +61,7 @@ flags     = [];
 
 % this test only applies to profile mode
 mode = readProperty('toolbox.mode');
-if ~strcmpi(mode, 'profile')
+if ~strcmpi(mode, 'profile') % this mode check is preventing the filter from being applied in the QC step - shawnM feb27,2020
     return;
 end
 

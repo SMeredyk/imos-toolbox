@@ -85,7 +85,7 @@ distance = distance + cellLength;
 time         = [structures.Id1(:).Time]';
 analn1       = [structures.Id1(:).Analn1]';
 battery      = [structures.Id1(:).Battery]';
-soundSpeed   = [structures.Id1(:).Analn2]'; % new variable since 2017 version
+analn2       = [structures.Id1(:).Analn2]';
 heading      = [structures.Id1(:).Heading]';
 pitch        = [structures.Id1(:).Pitch]';
 roll         = [structures.Id1(:).Roll]';
@@ -100,7 +100,6 @@ backscatter3 = [structures.Id1(:).Amp3]';
 clear structures;
 
 % battery     / 10.0   (0.1 V    -> V)
-% soundSpeed  / 10.0   (0.1 m/s  -> m/s) % new variable since 2017 version
 % heading     / 10.0   (0.1 deg  -> deg)
 % pitch       / 10.0   (0.1 deg  -> deg)
 % roll        / 10.0   (0.1 deg  -> deg)
@@ -108,7 +107,6 @@ clear structures;
 % temperature / 100.0  (0.01 deg -> deg)
 % velocities  / 1000.0 (mm/s     -> m/s) assuming earth coordinates
 battery      = battery      / 10.0;
-soundSpeed   = soundSpeed   / 10.0; % new variable since 2017 version
 heading      = heading      / 10.0;
 pitch        = pitch        / 10.0;
 roll         = roll         / 10.0;
@@ -183,45 +181,30 @@ clear dims;
 sample_data.dimensions{1}.seconds_to_middle_of_measurement = user.AvgInterval/2;
 
 % add variables with their dimensions and data mapped.
-% the below code was added to accomodate BEAM datasets , post 2017 version
-switch user.CoordSystem
-    case 0 % ENU
-        vel2Name = 'VCUR_MAG'; % we assume no correction for magnetic declination has been applied
-        vel1Name = 'UCUR_MAG';
-        vel3Name = 'WCUR';
-        
-    case 2 % Beam
-        vel2Name = 'VEL2';
-        vel1Name = 'VEL1';
-        vel3Name = 'VEL3';
-        
-    otherwise
-        error([mfilename ' only supports ENU and Beam coordinate systems']);
-end                      
+% we assume no correction for magnetic declination has been applied
 vars = {
     'TIMESERIES',       [], 1;...
     'LATITUDE',         [], NaN; ...
     'LONGITUDE',        [], NaN; ...
     'NOMINAL_DEPTH',    [], NaN; ...
-    'vel2Name',         1,  velocity2; ... % V, mag east - changed since the 2017 version
-    'vel1Name',         1,  velocity1; ... % U, mag north - changed since the 2017 version
-    'vel3Name',         1,  velocity3; ... % W - changed since the 2017 version
-    'CSPD',             1,  speed; ... % taken from below code / function
-    'CDIR_MAG',         1,  direction; ...% taken from below code / function
+    'VCUR_MAG',         1,  velocity2; ... % V, mag east
+    'UCUR_MAG',         1,  velocity1; ... % U, mag north
+    'WCUR',             1,  velocity3; ... % W 
+    'CSPD',             1,  speed; ... % taken from below code
+    'CDIR_MAG',         1,  direction; ...% taken from below code
     'ABSIC1',           1,  backscatter1; ...
     'ABSIC2',           1,  backscatter2; ...
     'ABSIC3',           1,  backscatter3; ...
     'TEMP',             1,  temperature; ...
     'PRES_REL',         1,  pressure; ...
-    'BAT_VOLT',         1,  battery; ... % changed witin code for 2019
-    'SSPD',             1,  soundSpeed; ... % new variable
+    'VOLT',             1,  battery; ...
     'PITCH',            1,  pitch; ...
     'ROLL',             1,  roll; ...
     'HEADING_MAG',      1,  heading
     };
-clear analn1 time distance velocity1 velocity2 velocity3 ... % removed analn2 from 2017 version
+clear analn1 analn2 time distance velocity1 velocity2 velocity3 ...
     backscatter1 backscatter2 backscatter3 speed direction ... % added speed and direction
-    temperature pressure battery pitch roll heading soundSpeed; % added the post 2017 newly labeled soundSpeed variable
+    temperature pressure battery pitch roll heading status;
 
 nVars = size(vars, 1);
 sample_data.variables = cell(nVars, 1);

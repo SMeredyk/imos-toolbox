@@ -101,7 +101,7 @@ distance = distance + cellSize;
 time            = [structures.Id36(:).Time]';
 analn1          = [structures.Id36(:).Analn1]';
 battery         = [structures.Id36(:).Battery]';
-soundSpeed      = [structures.Id36(:).Analn2]'; % was changed from the 2017 code
+analn2          = [structures.Id36(:).Analn2]';
 heading         = [structures.Id36(:).Heading]';
 pitch           = [structures.Id36(:).Pitch]';
 roll            = [structures.Id36(:).Roll]';
@@ -141,7 +141,6 @@ end
 clear structures;
 
 % battery     / 10.0   (0.1 V    -> V)
-% soundSpeed  / 10.0   (0.1 m/s  -> m/s) % was changed from the 2017 code
 % heading     / 10.0   (0.1 deg  -> deg)
 % pitch       / 10.0   (0.1 deg  -> deg)
 % roll        / 10.0   (0.1 deg  -> deg)
@@ -149,7 +148,6 @@ clear structures;
 % temperature / 100.0  (0.01 deg -> deg)
 % velocities  / 1000.0 (mm/s     -> m/s) assuming earth coordinates
 battery      = battery      / 10.0;
-soundSpeed   = soundSpeed   / 10.0;  % was changed from the 2017 code
 heading      = heading      / 10.0;
 pitch        = pitch        / 10.0;
 roll         = roll         / 10.0;
@@ -263,14 +261,14 @@ if velocityProcessed
 end
 dims = {
     'TIME',             time,    ['Time stamp corresponds to the start of the measurement which lasts ' num2str(user.AvgInterval) ' seconds.']; ...
-    'DIST_ALONG_BEAMS', distance, 'Values correspond to the distance between the instrument''s transducers and the centre of each cells. Nortek instrument data is not vertically bin-mapped (no tilt correction applied). Cells are lying parallel to the beams, at heights above sensor that vary with tilt.'
+    'DIST_ALONG_BEAMS', distance, 'Nortek instrument data is not vertically bin-mapped (no tilt correction applied). Cells are lying parallel to the beams, at heights above sensor that vary with tilt.'
     };
 clear time distance;
 
 if velocityProcessed
     % we re-arrange dimensions like for RDI ADCPs
     dims(end+1, :) = dims(end, :);
-    dims(end-1, :) = {'HEIGHT_ABOVE_SENSOR', height, 'Values correspond to the distance between the instrument''s transducers and the centre of each cells. Data has been vertically bin-mapped using Nortek Storm software ''Remove tilt effects'' procedure. Cells have consistant heights above sensor in time.'};
+    dims(end-1, :) = {'HEIGHT_ABOVE_SENSOR', height, 'Data has been vertically bin-mapped using Nortek Storm software ''Remove tilt effects'' procedure. Cells have consistant heights above sensor in time.'};
 end
 clear height;
 
@@ -297,31 +295,14 @@ else
     iDimVel = nDims;
     iDimDiag = nDims;
 end
-
-% This was added after 2017 to accomodate BEAM datasets
-switch user.CoordSystem
-    case 0 % ENU
-        vel2Name = 'VCUR_MAG'; % we assume no correction for magnetic declination has been applied
-        vel1Name = 'UCUR_MAG';
-        vel3Name = 'WCUR';
-        
-    case 2 % Beam
-        vel2Name = 'VEL2';
-        vel1Name = 'VEL1';
-        vel3Name = 'VEL3';
-        
-    otherwise
-        error([mfilename ' only supports ENU and Beam coordinate systems']);
-end
-
 vars = {
     'TIMESERIES',       [],             1; ...
     'LATITUDE',         [],             NaN; ...
     'LONGITUDE',        [],             NaN; ...
     'NOMINAL_DEPTH',    [],             NaN; ...
-    'vel2Name',         [1 iDimVel],    velocity2; ... % V east mag - changed after 2017 to accomodate BEAM datasets
-    'vel1Name',         [1 iDimVel],    velocity1; ... % U north mag - changed after 2017 to accomodate BEAM datasets
-    'vel3Name',         [1 iDimVel],    velocity3; ... % W - changed after 2017 to accomodate BEAM datasets
+    'VCUR_MAG',         [1 iDimVel],    velocity2; ... % V east mag
+    'UCUR_MAG',         [1 iDimVel],    velocity1; ... % U north mag
+    'WCUR',             [1 iDimVel],    velocity3; ... % W 
     'CSPD',             [1 iDimVel],    speed; ... % taken from below code
     'CDIR_MAG',         [1 iDimVel],    direction; ...% taken from below code
     'ABSIC1',           [1 iDimDiag],   backscatter1; ...
@@ -329,15 +310,14 @@ vars = {
     'ABSIC3',           [1 iDimDiag],   backscatter3; ...
     'TEMP',             1,              temperature; ...
     'PRES_REL',         1,              pressure; ...
-    'BAT_VOLT',         1,              battery; ...  % changed in 2019 to separate TX and instrument voltage readings
-    'SSPD',             1,              soundSpeed; ...
+    'VOLT',             1,              battery; ...
     'PITCH',            1,              pitch; ...
     'ROLL',             1,              roll; ...
     'HEADING_MAG',      1,              heading
     };
 clear analn1 analn2 time distance velocity1 velocity2 velocity3 ...
     backscatter1 backscatter2 backscatter3 speed direction ... % added speed and direction
-    temperature pressure battery pitch roll heading status soundSpeed; % soundSpeed was added post 2017 version
+    temperature pressure battery pitch roll heading status;
 
 if velocityProcessed
     % velocity has been processed

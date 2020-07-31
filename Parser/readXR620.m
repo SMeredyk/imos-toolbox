@@ -176,7 +176,7 @@ function sample_data = readXR620( filename, mode )
           sample_data.variables{end}.name         = 'TIME';
           sample_data.variables{end}.typeCastFunc = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
           sample_data.variables{end}.data         = sample_data.variables{end}.typeCastFunc([descendingTime, ascendingTime]);
-          sample_data.variables{end}.comment      = 'First value over profile measurement.';
+          sample_data.variables{end}.comment      = 'First value over profile measurement';
           
           sample_data.variables{end+1}.dimensions = dimensions;
           sample_data.variables{end}.name         = 'DIRECTION';
@@ -248,10 +248,10 @@ function sample_data = readXR620( filename, mode )
                       data.(vars{k}) = data.(vars{k})/10;
                       
                       %Temperature (Celsius degree)
-                  case {'Temp', 'temp02', 'temp00','temp12'}, name = 'TEMP';
+                  case {'Temp', 'temp02', 'temp00'}, name = 'TEMP';
                       
                       %Pressure (dBar)
-                  case {'Pres', 'pres20','pres19', 'pres21'}, name = 'PRES';
+                  case {'Pres', 'pres20','pres19'}, name = 'PRES';
                       
                       %Relative Pressure (dBar)
                   case {'pres08'}, name = 'PRES_REL';
@@ -296,7 +296,6 @@ function sample_data = readXR620( filename, mode )
                       
                       %Rinko dissolved O2 concentration (mg/l) => (umol/l)
                   case 'rdO2C'
-                      %name = 'DOXY'; %the below code existed in 2017 but not in 2020... not sure why not.
                       name = 'DOX1';
                       comment.(vars{k}) = ['Originally expressed in mg/l, ' ...
                           'O2 density = 1.429kg/m3 and 1ml/l = 44.660umol/l were assumed.'];
@@ -307,7 +306,6 @@ function sample_data = readXR620( filename, mode )
                       
                       % Oxyguard dissolved O2 concentration (ml/l) => (umol/l)
                   case {'dO2C','xdO2C'},
-                      %name = 'DOX'; %the below code existed in 2017 but not in 2020... not sure why not.
                       name = 'DOX1';
                       comment.(vars{k}) = ['Originally expressed in ml/l, ' ...
                           '1ml/l = 44.660umol/l was assumed.'];
@@ -521,12 +519,12 @@ function sample_data = readXR620( filename, mode )
                       data.(fields{k}) = data.(fields{k})/10;
                       
                       %Temperature (Celsius degree)
-                  case {'Temp', 'temp00','temp02', 'temp12'}, name = 'TEMP'; % temp02 and temp12 weren't relevant in 2017
+                  case {'Temp', 'temp00'}, name = 'TEMP';
                       
                       %Pressure (dBar)
                   case 'Pres', name = 'PRES';
                       
-                      %Pressure_Relative (dBar)
+                      %Pressure_ReLative (dBar)
                   case 'pres08', name = 'PRES_REL';
                       
                       %Fluorometry-chlorophyl (ug/l) = (mg.m-3)

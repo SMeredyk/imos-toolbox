@@ -61,7 +61,9 @@ if ~iscellstr(filename), error('filename must be a cell array of strings'); end
 filename = filename{1};
 if ~ischar(filename), error('filename must contain a string'); end
 
-sample_data = readIPSdraft(filename, mode); % Parses out the DateTime, Draft and Draft Err of Ice Keels calculated quickly by the Ips5Extract software.
+sample_data = readIPSdraft(filename, mode); % Parses out the DateTime, 
+% Draft and Draft Err of Ice Keels calculated quickly by the Ips5Extract 
+% software and also extracts sensor data from the IPS.
 
 end
 

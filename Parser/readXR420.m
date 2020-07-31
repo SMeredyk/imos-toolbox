@@ -167,7 +167,7 @@ function sample_data = readXR420( filename, mode )
           sample_data.variables{end}.name         = 'TIME';
           sample_data.variables{end}.typeCastFunc = str2func(netcdf3ToMatlabType(imosParameters(sample_data.variables{end}.name, 'type')));
           sample_data.variables{end}.data         = sample_data.variables{end}.typeCastFunc([descendingTime, ascendingTime]);
-          sample_data.variables{end}.comment      = 'First value over profile measurement.';
+          sample_data.variables{end}.comment      = 'First value over profile measurement';
           
           sample_data.variables{end+1}.dimensions = dimensions;
           sample_data.variables{end}.name         = 'DIRECTION';
@@ -330,10 +330,9 @@ function sample_data = readXR420( filename, mode )
                   %Fluorometry-chlorophyl (ug/l) = (mg.m-3)
                   case {'FlCa', 'FLC'},
                       name = 'CPHL';
-                      comment.(fields{k}) = getCPHLcomment('unknown','470nm','685nm'); % new code different from 2017 version
-                      %comment.(fields{k}) = ['Artificial chlorophyll data computed from ' ...
-                       %   'fluorometry sensor raw counts measurements. Originally ' ...
-                       %   'expressed in ug/l, 1l = 0.001m3 was assumed.'];
+                      comment.(fields{k}) = ['Artificial chlorophyll data computed from ' ...
+                          'fluorometry sensor raw counts measurements. Originally ' ...
+                          'expressed in ug/l, 1l = 0.001m3 was assumed.'];
                       
                   %DO (%)
                   case 'D_O2', name = 'DOXS';
