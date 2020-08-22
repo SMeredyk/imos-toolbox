@@ -119,6 +119,7 @@ SEABIRD, 				CTD - SBE 9 Plus, 												SBE19
 SEABIRD,				SBE37SM - MicroCAT C-T Recorder with RS-232 Interface, 			NIWA
 Seabird, 				SBE39 [600m] temp & press., 									SBE39
 Seabird, 				SBE19plus, 														SBE19
+Seabird, 				SBE16,	 														SBE19
 SEABIRD, 				SBE16 - CONDUCTIVITY TEMPERATURE LOGGER, 						SBE19
 SEABIRD, 				CTD - SBE19PLUS V2 SEACAT, 										SBE19
 Seabird,				SBE26,															SBE26

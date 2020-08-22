@@ -1,7 +1,7 @@
 % filename or ODBC DSN of MS-ACCESS deployment database
 % ex. : /home/ggalibert/OceanDB.mdb or imos-ddb
 %toolbox.ddb = imos-ddb
-toolbox.ddb = G:\Arcticnet\Git\OceansDB_working\OceanDB2015.accdb
+toolbox.ddb = C:\Users\ShawnM\Documents\Git\OceansDB_working\OceanDB2015.accdb
 
 % or full connection details to other kind of deployment database :
 % class name of JDBC database driver
@@ -64,7 +64,7 @@ dataFileStatusDialog.noFileFormat          = bold
 dataFileStatusDialog.multipleFileFormat    = italic
 
 % last selected values for start dialog
-startDialog.dataDir.timeSeries = D:\Analysis\High_Arctic\2016
+startDialog.dataDir.timeSeries = D:\Analysis\High_Arctic\2016\BRG-16
 startDialog.dataDir.profile = 
 startDialog.fieldTrip.timeSeries = 2017_IOS
 startDialog.fieldTrip.profile = 

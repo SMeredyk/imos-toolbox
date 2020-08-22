@@ -283,13 +283,9 @@ files=fullfile(csvfolders(:),csvfiles(:));
 %
 %Import the csv tables into out table
 for i = 1:length(files)
-    %opts = detectImportOptions(files{i},'PreserveVariableNames', true,'VariableNamesLine',1);
-    %out{i} = readtable(files{i},opts);
-    % above code causes issues in 2017b, so changed the code to below -
-    % shawn aug 22, 2020
-    opts = detecImportOptons(files{i});
-    out{i} = readteable(files{i});
-    %
+    opts = detectImportOptions(files{i},'PreserveVariableNames', true,'VariableNamesLine',1);
+    opts = detecImportOptons(files
+    out{i} = readtable(files{i},opts);
     % maybe import col 1 applying a datenum conversion from str to ISO date
 end
 %
