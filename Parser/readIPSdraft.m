@@ -125,6 +125,35 @@ data = readSensorData(filepath,data);
 % copy all of the information over to the sample data struct
 sample_data = struct;
 
+% %% in-air pressure offset test / filter
+% % apply only if the pressure sensor is exhibiting poor data. This unit's
+% % pressure sensor is not one that gets zero'd before deployment.
+%
+%     first_mes=data.PRES.values(1:5);
+%     first_mes=first_mes(first_mes<15);
+% 
+%     if  ~isnan(first_mes)
+%         disp(['Please note: ',name,': pressure offset in air : ',...
+%         num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
+%     
+% 	%pressure=pressure-mean(first_mes);
+%     data.PRES.values=data.PRES.values-mean(first_mes);
+%     
+% 	% Commenting the Metadata history
+%     PressureOffsetComment=[filename,'.m: Raw pressure data from ', name,...
+%         ' was corrected for a pressure offset in air of ',...
+%         num2str(round(mean(first_mes),1)),'dbar'];
+%     
+%     sample_data.history = sprintf('%s - %s', ...
+%             datestr(now_utc, readProperty('exportNetCDF.dateFormat')), ...
+%             PressureOffsetComment);
+%     else
+%         disp(['Please note: ', name,': pressure offset in air : ',...
+%         num2str(ceil(max(data.PRES.values(1:5)))),...
+%         '-dbar and NO pressure offset was applied']);
+%     end
+% %%
+
 sample_data.toolbox_input_file              = filename;
 sample_data.meta.instrument_make            = char(unitInfo{1}); 
 sample_data.meta.instrument_model           = char(unitInfo{2});
@@ -282,31 +311,30 @@ csvfolders=filefolders(endsWith(filenamesCSV,'sensor_ed00.csv'));
 files=fullfile(csvfolders(:),csvfiles(:));
 %
 %Import the csv tables into out table
+% setting the variables to extract
+%
 for i = 1:length(files)
     %opts = detectImportOptions(files{i},'PreserveVariableNames', true,'VariableNamesLine',1);
     %out{i} = readtable(files{i},opts);
     % above code causes issues in 2017b, so changed the code to below -
     % shawn aug 22, 2020
-    opts = detecImportOptons(files{i});
-    out{i} = readteable(files{i});
+    opts = detectImportOptions(files{i},'ReadVariableNames',true,'VariableNamesLine',1,'ExtraColumnsRule','ignore');
+    opts.SelectedVariableNames = {'Date_yyyy_mm_ddHH_MM_SS_FFF_','TiltX_deg_','TiltY_deg_','ParosTemperature_C_','Pressure_dbar_','Temperature_C_','Battery_V_'};
+    out{i} = readtable(files{i},opts);
     %
     % maybe import col 1 applying a datenum conversion from str to ISO date
 end
 %
 % merge the outputs into a usable table
 values = vertcat(out{:});
-%
-% Getting variable names from the table
-params = opts.VariableNames;  
-nParams = length(params); 
-%    
+%  
 % Sorting the dateTime of the table in ascending order without duplicates
 % new date table is created, though dates are strings 
 %
 isodates(:,1) = datenum(values{:,1},'yyyy/mm/dd-HH:MM:SS');
 %
 % new array values with mean of sorted dateTime
-for j = 2: nParams
+for j = 2:7
     isodates(:,j) = values{:,j};
 end
 %

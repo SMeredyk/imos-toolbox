@@ -156,114 +156,117 @@ EAA=nanmean(EAA,1);
 binDepth=nanmean(binDepth,1);
 bin_nonan=~isnan(binDepth); % linked to ytl error mesg. shawn aug 3, 2018
 binDepth_nonan=binDepth(bin_nonan);
+%% Incase the dataset is missing data at the begining of the record, have
+%the option to escape the filter and move onto the next filter - shawn
+% aug 22, 2020
+if ~isnan(binDepth_nonan)
+    % Prep. figure
+    scrsz = get(0,'ScreenSize');
+    fig=figure('visible','on','Position',[scrsz(1)+50 scrsz(2)+50 scrsz(3)*0.8 scrsz(4)*0.8],'Name','Visual inspection of suspicious bins');
 
-% Prep. figure
-scrsz = get(0,'ScreenSize');
-fig=figure('visible','on','Position',[scrsz(1)+50 scrsz(2)+50 scrsz(3)*0.8 scrsz(4)*0.8],'Name','Visual inspection of suspicious bins');
-
-% Plot for visual inspection
-subplot(1,2,1);
-plot(speed(bin_nonan),[1:length(binDepth_nonan)],'-dk','markerfacecolor','r');
-grid on;
-title('Time-averaged Current Speed');
-xlabel('Speed (m/s)');
-set(gca,'Ytick',1:1:length(binDepth_nonan));
-if ~isUpwardLooking
-set(gca,'ydir','reverse');
-end
-for j=1:length(binDepth(bin_nonan))
-    ytl{j,1}=['Bin #',num2str(j),' at ',num2str(round(binDepth_nonan(j))),'-m']; % will give ytl undefined error msg if alot of NAN data : ShawnM : june1-2017
-end
-set(gca,'yticklabel',ytl);   
-
-subplot(1,2,2);
-plot(EAA(bin_nonan),[1:length(binDepth_nonan)],'-dk','markerfacecolor','r');
-grid on;
-title('Time-averaged Echo Intensity');
-xlabel('Intensity (Counts)');
-set(gca,'Ytick',1:1:length(binDepth_nonan));
-if ~isUpwardLooking
-set(gca,'ydir','reverse');
-end
-set(gca,'yticklabel',ytl);
-if size_EAA ==4 %RDI 4 beams
-    suptitle(['Visual inspection of ',sample_data.meta.instrument_model,' #',sample_data.meta.instrument_serial_no,' on ',sample_data.deployment_code]);
-else %Nortek 3 beams
-    suptitle(['Visual inspection of ',sample_data.meta.instrument_model,' #',sample_data.meta.head.SerialNo,' on ',sample_data.deployment_code]);
-end
-
-%% Get the pre-existing bad bin data from the DDB, in Comma separted values
-badbins         = [];
-if ~isempty(sample_data.meta.deployment.BinNumInterference)
-    badbins = sample_data.meta.deployment.BinNumInterference;
-end
-
-%% Input from user if no info is in the DDB
-if isempty(badbins)
-    str1=sprintf('Info: imosBinDepthInterferenceSetQC requires your input\n\n');
-    str2=sprintf(['\nLook at where both Speed decreases and Echo'...
-    'Intensity increases and identify suspicious bins.\n\n']);
-    str3=sprintf('Enter the bin numbers separated by commas or spaces\n\n'); 
-
-    str4=[str1,str2,str3];
-    xx = inputdlg(str4,'Visual inspection of suspicious bins affected by instrument interference',[1 120]);
-
-    if ~isempty(xx)
-       badbins = str2num(xx{:}); %user inputed bad bins in CSV  
+    % Plot for visual inspection
+    subplot(1,2,1);
+    plot(speed(bin_nonan),[1:length(binDepth_nonan)],'-dk','markerfacecolor','r');
+    grid on;
+    title('Time-averaged Current Speed');
+    xlabel('Speed (m/s)');
+    set(gca,'Ytick',1:1:length(binDepth_nonan));
+    if ~isUpwardLooking
+    set(gca,'ydir','reverse');
     end
-else
-    str1=sprintf(['Info: imosBinDepthInterferenceSetQC requires your input\n\n']);
-    str2=sprintf(['\nLook at where both Speed decreases and Echo'...
-    'Intensity increases and identify suspicious bins.\n\n']);
-    str3=sprintf(['\n\nDo you want to continue to use the database noted bad bins of'...
-       '' badbins ' from previous QC analysis?\n\nIf not, please enter new'...
-       'values separated by a comma.']); 
-
-    str4=[str1,str2,str3];
-    xx = inputdlg(str4,'Visual inspection of suspicious bins affected by instrument interference',[1 120],{badbins});
-
-    if ~isempty(xx)
-       badbins = str2num(xx{:}); %user inputed bad bins in CSV  
+    for j=1:length(binDepth(bin_nonan))
+        ytl{j,1}=['Bin #',num2str(j),' at ',num2str(round(binDepth_nonan(j))),'-m']; % will give ytl undefined error msg if alot of NAN data : ShawnM : june1-2017
     end
-end    
-% Close figure
-close(fig);
+    set(gca,'yticklabel',ytl);   
 
-%% Make the flags
-% same flags are given to any variable
-flags = ones(sizeCur, 'int8')*rawFlag;
-flags(:,badbins) = badFlag;
-flags(flags == rawFlag) = goodFlag;
+    subplot(1,2,2);
+    plot(EAA(bin_nonan),[1:length(binDepth_nonan)],'-dk','markerfacecolor','r');
+    grid on;
+    title('Time-averaged Echo Intensity');
+    xlabel('Intensity (Counts)');
+    set(gca,'Ytick',1:1:length(binDepth_nonan));
+    if ~isUpwardLooking
+    set(gca,'ydir','reverse');
+    end
+    set(gca,'yticklabel',ytl);
+    if size_EAA ==4 %RDI 4 beams
+        suptitle(['Visual inspection of ',sample_data.meta.instrument_model,' #',sample_data.meta.instrument_serial_no,' on ',sample_data.deployment_code]);
+    else %Nortek 3 beams
+        suptitle(['Visual inspection of ',sample_data.meta.instrument_model,' #',sample_data.meta.head.SerialNo,' on ',sample_data.deployment_code]);
+    end
 
-if idWcur
-    sample_data.variables{idWcur}.flags = flags;
-    varChecked = [varChecked, {'WCUR'}];
-end
-if idCspd
-    sample_data.variables{idCspd}.flags = flags;
-    varChecked = [varChecked, {'CSPD'}];
-end
+    %% Get the pre-existing bad bin data from the DDB, in Comma separted values
+    badbins         = [];
+    if ~isempty(sample_data.meta.deployment.BinNumInterference)
+        badbins = sample_data.meta.deployment.BinNumInterference;
+    end
 
-if idUcur
-    sample_data.variables{idUcur}.flags = flags;
-    varChecked = [varChecked, {sample_data.variables{idUcur}.name}];
-end
-if idVcur
-    sample_data.variables{idVcur}.flags = flags;
-    varChecked = [varChecked, {sample_data.variables{idVcur}.name}];
-end
-if idCdir
-    sample_data.variables{idCdir}.flags = flags;
-    varChecked = [varChecked, {sample_data.variables{idCdir}.name}];
-end
+    %% Input from user if no info is in the DDB
+    if isempty(badbins)
+        str1=sprintf('Info: imosBinDepthInterferenceSetQC requires your input\n\n');
+        str2=sprintf(['\nLook at where both Speed decreases and Echo'...
+        'Intensity increases and identify suspicious bins.\n\n']);
+        str3=sprintf('Enter the bin numbers separated by commas or spaces\n\n'); 
 
-% store bad bins for meta data
-if ~isempty(badbins)
-sample_data.meta=setfield(sample_data.meta,'badbins',badbins);
-end
+        str4=[str1,str2,str3];
+        xx = inputdlg(str4,'Visual inspection of suspicious bins affected by instrument interference',[1 120]);
 
-end
+        if ~isempty(xx)
+           badbins = str2num(xx{:}); %user inputed bad bins in CSV  
+        end
+    else
+        str1=sprintf(['Info: imosBinDepthInterferenceSetQC requires your input\n\n']);
+        str2=sprintf(['\nLook at where both Speed decreases and Echo'...
+        'Intensity increases and identify suspicious bins.\n\n']);
+        str3=sprintf(['\n\nDo you want to continue to use the database noted bad bins of'...
+           '' badbins ' from previous QC analysis?\n\nIf not, please enter new'...
+           'values separated by a comma.']); 
 
+        str4=[str1,str2,str3];
+        xx = inputdlg(str4,'Visual inspection of suspicious bins affected by instrument interference',[1 120],{badbins});
+
+        if ~isempty(xx)
+           badbins = str2num(xx{:}); %user inputed bad bins in CSV  
+        end
+    end    
+    % Close figure
+    close(fig);
+
+    %% Make the flags
+    % same flags are given to any variable
+    flags = ones(sizeCur, 'int8')*rawFlag;
+    flags(:,badbins) = badFlag;
+    flags(flags == rawFlag) = goodFlag;
+
+    if idWcur
+        sample_data.variables{idWcur}.flags = flags;
+        varChecked = [varChecked, {'WCUR'}];
+    end
+    if idCspd
+        sample_data.variables{idCspd}.flags = flags;
+        varChecked = [varChecked, {'CSPD'}];
+    end
+
+    if idUcur
+        sample_data.variables{idUcur}.flags = flags;
+        varChecked = [varChecked, {sample_data.variables{idUcur}.name}];
+    end
+    if idVcur
+        sample_data.variables{idVcur}.flags = flags;
+        varChecked = [varChecked, {sample_data.variables{idVcur}.name}];
+    end
+    if idCdir
+        sample_data.variables{idCdir}.flags = flags;
+        varChecked = [varChecked, {sample_data.variables{idCdir}.name}];
+    end
+
+    % store bad bins for meta data
+    if ~isempty(badbins)
+    sample_data.meta=setfield(sample_data.meta,'badbins',badbins);
+    end
+
+    end
+end % option to escape from filter, due to NAN datasets / missing data
 
 %% We use a modified version of imosSideLobeVelocitySetQC as a nested function
 % Alexandre Forest
