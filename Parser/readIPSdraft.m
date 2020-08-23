@@ -128,7 +128,7 @@ sample_data = struct;
 % %% in-air pressure offset test / filter
 % % apply only if the pressure sensor is exhibiting poor data. This unit's
 % % pressure sensor is not one that gets zero'd before deployment.
-%
+% 
 %     first_mes=data.PRES.values(1:5);
 %     first_mes=first_mes(first_mes<15);
 % 
@@ -140,7 +140,7 @@ sample_data = struct;
 %     data.PRES.values=data.PRES.values-mean(first_mes);
 %     
 % 	% Commenting the Metadata history
-%     PressureOffsetComment=[filename,'.m: Raw pressure data from ', name,...
+%     PressureOffsetComment=[mfilename,'.m: Raw pressure data from ', name,...
 %         ' was corrected for a pressure offset in air of ',...
 %         num2str(round(mean(first_mes),1)),'dbar'];
 %     
