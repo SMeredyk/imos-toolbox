@@ -705,7 +705,8 @@ function sample_data = readXR620( filename, mode )
                   end
                   
                   % calculate density from salinity, temperature and pressure
-                  dens = sw_dens(psal.data, temp.data, pres.data - gsw_P0/10^4); % cannot use the GSW SeaWater library TEOS-10 as we don't know yet the position
+                  %dens = sw_dens(psal.data, temp.data, pres.data - gsw_P0/10^4); % cannot use the GSW SeaWater library TEOS-10 as we don't know yet the position
+                  dens = gsw_rho(psal.data, temp.data, pres.data - gsw_P0/10^4); % the sw_dens script isn't in the standard toolbox package, so maybe gsw_rho.m will work - shawn
                   
                   % umol/l -> umol/kg (dens in kg/m3 and 1 m3 = 1000 l)
                   data = dox1.data .* 1000.0 ./ dens;
