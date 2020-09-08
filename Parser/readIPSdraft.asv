@@ -318,7 +318,7 @@ for i = 1:length(files)
     %out{i} = readtable(files{i},opts);
     % above code causes issues in 2017b, so changed the code to below -
     % shawn aug 22, 2020
-    opts = detectImportOptions(files{i},'ReadVariableNames',true,'VariableNamesLine',1,'ExtraColumnsRule','ignore', 'Delimiter', ',','ConsecutiveDelimitersRule','join');
+    opts = detectImportOptions(files{i},'ReadVariableNames',true,'VariableNamesLine',1,'ExtraColumnsRule','ignore', 'Delimiter', ',','ConsecutiveDelimitersRule',);
     opts.SelectedVariableNames = {'Date_yyyy_mm_ddHH_MM_SS_FFF_','TiltX_deg_','TiltY_deg_','ParosTemperature_C_','Pressure_dbar_','Temperature_C_','Battery_V_'};
     out{i} = readtable(files{i},opts);
     %

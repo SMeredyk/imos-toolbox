@@ -93,37 +93,39 @@ sample_data = struct;
   fclose(fid);
   % iData passed the header position to readData
   params = params{1};
-  
-A = count(params{1},"Pressure(kPa)");
-if A > 0
- 
-    first_mes=data.PRES.values(1:5);
-    first_mes=first_mes(first_mes<15);
-
-    if  ~isnan(first_mes)
-        disp(['Please note: ', NAME,': pressure offset in air : ',...
-        num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
-    
-	%pressure=pressure-mean(first_mes);
-    data.PRES.values=data.PRES.values-mean(first_mes);
-    
-	% Commenting the Metadata history
-    PressureOffsetComment=[mfilename,'.m: Raw pressure data from ', NAME,...
-        ' was corrected for a pressure offset in air of ',...
-        num2str(round(mean(first_mes),1)),'dbar'];
-    
-    sample_data.history = sprintf('%s - %s', ...
-            datestr(now_utc, readProperty('exportNetCDF.dateFormat')), ...
-            PressureOffsetComment);
-    else
-        disp(['Please note: ', NAME,': pressure offset in air : ',...
-        num2str(ceil(max(data.PRES.values(1:5)))),...
-        '-dbar and NO pressure offset was applied']);
-    end
-
-else
-disp(['Please note: ', NAME,' pressure sensor was not installed.']);
-end
+% Not always an accurate way of measuring the in-air offset - shawn - sept
+% 8, 2020
+%
+% A = count(params{1},"Pressure(kPa)");
+% if A > 0
+%  
+%     first_mes=data.PRES.values(1:5);
+%     first_mes=first_mes(first_mes<15);
+% 
+%     if  ~isnan(first_mes)
+%         disp(['Please note: ', NAME,': pressure offset in air : ',...
+%         num2str(ceil(max(first_mes))),'-dbar Pressure Offset Applied']);
+%     
+% 	%pressure=pressure-mean(first_mes);
+%     data.PRES.values=data.PRES.values-mean(first_mes);
+%     
+% 	% Commenting the Metadata history
+%     PressureOffsetComment=[mfilename,'.m: Raw pressure data from ', NAME,...
+%         ' was corrected for a pressure offset in air of ',...
+%         num2str(round(mean(first_mes),1)),'dbar'];
+%     
+%     sample_data.history = sprintf('%s - %s', ...
+%             datestr(now_utc, readProperty('exportNetCDF.dateFormat')), ...
+%             PressureOffsetComment);
+%     else
+%         disp(['Please note: ', NAME,': pressure offset in air : ',...
+%         num2str(ceil(max(data.PRES.values(1:5)))),...
+%         '-dbar and NO pressure offset was applied']);
+%     end
+% 
+% else
+% disp(['Please note: ', NAME,' pressure sensor was not installed.']);
+% end
 
 sample_data.toolbox_input_file              = filename;
 sample_data.meta.instrument_make            = 'Aanderaa';
