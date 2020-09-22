@@ -159,7 +159,7 @@ function [header, channel,nChannels] = readHeader(rawText)
           %eval(['channel.Ch' num2str(i) '(j) = coef{j};']); end 
       %if the above line gives an error, use lines below
             eval(['channel.Ch' num2str(i) '(j) = coef{1,j};']); 
-            j = j+1;
+            j = j+1;end
   end   %end for loop
   
 end % end of readHeader function

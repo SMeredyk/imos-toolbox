@@ -89,11 +89,14 @@ sample_data.meta.featureType                = mode;
 
 if isfield(header,'SondeName')== 1  % If the header scan filled-in the variable SondeName, otherwise elseif
 % Infinity Series Units
-sample_data.meta.instrument_model           = header.SondeName;
+%sample_data.meta.instrument_model           = header.SondeName; % original
+% code , but causes an error once in a while , so below code was added -
+% shawn , sept 22, 2020
+sample_data.meta.instrument_model           = header.SensorType;
 sample_data.meta.instrument_serial_no       = header.SondeNo;
   
 	% Infinity Model and Serial number
-	equipname = regexp(header.SondeName,'T0K0U3B0');
+	equipname = regexp(header.SensorType,'T0K0U3B0');
     if equipname == 1
         sample_data = readInfinityAclw(filename, mode); % This is an ACLW-USB model
     else    
@@ -138,7 +141,7 @@ end 	% end of switch
 
 end 	% end of InstType
 	
-
+end     % end of main function
 
 function header = readHeader(rawText)
 %READHEADER Reads the header from the file.
@@ -165,5 +168,3 @@ function header = readHeader(rawText)
      
   end
 end     % readHeader function end
-
-end % closes main function
