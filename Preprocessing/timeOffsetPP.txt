@@ -11,6 +11,7 @@ GMT     = 0.0
 UTC/GMT = 0.0
 
 % for North American datasets
+NAATL	=-4.0
 NACST	=-6.0
 NAEST	=-5.0
 
