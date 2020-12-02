@@ -77,8 +77,11 @@ elseif strcmpi(ext, '.txt') && strcmp(line(1:12), 'Model=XR-620')
 elseif strcmpi(ext, '.txt') && strcmp(line(1:12), 'Model=RBRcon')		
 		   	sample_data = readXRConcertoDuo(filename, mode); % This is a Concerto model 
 			%this parser is the same as XR620
-else strcmpi(ext, '.txt') && strcmp(line(1:10), 'Model=RBRd')			
+elseif strcmpi(ext, '.txt') && strcmp(line(1:10), 'Model=RBRd')			
 		   	sample_data = readXRConcertoDuo(filename, mode); % This is a Duo model - 
 			%this parser is the same as XR620
-
+else strcmpi(ext, '.txt') && strcmp(line(1:6), 'Time,C')			
+		   	sample_data = readRuskinZipData(filename, mode); % This is any RBR unit with data from,
+			% the new export function of Ruskin (fall 2020).
+			%this is a very different / simple parser in comparison to the other model type functions.
 end % end of main
