@@ -110,15 +110,21 @@ narginchk(1,2);
 
 if ~ischar(filename), error('filename must contain a string'); end
 
-[filepath,name,~] = fileparts(filename);
+[filepath,name,ext] = fileparts(filename);
 %extracting filename parts 
 % Filename example : ASL_IPS5_51104_Draft.txt
 unitInfo = textscan(name, '%s %s %d %s', 'Delimiter', '_');
 %unitMake = char(unitInfo{1}); % company
 %unitModel = char(unitInfo{2});
 
-% extracting ice drafts - first approximation
-data = readData(filename);
+%% separate import functions for txt and csv Draft file types
+if ext = 'txt'
+    % extracting ice drafts - first approximation
+    data = readData(filename);
+else 
+    data = readDataCsv(filename);
+end 
+   
 % extracting sensor data and combining the ice draft and sensor data tables
 data = readSensorData(filepath,data);     
  
@@ -269,6 +275,75 @@ data.TIME.comment = 'DateTime';
 
 % house cleaning 
 clear Y M D H MN S params values Sort_order inRangeA DTime Draft Draft_err c
+
+end % end of readData function
+
+function data = readDataCsv(filename)
+%READDATA Reads the sample data from the CSV file data type
+
+  data = struct;
+    
+  fid = fopen(filename, 'rt');
+  params = textscan(fid,'%s',3,'Delimiter',',');
+  values = textscan(fid,repmat('%f',[1,3]),'Delimiter',',');
+  fclose(fid);
+
+% Example of DraftFile CSV type - exported from IPS5Extract 5.0  
+%Date[yyyy/mm/dd HH:MM:SS.FFF],Draft(m), DraftError(m)
+% 2020/9/20 - 15:52.18.01 , -0.15893, 0.918689
+
+%Y=values{1};
+DTime=values{1};
+%M=values{2};
+%D=values{3};
+%H=values{4};
+%MN=values{5};
+%S=values{6};
+Draft = values{2}; % draft values
+Draft_err = values{3}; % Draft Error values
+
+% adding DateTime to values and params
+%params{1,1}{9,1} = 'DATETIME';
+%values{9} = datenum(Y,M,D,H,MN,S); % DATETIME
+%DTime = values{9};
+
+% Sorting the dateTime in ascending order without duplicates
+[~,Sort_order]=unique(DTime,'sorted'); 
+
+DTime     = DTime(Sort_order);
+Draft     = Draft(Sort_order);
+Draft_err = Draft_err(Sort_order);
+
+%identify impossible dates, to not include in the final data struct
+[c,~] = sort(DTime > datenum(2000,01,01));
+
+DTime     = DTime(c);
+Draft     = Draft(c);
+Draft_err = Draft_err(c);
+
+%sorting data struct by unique sorted time values
+data.TIME.values=DTime;
+data.ICE_DRAFT.values=Draft;
+data.ICE_DRAFT_ERR.values=Draft_err;
+%
+% selecting +5m to -40m ice draft depth selection ; typically the Beaufort
+% Sea is between 15-30m drafts. 60-100m is maybe more applicable for the 
+% Labrador Sea. Thus, change to 60-100m if IPS are ever deployed in the 
+% Eastern Arctic. - ShawnM Feb 19, 2020
+%
+inRangeA = Draft >=-5 & Draft <= 40; 
+
+data.ICE_DRAFT.values = data.ICE_DRAFT.values(inRangeA)*(-1); %values inverted for vertical plotting sense
+data.ICE_DRAFT.comment = 'Ice Keel Depth (m)';
+
+data.ICE_DRAFT_ERR.values = data.ICE_DRAFT_ERR.values(inRangeA)*(-1); %values inverted for vertical plotting sense
+data.ICE_DRAFT_ERR.comment = 'Ice Keel Depth Error (m)'; 
+
+data.TIME.values = data.TIME.values(inRangeA); 
+data.TIME.comment = 'DateTime';
+
+% house cleaning 
+clear params values Sort_order inRangeA DTime Draft Draft_err c
 
 end % end of readData function
 
