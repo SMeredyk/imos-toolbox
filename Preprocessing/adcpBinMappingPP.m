@@ -17,12 +17,14 @@ function sample_data = adcpBinMappingPP( sample_data, qcLevel, auto )
 %   sample_data - the same data sets, with relevant processed variable originally function 
 %                 of DIST_ALONG_BEAMS now function of HEIGHT_ABOVE_SENSOR.
 %
-% Author:       Guillaume Galibert <guillaume.galibert@utas.edu.au>
+% Author:   Shawn Meredyk <shawn.meredyk@as.ulaval.ca>    
+%           Guillaume Galibert <guillaume.galibert@utas.edu.au>
 %
-
 %
-% Copyright (C) 2017, Australian Ocean Data Network (AODN) and Integrated 
-% Marine Observing System (IMOS).
+% Copyright (C) 2020, , Amundsen Science & ArcticNet
+% http://www.amundsen.ulaval.ca/
+% http://www.arcticnet.ulaval.ca/
+% All rights reserved.
 %
 % This program is free software: you can redistribute it and/or modify
 % it under the terms of the GNU General Public License as published by
@@ -55,30 +57,35 @@ for k = 1:length(sample_data)
     isNortek = false;
     if strcmpi(sample_data{k}.meta.instrument_make, 'Teledyne RDI'), isRDI = true; end
     if strcmpi(sample_data{k}.meta.instrument_make, 'Nortek'), isNortek = true; end
-    if ~isRDI && ~isNortek, continue; end
     
-    % do not process if Nortek with more than 3 beams
-    absic4Idx = getVar(sample_data{k}.variables, 'ABSIC4');
-    if absic4Idx && isNortek, continue; end
+    %% if nortek adcp , the following are escape scripts - shawn dec 9, 2020
+    if ~isRDI && ~isNortek, continue; end
     
     heightAboveSensorIdx = getVar(sample_data{k}.dimensions, 'HEIGHT_ABOVE_SENSOR');
     distAlongBeamsIdx = getVar(sample_data{k}.dimensions, 'DIST_ALONG_BEAMS');
     pitchIdx = getVar(sample_data{k}.variables, 'PITCH');
     rollIdx  = getVar(sample_data{k}.variables, 'ROLL');
-  
+    
+    % do not process if Nortek with more than 3 beams - AWAC case
+    absic4Idx = getVar(sample_data{k}.variables, 'ABSIC4');
+    if absic4Idx && isNortek, continue; end
+    
     % do not process if pitch, roll, and dist_along_beams not present in data set
     if ~(distAlongBeamsIdx && pitchIdx && rollIdx), continue; end
-  
-    % do not process if velocity data not vertically bin-mapped and there 
-    % is no velocity data in beam coordinates (useless)
+    
+    % nortek adcp ENU isn't bin-mapped , which is opposite from an RDI adcp - shawn - dec 8, 2020
+    % do not process if ENU velocity data not vertically bin-mapped and there 
+    % is no beam velocity data (ENU velocity is not going to be bin-mapped later so useless)
     ucurIdx  = getVar(sample_data{k}.variables, 'UCUR');
-    if ~ucurIdx, ucurIdx  = getVar(sample_data{k}.variables, 'UCUR_MAG'); end
-        vel1Idx  = getVar(sample_data{k}.variables, 'VEL1'); 
-
-    if any(sample_data{k}.variables{ucurIdx}.dimensions == distAlongBeamsIdx) && ~vel1Idx, continue; end
-
-      
-    % We apply tilt corrections to project DIST_ALONG_BEAMS onto the vertical
+    if ~ucurIdx 
+        ucurIdx  = getVar(sample_data{k}.variables, 'UCUR_MAG'); end
+    
+    vel1Idx  = getVar(sample_data{k}.variables, 'VEL1');
+    if vel1Idx && isNortek, continue; end
+    % old IMOS code - shawn - dec 9, 2020
+    %if any(sample_data{k}.variables{ucurIdx}.dimensions == heightAboveSensorIdx) && ~vel1Idx, continue; end
+  
+    %% We apply tilt corrections to project DIST_ALONG_BEAMS onto the vertical
     % axis HEIGHT_ABOVE_SENSOR.
     %
     % RDI 4 beams ADCPs:
@@ -117,7 +124,7 @@ for k = 1:length(sample_data)
         nonMappedHeightAboveSensorBeam4 = (cos(beamAngle + pitch)/cos(beamAngle)) * distAlongBeams;
         nonMappedHeightAboveSensorBeam4 = repmat(cos(roll), 1, nBins) .* nonMappedHeightAboveSensorBeam4;
     else
-        % Nortek 3 beams
+        % Nortek 3 beams ENU
         nonMappedHeightAboveSensorBeam1 = (cos(beamAngle - pitch)/cos(beamAngle)) * distAlongBeams;
         nonMappedHeightAboveSensorBeam1 = repmat(cos(roll), 1, nBins) .* nonMappedHeightAboveSensorBeam1;
         
@@ -212,31 +219,31 @@ for k = 1:length(sample_data)
             sample_data{k}.variables{j}.coordinates = 'TIME LATITUDE LONGITUDE HEIGHT_ABOVE_SENSOR';
         end
     end
-    
-    if isBinMapApplied
-        % let's look for remaining variables assigned to DIST_ALONG_BEAMS,
-        % if none we can remove this dimension (RDI for example)
-        isDistAlongBeamsUsed = false;
-        for j=1:length(sample_data{k}.variables)
-            if any(sample_data{k}.variables{j}.dimensions == distAlongBeamsIdx)
-                isDistAlongBeamsUsed = true;
-                break;
-            end
-        end
-        if ~isDistAlongBeamsUsed
-            if length(sample_data{k}.dimensions) > distAlongBeamsIdx
-                for j=1:length(sample_data{k}.variables)
-                    dimToUpdate = sample_data{k}.variables{j}.dimensions > distAlongBeamsIdx;
-                    if any(dimToUpdate)
-                        sample_data{k}.variables{j}.dimensions(dimToUpdate) = sample_data{k}.variables{j}.dimensions(dimToUpdate) - 1;
-                    end
-                end
-            end
-            sample_data{k}.dimensions(distAlongBeamsIdx) = [];
-            
-            binMappingComment = [binMappingComment ' DIST_ALONG_BEAMS is not used by any variable left and has been removed.'];
-        end
-        
+%% another nortek instance - shawn - will need to change to accomadate Nortek ADCPs    
+%     if isBinMapApplied
+%         % let's look for remaining variables assigned to DIST_ALONG_BEAMS,
+%         % if none we can remove this dimension (RDI for example)
+%         isDistAlongBeamsUsed = false;
+%         for j=1:length(sample_data{k}.variables)
+%             if any(sample_data{k}.variables{j}.dimensions == distAlongBeamsIdx)
+%                 isDistAlongBeamsUsed = true;
+%                 break;
+%             end
+%         end
+%         if ~isDistAlongBeamsUsed
+%             if length(sample_data{k}.dimensions) > distAlongBeamsIdx
+%                 for j=1:length(sample_data{k}.variables)
+%                     dimToUpdate = sample_data{k}.variables{j}.dimensions > distAlongBeamsIdx;
+%                     if any(dimToUpdate)
+%                         sample_data{k}.variables{j}.dimensions(dimToUpdate) = sample_data{k}.variables{j}.dimensions(dimToUpdate) - 1;
+%                     end
+%                 end
+%             end
+%             sample_data{k}.dimensions(distAlongBeamsIdx) = [];
+%             
+%             binMappingComment = [binMappingComment ' DIST_ALONG_BEAMS is not used by any variable left and has been removed.'];
+%         end
+%         
         history = sample_data{k}.history;
         if isempty(history)
             sample_data{k}.history = sprintf('%s - %s', datestr(now_utc, readProperty('exportNetCDF.dateFormat')), binMappingComment);
