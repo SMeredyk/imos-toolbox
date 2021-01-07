@@ -1,7 +1,9 @@
-function sample_data = readRuskinZipData( filename, mode )
+function sample_data = readRSKfile( filename, mode )
 %% Function Description
-% readRuskinZipData Parses a data file retrieved from an RBR logger 
-% that was exported from the new (fall 2020) ruskin Zip file.
+% readRSKfile.m Parses a data file retrieved from an RBR logger 
+% that was exported from the new (fall 2020) ruskin v2.12.
+% this script will extract the data needed to process an .rsk file
+% without having to manually export the Ruskin Zip folder.
 %
 % Inputs:
 %   filename    - Cell array containing the name of the file to parse.
@@ -15,7 +17,7 @@ function sample_data = readRuskinZipData( filename, mode )
 %				
 %
 % Copyright (c) 2020, Australian Ocean Data Network (AODN) and Integrated 
-% Marine Observing System (IMOS).
+% Marine Observing System (IMOS) and Amundsen Science (AS).
 % All rights reserved.
 % 
 % Redistribution and use in source and binary forms, with or without 
