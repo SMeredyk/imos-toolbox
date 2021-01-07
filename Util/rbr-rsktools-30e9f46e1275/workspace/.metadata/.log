@@ -1,0 +1,10 @@
+!SESSION 2021-01-06 12:07:22.742 -----------------------------------------------
+eclipse.buildId=unknown
+java.version=1.8.0_161
+java.vendor=Oracle Corporation
+BootLoader constants: OS=win32, ARCH=x86, WS=win32, NL=en_CA
+Framework arguments:  -clearPersistedState C:\Users\ShawnM\Downloads\rbr-rsktools\rbr-rsktools-30e9f46e1275\sample.rsk
+Command-line arguments:  -os win32 -ws win32 -arch x86 -clean -clearPersistedState C:\Users\ShawnM\Downloads\rbr-rsktools\rbr-rsktools-30e9f46e1275\sample.rsk
+
+!ENTRY org.eclipse.equinox.p2.touchpoint.natives 2 0 2021-01-06 12:08:42.281
+!MESSAGE Could not remove temporary backup directory (it is safe to manually delete it and its contents): C:\Users\ShawnM\AppData\Local\Temp\DefaultProfile_2edb15811e20_c0a80111ec34
