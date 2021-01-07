@@ -64,9 +64,9 @@ dataFileStatusDialog.noFileFormat          = bold
 dataFileStatusDialog.multipleFileFormat    = italic
 
 % last selected values for start dialog
-startDialog.dataDir.timeSeries = D:\Analysis\StLawrence_Seaway\2018\S20-18
+startDialog.dataDir.timeSeries = D:\Analysis\High_Arctic\2019\BRG-19\Recovery
 startDialog.dataDir.profile = 
-startDialog.fieldTrip.timeSeries = 2019_SILLEX
+startDialog.fieldTrip.timeSeries = 2020_IOS
 startDialog.fieldTrip.profile = 
 startDialog.lowDate.timeSeries = 730699
 startDialog.lowDate.profile = 

@@ -64,6 +64,7 @@ catch e
     rethrow(e);
 end
 
+fname = filename; % to accomodate RSKTools functions without having to varName replace - shawn Jan 6, 2021
 
 if strcmpi(ext, '.dat') && strcmp(line(1:9), 'Model=RBR')
     % use the classic XR420 parser for RBR Windows v 6.13 file format
@@ -81,7 +82,7 @@ elseif strcmpi(ext, '.txt') && strcmp(line(1:10), 'Model=RBRd')
 		   	sample_data = readXRConcertoDuo(filename, mode); % This is a Duo model - 
 			%this parser is the same as XR620
 else strcmpi(ext, '.rsk')			
-		   	sample_data = readRSKfile(filename, mode); % This is any RBR unit with data in .rsk format
+		   	sample_data = readRSKfile(fname, mode); % This is any RBR unit with data in .rsk format
 			%this is a very different / simple parser in comparison to the other model type functions.
 			% this may become the default parser as legacy exporting is limited to legacy products.
 end % end of main
