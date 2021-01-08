@@ -74,8 +74,8 @@ HEAT_NET,            1, surface_upward_heat_flux_in_air,                        
 HEIGHT_ABOVE_SENSOR, 1, height,                                                                                   m,             up,            sensor,                            Z, 999999.0, -12000.0, 12000.0,  float
 HL,                  1, surface_upward_latent_heat_flux,                                                          W m-2,         ,              ,                                  F, 999999.0, ,         ,         float
 HS,                  1, surface_upward_sensible_heat_flux,                                                        W m-2,         ,              ,                                  F, 999999.0, ,         ,         float
-ICE_DRAFT,			 0, ice_draft_depth,																		  m,			 down,			sea surface,					   I, 999999.0, -100.0,   100.0,    double
-ICE_DRAFT_ERR,		 0, ice_draft_depth_error,																	  m,			 down,			sea surface,					   I, 999999.0, -10.0,    10.0,     double
+ICE_DRAFT,			 1, ice_draft_depth,																		  m,			 down,			sea surface,					   I, 999999.0, -100.0,   100.0,    double
+ICE_DRAFT_ERR,		 1, ice_draft_depth_error,																	  m,			 down,			sea surface,					   I, 999999.0, -10.0,    10.0,     double
 ISO17,               1, depth_of_isosurface_of_sea_water_potential_temperature,                                   m,             down,          sea surface,                       E, 999999.0, ,         ,         float
 LATITUDE,            1, latitude,                                                                                 degrees_north, ,              WGS84 geographic coordinate system, , 999999.0, -90.0,    90.0,     double
 LONGITUDE,           1, longitude,                                                                                degrees_east,  ,              WGS84 geographic coordinate system, , 999999.0, -180.0,   180.0,    double

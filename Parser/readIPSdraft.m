@@ -118,15 +118,15 @@ unitInfo = textscan(name, '%s %s %d %s', 'Delimiter', '_');
 %unitModel = char(unitInfo{2});
 
 %% separate import functions for txt and csv Draft file types
-if ext = 'txt'
+if strcmp(ext,'txt')
     % extracting ice drafts - first approximation
-    data = readData(filename);
+    data = readDataV634(filename);
 else 
-    data = readDataCsv(filename);
+    data = readDataV650(filename);
 end 
    
 % extracting sensor data and combining the ice draft and sensor data tables
-data = readSensorData(filepath,data);     
+data = readSensorDataV634(filepath,data);     
  
 % copy all of the information over to the sample data struct
 sample_data = struct;
@@ -211,7 +211,7 @@ end
 end %end of main function
 
 
-function data = readData(filename)
+function data = readDataV634(filename)
 %READDATA Reads the sample data from the file.
 
   data = struct;
@@ -278,10 +278,12 @@ clear Y M D H MN S params values Sort_order inRangeA DTime Draft Draft_err c
 
 end % end of readData function
 
-function data = readDataCsv(filename)
-%READDATA Reads the sample data from the CSV file data type
-
-  data = struct;
+function data = readDataV650(filename)
+% This function is to accomodate the latest version of Ips5Extract v6.5.0
+% The files in structure and number are quite different from v6.3.4
+% This function is still in-progress and needs work.
+%
+ data = struct;
     
   fid = fopen(filename, 'rt');
   params = textscan(fid,'%s',3,'Delimiter',',');
@@ -291,6 +293,10 @@ function data = readDataCsv(filename)
 % Example of DraftFile CSV type - exported from IPS5Extract 5.0  
 %Date[yyyy/mm/dd HH:MM:SS.FFF],Draft(m), DraftError(m)
 % 2020/9/20 - 15:52.18.01 , -0.15893, 0.918689
+
+%%%% - code to help concatenate all CSV files from the new V6.5.0 IpsExtract
+%ds = datastore(pwd);
+%mydata = ds.readall;
 
 %Y=values{1};
 DTime=values{1};
@@ -347,7 +353,7 @@ clear params values Sort_order inRangeA DTime Draft Draft_err c
 
 end % end of readData function
 
-function data = readSensorData(filepath, data)
+function data = readSensorDataV634(filepath, data)
 %% readIPS reads a directory with multiple.csv files from an IPS5 unit (ice profiling ADCP) 
 % extracted via Ips5Extract v6.3.4 software.
 %
