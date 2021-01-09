@@ -112,17 +112,17 @@ if ~ischar(filename), error('filename must contain a string'); end
 
 [filepath,name,ext] = fileparts(filename);
 %extracting filename parts 
-% Filename example : ASL_IPS5_51104_Draft.txt
+% Filename example : ASL_IPS5_51104_Draft.txt or ASL_IPS5_51104.csv
 unitInfo = textscan(name, '%s %s %d %s', 'Delimiter', '_');
 %unitMake = char(unitInfo{1}); % company
 %unitModel = char(unitInfo{2});
 
 %% separate import functions for txt and csv Draft file types
-if strcmp(ext,'txt')
+if strcmp(ext,'.txt')
     % extracting ice drafts - first approximation
     data = readDataV634(filename);
 else 
-    data = readDataV650(filename);
+    data = readDataV650(filepath);
 end 
    
 % extracting sensor data and combining the ice draft and sensor data tables
@@ -278,17 +278,19 @@ clear Y M D H MN S params values Sort_order inRangeA DTime Draft Draft_err c
 
 end % end of readData function
 
-function data = readDataV650(filepath, data)
+function data = readDataV650(filepath)
 %% read all CSV files from the ice draft filepath
 %  
+data = struct;
+
 myfiles         = dir(filepath);
 filenamesCSV    = {myfiles(:).name}; 
 filefolders     = {myfiles(:).folder};
 %  
 %list only csv files with draftfile in name. 
 %
-csvfiles    = filenamesCSV(endsWith(filenamesCSV,'draftfile.csv'));
-csvfolders  = filefolders(endsWith(filenamesCSV,'draftfile.csv')); 
+csvfiles    = filenamesCSV(endsWith(filenamesCSV,'IPS5Extract_draftfile.csv'));
+csvfolders  = filefolders(endsWith(filenamesCSV,'IPS5Extract_draftfile.csv')); 
 %
 %Make a cell array of strings containing the full file locations of the
 %files.
@@ -304,7 +306,7 @@ for i = 1:length(files)
     % above code causes issues in 2017b, so changed the code to below -
     % shawn aug 22, 2020
     opts = detectImportOptions(files{i},'ReadVariableNames',true,'VariableNamesLine',1,'ExtraColumnsRule','ignore', 'Delimiter', ',','ConsecutiveDelimitersRule','join');
-    opts.SelectedVariableNames = {'Date[yyyy/mm/dd HH:MM:SS.FFF]' ,'Draft(m)', 'DraftError(m)'};
+    opts.SelectedVariableNames = {'Date_yyyy_mm_ddHH_MM_SS_FFF_' ,'Draft_m_', 'DraftError_m_'};
     out{i} = readtable(files{i},opts);
 end
 %
@@ -314,29 +316,53 @@ values = vertcat(out{:});
 % Sorting the dateTime of the table in ascending order without duplicates
 % new date table is created, though dates are strings 
 %
-isodates(:,1) = datenum(values{:,1},'yyyy/mm/dd - HH:MM:SS.FFF');
+isodates(:,1) = datenum(values{:,1},'yyyy/mm/dd - HH:MM.SS.FFF');
 %
 % new array values with mean of sorted dateTime
 for j = 2:3
     isodates(:,j) = values{:,j};
 end
 %
-T2 = datetime(isodates(:,1), 'convertFrom', 'datenum');
+%T2 = datetime(isodates(:,1), 'convertFrom', 'datenum');
 %
-% Create timetables of ICE_Draft
-tt = timetable(T2,isodates(:,2),isodates(:,3));
+% Create timetable of ICE_Draft and error
+%tt = timetable(T2,isodates(:,2),isodates(:,3));
 %
 % finalizing the data struct for passing back up
-data.TIME.values = tt(:,1);
-data.ICE_DRAFT.values = tt(:,2);
-data.ICE_DRAFT_ERR.values = tt(:,3);
+%data.TIME.values = tt(:,1);
+%data.ICE_DRAFT.values = tt(:,2);
+%data.ICE_DRAFT_ERR.values = tt(:,3); % causes error due to timetable
+%syntax.
 %
+% Sorting the dateTime in ascending order without duplicates
+DTime = isodates(:,1);
+Draft = isodates(:,2);
+Draft_err = isodates(:,3);
+
+[~,Sort_order]=unique(DTime,'sorted'); 
+
+DTime     = DTime(Sort_order);
+Draft     = Draft(Sort_order);
+Draft_err = Draft_err(Sort_order);
+
+%identify impossible dates, to not include in the final data struct
+[c,~] = sort(DTime > datenum(2000,01,01));
+
+DTime     = DTime(c);
+Draft     = Draft(c);
+Draft_err = Draft_err(c);
+
+%sorting data struct by unique sorted time values
+data.TIME.values=DTime;
+data.ICE_DRAFT.values=Draft;
+data.ICE_DRAFT_ERR.values=Draft_err;
+
 % selecting +5m to -40m ice draft depth selection ; typically the Beaufort
 % Sea is between 15-30m drafts. 60-100m is maybe more applicable for the 
 % Labrador Sea. Thus, change to 60-100m if IPS are ever deployed in the 
 % Eastern Arctic. - ShawnM Feb 19, 2020
 %
-inRangeA = data.TIME.values >=-5 & data.TIME.values <= 40; 
+inRangeA = Draft >=-5 & Draft <= 40; 
 
 data.ICE_DRAFT.values = data.ICE_DRAFT.values(inRangeA)*(-1); %values inverted for vertical plotting sense
 data.ICE_DRAFT.comment = 'Ice Keel Depth (m)';
@@ -348,7 +374,7 @@ data.TIME.values = data.TIME.values(inRangeA);
 data.TIME.comment = 'DateTime';
 
 %% House cleaning
-clear values params nParams myfiles filenamesCSV filefolders csvfiles csvfolders files opts out i j k isodates tt T2
+clear values myfiles filenamesCSV filefolders csvfiles csvfolders files opts out i j isodates tt T2
 
 end % end of readData function
 
