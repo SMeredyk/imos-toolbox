@@ -126,7 +126,7 @@ else
 end 
    
 % extracting sensor data and combining the ice draft and sensor data tables
-data = readSensorDataV634(filepath,data);     
+data = readSensorData(filepath,data);     
  
 % copy all of the information over to the sample data struct
 sample_data = struct;
@@ -278,66 +278,65 @@ clear Y M D H MN S params values Sort_order inRangeA DTime Draft Draft_err c
 
 end % end of readData function
 
-function data = readDataV650(filename)
-% This function is to accomodate the latest version of Ips5Extract v6.5.0
-% The files in structure and number are quite different from v6.3.4
-% This function is still in-progress and needs work.
+function data = readDataV650(filepath, data)
+%% read all CSV files from the ice draft filepath
+%  
+myfiles         = dir(filepath);
+filenamesCSV    = {myfiles(:).name}; 
+filefolders     = {myfiles(:).folder};
+%  
+%list only csv files with draftfile in name. 
 %
- data = struct;
-    
-  fid = fopen(filename, 'rt');
-  params = textscan(fid,'%s',3,'Delimiter',',');
-  values = textscan(fid,repmat('%f',[1,3]),'Delimiter',',');
-  fclose(fid);
-
-% Example of DraftFile CSV type - exported from IPS5Extract 5.0  
-%Date[yyyy/mm/dd HH:MM:SS.FFF],Draft(m), DraftError(m)
-% 2020/9/20 - 15:52.18.01 , -0.15893, 0.918689
-
-%%%% - code to help concatenate all CSV files from the new V6.5.0 IpsExtract
-%ds = datastore(pwd);
-%mydata = ds.readall;
-
-%Y=values{1};
-DTime=values{1};
-%M=values{2};
-%D=values{3};
-%H=values{4};
-%MN=values{5};
-%S=values{6};
-Draft = values{2}; % draft values
-Draft_err = values{3}; % Draft Error values
-
-% adding DateTime to values and params
-%params{1,1}{9,1} = 'DATETIME';
-%values{9} = datenum(Y,M,D,H,MN,S); % DATETIME
-%DTime = values{9};
-
-% Sorting the dateTime in ascending order without duplicates
-[~,Sort_order]=unique(DTime,'sorted'); 
-
-DTime     = DTime(Sort_order);
-Draft     = Draft(Sort_order);
-Draft_err = Draft_err(Sort_order);
-
-%identify impossible dates, to not include in the final data struct
-[c,~] = sort(DTime > datenum(2000,01,01));
-
-DTime     = DTime(c);
-Draft     = Draft(c);
-Draft_err = Draft_err(c);
-
-%sorting data struct by unique sorted time values
-data.TIME.values=DTime;
-data.ICE_DRAFT.values=Draft;
-data.ICE_DRAFT_ERR.values=Draft_err;
+csvfiles    = filenamesCSV(endsWith(filenamesCSV,'draftfile.csv'));
+csvfolders  = filefolders(endsWith(filenamesCSV,'draftfile.csv')); 
+%
+%Make a cell array of strings containing the full file locations of the
+%files.
+%
+files = fullfile(csvfolders(:),csvfiles(:));
+%
+%Import the csv tables into out table
+% setting the variables to extract
+%
+for i = 1:length(files)
+    %opts = detectImportOptions(files{i},'PreserveVariableNames', true,'VariableNamesLine',1);
+    %out{i} = readtable(files{i},opts);
+    % above code causes issues in 2017b, so changed the code to below -
+    % shawn aug 22, 2020
+    opts = detectImportOptions(files{i},'ReadVariableNames',true,'VariableNamesLine',1,'ExtraColumnsRule','ignore', 'Delimiter', ',','ConsecutiveDelimitersRule','join');
+    opts.SelectedVariableNames = {'Date[yyyy/mm/dd HH:MM:SS.FFF]' ,'Draft(m)', 'DraftError(m)'};
+    out{i} = readtable(files{i},opts);
+end
+%
+% merge the outputs into a usable table
+values = vertcat(out{:});
+%
+% Sorting the dateTime of the table in ascending order without duplicates
+% new date table is created, though dates are strings 
+%
+isodates(:,1) = datenum(values{:,1},'yyyy/mm/dd - HH:MM:SS.FFF');
+%
+% new array values with mean of sorted dateTime
+for j = 2:3
+    isodates(:,j) = values{:,j};
+end
+%
+T2 = datetime(isodates(:,1), 'convertFrom', 'datenum');
+%
+% Create timetables of ICE_Draft
+tt = timetable(T2,isodates(:,2),isodates(:,3));
+%
+% finalizing the data struct for passing back up
+data.TIME.values = tt(:,1);
+data.ICE_DRAFT.values = tt(:,2);
+data.ICE_DRAFT_ERR.values = tt(:,3);
 %
 % selecting +5m to -40m ice draft depth selection ; typically the Beaufort
 % Sea is between 15-30m drafts. 60-100m is maybe more applicable for the 
 % Labrador Sea. Thus, change to 60-100m if IPS are ever deployed in the 
 % Eastern Arctic. - ShawnM Feb 19, 2020
 %
-inRangeA = Draft >=-5 & Draft <= 40; 
+inRangeA = data.TIME.values >=-5 & data.TIME.values <= 40; 
 
 data.ICE_DRAFT.values = data.ICE_DRAFT.values(inRangeA)*(-1); %values inverted for vertical plotting sense
 data.ICE_DRAFT.comment = 'Ice Keel Depth (m)';
@@ -348,12 +347,12 @@ data.ICE_DRAFT_ERR.comment = 'Ice Keel Depth Error (m)';
 data.TIME.values = data.TIME.values(inRangeA); 
 data.TIME.comment = 'DateTime';
 
-% house cleaning 
-clear params values Sort_order inRangeA DTime Draft Draft_err c
+%% House cleaning
+clear values params nParams myfiles filenamesCSV filefolders csvfiles csvfolders files opts out i j k isodates tt T2
 
 end % end of readData function
 
-function data = readSensorDataV634(filepath, data)
+function data = readSensorData(filepath, data)
 %% readIPS reads a directory with multiple.csv files from an IPS5 unit (ice profiling ADCP) 
 % extracted via Ips5Extract v6.3.4 software.
 %
@@ -461,6 +460,6 @@ data.VOLT.values = tt(:,8);
 data.VOLT.comment = 'Battery Voltage';  
 %
 %% House cleaning
-clear values params nParams myfiles filenamesCSV filefolders csvfiles csvfolders files opts out i j k isodatesT1 T2 TT1 TT2 TT3 TT4 t tt
+clear values params nParams myfiles filenamesCSV filefolders csvfiles csvfolders files opts out i j k isodates T1 T2 TT1 TT2 TT3 TT4 t tt
 
 end % end of readData function
