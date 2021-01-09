@@ -70,10 +70,10 @@ if strcmpi(ext, '.dat') && strcmp(line(1:9), 'Model=RBR')
     % use the classic XR420 parser for RBR Windows v 6.13 file format
     sample_data = readXR420(filename, mode);
 elseif strcmpi(ext, '.txt') && strcmp(line(1:12), 'Model=XR-420')
-            sample_data = readXR620(filename, mode); % This is a newer Ruskin exported XR420 dataset, 
+            sample_data = readXR620(filename, mode); % This is a newer XR620 Ruskin exported XR420 dataset, 
 			% imports CT, CT-FL-Tu-DO ; no salinity or depth imported
 elseif strcmpi(ext, '.txt') && strcmp(line(1:12), 'Model=XR-620')
-            sample_data = readXR620(filename, mode); % This is a newer Ruskin exported XR420 dataset, 
+            sample_data = readXR620(filename, mode); % This is a newer XR620 Ruskin exported XR420 dataset, 
 			% imports CT, CT-FL-Tu-DO ; no salinity or depth imported		
 elseif strcmpi(ext, '.txt') && strcmp(line(1:12), 'Model=RBRcon')		
 		   	sample_data = readXRConcertoDuo(filename, mode); % This is a Concerto model 

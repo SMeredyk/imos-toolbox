@@ -64,13 +64,13 @@ function sample_data = readXR420( filename, mode )
   sample_data.meta.instrument_sample_interval = median(diff(data.time*24*3600));
   sample_data.meta.featureType          = mode;
   
-  if isfield(header, 'correction'),             sample_data.meta.correction             = header.correction; end
-  if isfield(header, 'averaging_time_period'),  sample_data.meta.instrument_average_interval = header.averaging_time_period; end
-  if isfield(header, 'burst_sample_rate'),      sample_data.meta.burst_sample_rate      = header.burst_sample_rate; end
+  if isfield(header, 'correction'),sample_data.meta.correction = header.correction; end
+  if isfield(header, 'averaging_time_period'),sample_data.meta.instrument_average_interval = header.averaging_time_period; end
+  if isfield(header, 'burst_sample_rate'),sample_data.meta.burst_sample_rate = header.burst_sample_rate; end
   
   sample_data.dimensions = {};  
   sample_data.variables  = {};
-  
+%%  
   switch mode
       case 'profile'
           % dimensions creation
@@ -249,7 +249,7 @@ function sample_data = readXR420( filename, mode )
                   % case 'Depth', name = 'DEPTH'; % letting toolbox calculate this.
                       
                   %Fluorometry-chlorophyl (ug/l) = (mg.m-3)
-                  case {'FlCa', 'FLC'},
+                  case {'FlCa', 'FLC'}
                       name = 'CPHL';
                       comment.(vars{k}) = ['Artificial chlorophyll data computed from ' ...
                           'fluorometry sensor raw counts measurements. Originally ' ...
@@ -260,6 +260,18 @@ function sample_data = readXR420( filename, mode )
                       
                   %Turb-a (NTU)
                   case {'Turba', 'Turb'}, name = 'TURB';
+                      
+                    % Oxyguard dissolved O2 concentration (ml/l) => (umol/l)
+                  case {'dO2C','xdO2C'}
+                      name = 'DOX1';
+                      comment.(vars{k}) = ['Originally expressed in ml/l, ' ...
+                          '1ml/l = 44.660umol/l was assumed.'];
+                      data.(vars{k}) = data.(vars{k}) * 44.660;
+                      
+                    %Specific conductivity (uS/cm) = 10-4 * (S/m)
+                  case {'SpecCond', 'scon00'}
+                      name = 'SPEC_CNDC';
+                      data.(vars{k}) = data.(vars{k})/10000;
               end
               
               sample_data.variables{end  }.name       = name;
@@ -277,11 +289,12 @@ function sample_data = readXR420( filename, mode )
                   sample_data.variables{end  }.coordinates = 'TIME LATITUDE LONGITUDE DEPTH';
               end
           end
-          
+ %% Times series section below 
       case 'timeSeries'
           sample_data.dimensions{1}.name            = 'TIME';
           sample_data.dimensions{1}.typeCastFunc    = str2func(netcdf3ToMatlabType(imosParameters(sample_data.dimensions{1}.name, 'type')));
           sample_data.dimensions{1}.data            = sample_data.dimensions{1}.typeCastFunc(data.time);
+          
           if isfield(header, 'averaging_time_period')
               sample_data.dimensions{1}.comment         = ['Time stamp corresponds to the start of the measurement which lasts ' num2str(header.averaging_time_period) ' seconds.'];
               sample_data.dimensions{1}.seconds_to_middle_of_measurement = header.averaging_time_period/2; %assume averaging time is always in seconds
@@ -305,7 +318,7 @@ function sample_data = readXR420( filename, mode )
           sample_data.variables{end}.dimensions       = [];
 
           % copy variable data over
-          data = rmfield(data, 'time');
+          data = rmfield(data, 'TIME');
           fields = fieldnames(data);
           coordinates = 'TIME LATITUDE LONGITUDE NOMINAL_DEPTH';
           
@@ -328,7 +341,7 @@ function sample_data = readXR420( filename, mode )
                   %case 'Depth', name = 'DEPTH'; % letting toolbox calculate this.
                       
                   %Fluorometry-chlorophyl (ug/l) = (mg.m-3)
-                  case {'FlCa', 'FLC'},
+                  case {'FlCa', 'FLC'}
                       name = 'CPHL';
                       comment.(fields{k}) = ['Artificial chlorophyll data computed from ' ...
                           'fluorometry sensor raw counts measurements. Originally ' ...
@@ -339,6 +352,18 @@ function sample_data = readXR420( filename, mode )
                       
                   %Turb-a (NTU)
                   case {'Turba', 'Turb'}, name = 'TURB';
+                      
+                  % Oxyguard dissolved O2 concentration (ml/l) => (umol/l)
+                  case {'dO2C','xdO2C'}
+                      name = 'DOX1';
+                      comment.(vars{k}) = ['Originally expressed in ml/l, ' ...
+                          '1ml/l = 44.660umol/l was assumed.'];
+                      data.(vars{k}) = data.(vars{k}) * 44.660;
+                      
+                    %Specific conductivity (uS/cm) = 10-4 * (S/m)
+                  case {'SpecCond', 'scon00'}
+                      name = 'SPEC_CNDC';
+                      data.(vars{k}) = data.(vars{k})/10000;
                       
                   otherwise, name = fields{k};
               end
@@ -398,8 +423,10 @@ function header = readHeader(fid)
                 header.model    = tkns{1}{2};
                 header.firmware = tkns{1}{3};
                 header.serial   = tkns{1}{4};
+                
         
         % start of sampling
+        %
         case 2, header.start    = datenum(tkns{1}{1},   'yy/mm/dd HH:MM:SS');
         
         % end of sampling
@@ -411,8 +438,8 @@ function header = readHeader(fid)
         
         % comment
         case 5, header.correction  = tkns{1}{1};
-        
-        % number of channels, number of samples
+
+        %
         case 6, header.channels = str2double(tkns{1}{1});
                 header.samples  = str2double(tkns{1}{2});
                 

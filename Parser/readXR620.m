@@ -79,7 +79,7 @@ function sample_data = readXR620( filename, mode )
   
   sample_data.dimensions = {};  
   sample_data.variables  = {};
-  
+%% profile mode - rarely used for oceanographic moorings  
   switch mode
       case 'profile'
           % dimensions creation
@@ -503,7 +503,7 @@ function sample_data = readXR620( filename, mode )
           sample_data.variables{end}.dimensions       = [];
           
           % copy variable data over
-          data = rmfield(data, 'time');
+          data = rmfield(data, 'TIME'); % was 'time' but chaged to 'TIME' - shawnM jan 8, 2021
           fields = fieldnames(data);
           coordinates = 'TIME LATITUDE LONGITUDE NOMINAL_DEPTH';
           
