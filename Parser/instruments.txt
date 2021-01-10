@@ -65,6 +65,7 @@ RBR,            		Concerto-CT,                                                  
 RBR,            		Concerto-CT-Tu-DO,                                              XR
 RBR, 					Concerto-CTD-Tu-DO, 											XR
 RBR, 					Concerto-CTD-Tu, 												XR
+RBR, 					Concerto-CTD-Tu-FL,												XR
 RBR, 					Concerto-CTD,	 												XR
 RBR, 					Concerto-CTD-FL,	 											XR
 RBR, 					DR1050P, 														DR1050

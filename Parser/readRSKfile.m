@@ -17,8 +17,7 @@ function sample_data = readRSKfile(fname, mode)
 %   sample_data - Struct containing imported sample data.
 %
 % Author : 		Shawn Meredyk <shawn.meredyk@arcticnet.ulaval.ca>
-% Contributor : Guillaume Galibert <guillaume.galibert@utas.edu.au>,
-%               and selected RBR RSKTools scripts (2020).
+% Contributor : RBR RSKTools scripts (2020).
 %				
 %
 % Copyright (c) 2021, Amundsen Science & ArcticNet
@@ -87,7 +86,6 @@ function sample_data = readRSKfile(fname, mode)
     sample_data.meta.instrument_model             = char(unitInfo{2});
     sample_data.meta.instrument_firmware          = char(unitInfo{3});
     sample_data.meta.instrument_serial_no         = double(unitInfo{4});
-    sample_data.meta.instrument_sample_interval   = rsk.average.repetitionPeriod ./ 60000; %interval in minutes
     sample_data.meta.featureType                  = mode; %assumed timeSeries
 
     sample_data.dimensions = {};  
@@ -120,38 +118,49 @@ function sample_data = readRSKfile(fname, mode)
  for i=1:length(RSK.channelnames)
       switch RSK.channelnames{i,1}
                   		
-				  %Turbidity (Ftu) - NTU and FTU have similar values ,
-				  %though calibration method is different chemicals
-				  %(Forazine , Nephelometric)
-                  
+				  %Turbidity (NTU)
 				  case 'Turbidity'
-				    name{i} = 'TURB';
-                    data.TURB.values = RSK.data(:,i); 
-					data.TURB.comment = ['NTU'];
+				    %name{i,1} = 'TURB';
+                     data.TURB.values = RSK.data(:,i); 
+					 data.TURB.comment = ['NTU'];
 			
                   %Pressure(dBarr) 
                   case 'Pressure' 
-                     name{i} = 'PRES';
+                     %name{i,1} = 'PRES';
                      data.PRES.values = RSK.data(:,i);   
 					 data.PRES.comment = ['dbar'];	
 
 				  %Temperature (Celsius degree)
                   case 'Temperature' 
-                    name{i} = 'TEMP';
-                    data.TEMP.values = RSK.data(:,i); 
-					data.TEMP.comment = ['Degrees Celius'];
+                    %name{i,1} = 'TEMP';
+                     data.TEMP.values = RSK.data(:,i); 
+					 data.TEMP.comment = ['Degrees Celius'];
                                     
 				  %Conductivity (mS/cm) = 10-1*(S/m)
                   case 'Conductivity'
-                      name{i} = 'CNDC';
-                      data.CNDC.values = (RSK.data(:,i))/10; 
-                      data.CNDC.comment = ['converted from mS/cm to S/m for Toolbox'];
-					  
+                      %name{i,1} = 'CNDC';
+                     data.CNDC.values = (RSK.data(:,i))/10; 
+                     data.CNDC.comment = ['converted from mS/cm to S/m for Toolbox'];
+                      
+                  %Specific conductivity (uS/cm) = 10-4 * (S/m)
+                  case 'Specific conductivity'
+                      %name{i,1} = 'SPEC_CNDC';
+                     data.SPEC_CNDC.values = (RSK.data(:,i))/10000;    
+                     data.SPEC_CNDC.comment = ['converted from mS/cm to S/m for Toolbox'];
+
 				  %DO (uM/L)
                   case 'O2Concentration' 
-                    name{i} = 'DOX1';
-                    data.DOX1.values = RSK.data(:,i);
-                    data.DOX1.comment = ['Dissolved Oxygen Concentration (uM)per Litre'];           
+                    %name{i,1} = 'DOX1';
+                     data.DOX1.values = RSK.data(:,i);
+                     data.DOX1.comment = ['Dissolved Oxygen Concentration (uM)per Litre'];  
+
+                  %Fluorometry-chlorophyl (ug/l) = (mg.m-3)
+                  case 'Chlorophyll'
+                    % name{i,1} = 'CPHL';
+                     data.CPHL.values = RSK.data(:,i);
+                     data.CPHL.comment = ['Artificial chlorophyll data computed from ' ...
+                          'fluorometry sensor raw counts measurements. Originally ' ...
+                          'expressed in ug/l, 1l = 0.001m3 was assumed.'];  
 				
       end % end of Switch
   end % end of For loop
