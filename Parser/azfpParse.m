@@ -15,16 +15,11 @@ function sample_data = azfpParse(filename, mode )
 %
 % Author :      Shawn Meredyk <shawn.meredyk@as.ulaval.ca>
 % 
-%
-% Copyright (c) 2020, Amundsen Science & ArcticNet
+% Copyright (c) 2021, Amundsen Science & ArcticNet
 % http://www.amundsen.ulaval.ca/
 % http://www.arcticnet.ulaval.ca/
 % All rights reserved.
 %
-% Copyright (c) 2020, Australian Ocean Data Network (AODN) and Integrated 
-% Marine Observing System (IMOS).
-% All rights reserved.
-% 
 % Redistribution and use in source and binary forms, with or without 
 % modification, are permitted provided that the following conditions are met:
 % 
@@ -48,7 +43,7 @@ function sample_data = azfpParse(filename, mode )
 % CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) 
 % ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE 
 % POSSIBILITY OF SUCH DAMAGE.
-
+%
 % ensure that there is exactly one argument, 
 % and that it is a cell array of strings
 narginchk(1,2);
@@ -59,9 +54,8 @@ if ~iscellstr(filename), error('filename must be a cell array of strings'); end
 filename = filename{1};
 if ~ischar(filename), error('filename must contain a string'); end
 
-sample_data = readIPSdraft(filename, mode); % Parses out the DateTime, 
-% Draft and Draft Err of Ice Keels calculated quickly by the Ips5Extract 
-% software and also extracts sensor data from the IPS.
+sample_data = readAZFPabsorp(filename, mode); % Parses out the DateTime, 
+% Absorption of the various channels of recorded data from an AZFP.
 
 end
 

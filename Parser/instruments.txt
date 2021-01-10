@@ -20,6 +20,7 @@ AQUATEC, 				AQUALOGGER MODEL 520, 											aquatec
 
 ASL,					IPS5,															ips
 ASL,					IPS4,															ips
+ASL,                    AZFP,                                                           azfp
 
 FSI, 					NXIC BIO-500, 													NXICBinary
 FSI, 					FSI, 															NXICBinary
