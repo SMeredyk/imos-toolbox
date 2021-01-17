@@ -18,11 +18,11 @@ function sample_data = variableOffsetPP( sample_data, qcLevel, auto )
 %   sample_data - same as input, potentially with variable data modified.
 %
 % Author:       Paul McCarthy <paul.mccarthy@csiro.au>
-% Contributor:  Guillaume Galibert <guillaume.galibert@utas.edu.au>
+% Contributor:  Guillaume Galibert <guillaume.galibert@utas.edu.au>,
+%               Shawn Meredyk <shawn.meredyk@as.ulaval.ca>
 %
-
 %
-% Copyright (C) 2017, Australian Ocean Data Network (AODN) and Integrated 
+% Copyright (C) 2021, Australian Ocean Data Network (AODN) and Integrated 
 % Marine Observing System (IMOS).
 %
 % This program is free software: you can redistribute it and/or modify
@@ -171,7 +171,11 @@ function sample_data = variableOffsetPP( sample_data, qcLevel, auto )
               
               % we will be looking at differences over a day from 1/4 of the
               % deployment
-              timeForDiff = timeCurrent(1) + (timeCurrent(end)-timeCurrent(1))/4;
+              %timeForDiff = timeCurrent(1) +
+              %(timeCurrent(end)-timeCurrent(1))/4; % commented out and
+              %placed below section below on time_deployment_start - shawn
+              %, Jan 17, 2021
+              
               if isfield(sample_data{k}, 'time_deployment_start')
                   if ~isempty(sample_data{k}.time_deployment_start)
                       % or preferably from the moment the mooring is in position
@@ -187,12 +191,15 @@ function sample_data = variableOffsetPP( sample_data, qcLevel, auto )
                       ' so that difference with a nearest instrument can be better calculated']);
               end
               
-              iForDiff = timeCurrent >= timeForDiff & ...
-                  timeCurrent <= timeForDiff + 1;
+              % we will be looking at differences over a day from 1/4 of the
+              % deployment
+              timeForDiff = timeCurrent(1) + (timeCurrent(end)-timeCurrent(1))/4;
+              %
+              iForDiff = timeCurrent >= timeForDiff & timeCurrent <= timeForDiff + 1;
               timeCurrentForDiff = timeCurrent(iForDiff);
               
               diffHeaderLabelStr = ['Mean diff from ' datestr(timeCurrentForDiff(1), 'dd-mm-yyyy HH:MM:SS UTC') ' over 24h'];
-          end
+          end % end of timeSeries section
           
           % column headers
           varHeaderLabel    = uicontrol('Parent', setPanels(k), 'Style', 'text', ...
