@@ -503,7 +503,7 @@ function sample_data = readXR620( filename, mode )
           sample_data.variables{end}.dimensions       = [];
           
           % copy variable data over
-          data = rmfield(data, 'time'); % was 'time' but chaged to 'TIME' - shawnM jan 8, 2021
+          data = rmfield(data, 'time'); 
           fields = fieldnames(data);
           coordinates = 'TIME LATITUDE LONGITUDE NOMINAL_DEPTH';
           
@@ -834,7 +834,7 @@ function header = readHeader(fid)
   end    
   
   if isempty(startDate) && ~isempty(startTime) % ruskin v1.7+
-      if length(startTime) == 11 && ruskinVer == 0
+      if length(startTime) > 10 & ruskinVer == 0
           header.start    = datenum([startDate ' ' startTime],  'dd-mmm-yyyy HH:MM:SS.FFF');
       else
           header.start    = datenum([startDate ' ' startTime],  'yyyy-mm-dd HH:MM:SS.FFF');  
@@ -850,7 +850,7 @@ function header = readHeader(fid)
   end   
   
   if isempty(endDate) && ~isempty(endTime) % ruskin v1.7+
-      if length(endTime) == 11 && ruskinVer == 0
+      if length(endTime) > 10 & ruskinVer == 0
           header.end    = datenum([endDate ' ' endTime],  'dd-mmm-yyyy HH:MM:SS.FFF');
       else
           header.end    = datenum([endDate ' ' endTime],  'yyyy-mm-dd HH:MM:SS.FFF');
